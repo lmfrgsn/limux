@@ -5,10 +5,13 @@ import time
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
-out = root / 'build/rhapsody'
+out = root / 'build/rhapsody-candidate2'
 subprocess.run(['python3', str(root/'scripts/theme.py'), 'render', str(root/'themes/rhapsody.toml'), '--output', str(out)], check=True)
 # Fail before launch if the session cannot capture screenshots.
-subprocess.run(['grim', str(out/'before.png')], check=True)
+try:
+    subprocess.run(['grim', str(out/'before.png')], check=True)
+except (OSError, subprocess.CalledProcessError):
+    raise SystemExit('Cannot capture the Wayland display. Run this script from Foot in the desktop session. No preview was started.')
 bar = subprocess.Popen([str(Path.home()/'.local/bin/mangobar'), '-c', str(Path.home()/'.config/mangobar/config.jsonc'), '-s', str(out/'mangobar.css')])
 try:
     time.sleep(3)

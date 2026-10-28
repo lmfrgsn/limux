@@ -89,4 +89,4 @@ Before each future visual iteration:
 3. Generate supported styling from shared tokens, validate native formats and inspect real screenshots at native scale, including hover, focus, selected and urgent states. Check functional precision, subtle lavender, purposeful signals, depth, accessibility and light/dark cohesion.
 4. Preserve behaviour and hardware. Live activation requires explicit authorization and a validated rollback path; a generated preview is not proof of visual approval.
 
-The present reconciliation is documentation-only. Tokens, generators, generated styling and live settings remain unchanged. Outstanding discrepancies and approval needs are recorded in the [decision log](design-decisions.md).
+The reconciliation at `f52bb7e` was documentation-only. The subsequently authorized Mangobar candidate implements proposed tokens and styling without permanent activation. Its evidence, limitations and pending approval are recorded in the [decision log](design-decisions.md); it does not supersede the established direction or finalize exploratory choices.

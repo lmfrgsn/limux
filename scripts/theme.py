@@ -22,12 +22,13 @@ try:
     assert isinstance(theme['typography']['size'], int) and theme['typography']['size'] > 0
     for name in ('radius', 'spacing', 'border'):
         assert isinstance(theme['geometry'][name], int) and theme['geometry'][name] >= 0
+    css = render_mangobar(theme)  # Validate the complete adapter contract for both actions.
     if args.action == 'render':
         if args.output is None:
             parser.error('render requires --output')
         args.output.mkdir(parents=True, exist_ok=True)
         (args.output / 'tokens.json').write_text(json.dumps(theme, indent=2) + '\n')
-        (args.output / 'mangobar.css').write_text(render_mangobar(theme))
+        (args.output / 'mangobar.css').write_text(css)
     print(f"Validated {theme['name']}" + ('; preview written' if args.action == 'render' else ''))
 except (OSError, KeyError, ValueError, TypeError, AssertionError) as e:
     parser.exit(1, f'Invalid theme: {e}\n')
