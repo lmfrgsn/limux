@@ -4,12 +4,16 @@ name = "Rhapsody"
 canvas = "#DADAE3"
 surface = "#F8F8FA"
 chrome = "#EAE9F0"
-accent = "#77768F"
+accent = "#646178"
+text_secondary = "#666573"
+text_quiet = "#72717E"
+urgent = "#945035"
+on_urgent = "#F8F8FA"
 text = "#343442"
 dark_terminal = "#2F303B"
 
 [typography]
-sans = "IBM Plex Sans"
+sans = "Inter"
 mono = "IBM Plex Mono"
 size = 13
 

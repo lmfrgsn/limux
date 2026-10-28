@@ -4,7 +4,7 @@ import re
 
 def render(theme):
     colors = theme['colors']
-    for key in ('canvas', 'surface', 'chrome', 'accent', 'text'):
+    for key in ('canvas', 'surface', 'chrome', 'accent', 'text', 'text_secondary', 'text_quiet', 'urgent', 'on_urgent'):
         if not isinstance(colors[key], str) or not re.fullmatch(r'#[0-9a-fA-F]{6}', colors[key]):
             raise ValueError(f'invalid color: {key}')
     typography, geometry = theme['typography'], theme['geometry']
@@ -29,13 +29,13 @@ def render(theme):
 #bar {{ background: {c['chrome']}; padding: 0px; margin: 0px; }}
 #bar.sel {{ background: {c['chrome']}; }}
 #tags {{ padding: 0px {spacing}px; margin: 0px 1px; min-width: 25px; }}
-#tags.empty {{ color: {c['text']}; background: {c['chrome']}; }}
-#tags.occupied {{ color: {c['text']}; background: {c['canvas']}; }}
+#tags.empty {{ color: {c['text_quiet']}; background: {c['chrome']}; }}
+#tags.occupied {{ color: {c['text']}; background: {c['chrome']}; }}
 #tags.active {{ color: {active_text}; background: {c['accent']}; }}
-#tags.urgent {{ color: {active_text}; background: {c['accent']}; }}
+#tags.urgent {{ color: {c['on_urgent']}; background: {c['urgent']}; }}
 #tags:hover {{ color: {c['text']}; background: {c['surface']}; }}
-#layout {{ color: {c['text']}; background: {c['canvas']}; padding: 0px {spacing}px; margin: 0px 5px; }}
-#title {{ color: {c['text']}; }}
+#layout {{ color: {c['text_secondary']}; background: {c['chrome']}; padding: 0px {spacing}px; margin: 0px 5px; }}
+#title {{ color: {c['text_secondary']}; }}
 #clock {{ color: {c['text']}; }}
 #battery {{ color: {c['text']}; }}
 #volume {{ color: {c['text']}; }}
