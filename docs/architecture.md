@@ -4,7 +4,7 @@ The [canonical design language](design-language.md), [original visual reference]
 
 Each theme has one canonical semantic token file, such as themes/rhapsody.toml. A theme generator translates tokens into application-native formats. Generated appearance is separate from human-maintained functionality wherever supported; applying a theme must not change shortcuts or hardware. A future `limux theme apply rhapsody` is a design possibility, not an available command.
 
-Targets include MangoWM borders, Mangobar, Rofi, Foot, Mako and GTK/Thunar. Each target needs a reviewed adapter, native-format validation, backup and rollback before live application. The generator emits Mangobar CSS, Rofi Rasi, a MangoWM appearance fragment and a JSON token preview. Guarded component-specific activation mechanisms are available below; no generic live theme application command exists.
+Targets include MangoWM borders, Mangobar, Rofi, Foot, Mako and GTK/Thunar. Each target needs a reviewed adapter, native-format validation, backup and rollback before live application. The generator emits Mangobar CSS, Rofi Rasi, a MangoWM appearance fragment, a Foot appearance fragment and a JSON token preview. Guarded component-specific activation mechanisms are available below; no generic live theme application command exists.
 
 ## Machine audit and ownership
 
@@ -13,7 +13,7 @@ Targets include MangoWM borders, Mangobar, Rofi, Foot, Mako and GTK/Thunar. Each
 | MangoWM | ~/.config/mango/config.conf | Sole complete live config; functionality stays manually maintained. The candidate adapter can replace only 16 reviewed appearance values, preserving all other bytes. Do not import wholesale or replace from a generated full config. |
 | Mangobar | ~/.config/mangobar/config.jsonc, style.css | Functional config remains manually maintained. The approved generated CSS can replace only the live style through the guarded activation mechanism; the user has activated it successfully, and its live CSS matches the approved baseline. |
 | Rofi | ~/.config/rofi/config.rasi, charcoal.rasi | Functional config stays manually maintained. Approved generated Rhapsody styling can replace only charcoal.rasi through the guarded activation tool; historical theme and icon are versioned for rollback. |
-| Foot | ~/.config/foot/foot.ini | Manually maintained font and clipboard shortcuts; not imported. |
+| Foot | ~/.config/foot/foot.ini | Sole live behaviour config, unchanged. Candidate preview layers generated visual overrides onto this file in a separate process. |
 | Mako | ~/.config/mako/config | Manually maintained notifications; not imported. |
 | Thunar | ~/.config/Thunar/accels.scm, uca.xml | Manually maintained shortcuts and custom actions; not imported. |
 | T2 | WirePlumber, PipeWire, systemd and helper scripts | Hardware-specific, outside this repository; preserve and audit separately before any import. |
@@ -122,3 +122,76 @@ python3 scripts/mango-appearance.py rollback
 ```
 
 `check` validates the configuration offline and reports whether its appearance is the approved baseline or the previous version. `verify` additionally requires the exact approved live values and one reachable compositor using that config; it does not claim pixel-level verification. Activation confirms exact post-reload config bytes and compositor IPC responsiveness before clearing the recovery journal. After success the timed restorer sees no pending operation and cannot undo the committed activation. Inspect the desktop to confirm the 2px borders, 8px inner / 12px outer gaps, 6px corners and approved colours. Shortcuts, layouts, gestures, animation and hardware settings are outside ownership and remain unchanged.
+
+
+## Foot candidate — separate-window preview only
+
+The `[foot]` tokens generate a native Foot 1.28 appearance fragment through
+`scripts/foot.py`. `[foot.colors]` contains only additional muted ANSI hue roles;
+`[foot.blends]` derives readable dark-surface variants from shared colours using
+explicit sRGB channel mixes. Existing foundation and semantic signal values are
+unchanged. `scripts/theme.py render` includes `foot.ini` in its disposable output.
+The fragment is **not** a replacement for the live configuration.
+
+From an existing Foot window:
+
+```sh
+cd ~/limux
+python3 scripts/preview-foot.py --check
+python3 scripts/preview-foot.py
+# Alternatively, use your normal configured shell in the separate themed window:
+python3 scripts/preview-foot.py --shell
+# Optional actual desktop capture (includes other visible windows):
+python3 scripts/preview-foot.py --capture
+```
+
+The preview reads `${XDG_CONFIG_HOME:-~/.config}/foot/foot.ini` and passes only
+appearance settings through native `-o section.key=value` overrides. The fragment
+and overrides come from the same adapter settings. It validates both the fragment
+and the combination with the functional config using `foot --check-config` before
+launch. There is no include added to the live file, no service, no second active
+configuration, and no generated copy of functional settings. The resolved font
+family is checked to prevent silent fallback. App ID, window rules, shell, TERM,
+scrollback, clipboard bindings and mouse/keyboard behaviour are inherited. No
+shell prompt or Codex settings are changed. Existing terminals remain running.
+
+The specimen displays an explicitly fictional development transcript, all 16 ANSI
+colours, secondary text and a selection-colour swatch. Its input prompt uses the
+real cursor; drag to test actual selection. It never executes entered commands.
+`wait` sleeps for ten seconds to test Ctrl+C, `ansi` redraws and `exit` closes.
+`--shell` instead starts Foot's normal configured shell with its existing prompt.
+Closing this separate window is the entire rollback; no file restoration is
+needed. Ctrl+C in the invoking terminal cleans up only its preview child.
+Generated artifacts and optional screenshot are under `build/foot-candidate1/`.
+No permanent activation command is provided before visual approval.
+
+On-device review:
+
+1. Compare alongside the light bar/launcher and approved window borders. Check
+   text at the actual 2880×1800 / 1.5 output scale, including split windows.
+2. Drag-select text; test Command+C/V and Ctrl+Shift+C/V at the specimen prompt.
+   Check scrolling and selection across lines. The unchanged live configuration
+   is used; native parser validation is not proof of interactive clipboard input.
+3. Enter `wait`, press Ctrl+C and confirm interruption. Verify the yellow cursor
+   becomes hollow when unfocused. Applications can request another cursor style.
+4. In `--shell`, test ordinary commands and Foot's existing search/URL modes.
+   Existing search bindings are retained; matching search uses yellow with dark
+   ink, no-match uses the shared red with porcelain ink.
+5. Close the candidate and confirm the original terminal remains unchanged.
+
+Compatibility evidence comes from the installed `foot(1)` and `foot.ini(5)` for
+1.28.0. In this version cursor colours belong in `[colors-dark]` as text/background
+pairs. Foot renders flat terminal cells, not recessed inputs, inner borders or
+material bevels; graphite field, aligned glyphs and 8 logical pixel padding supply
+the instrument-panel character within MangoWM's existing chrome. Opaque output
+keeps contrast stable. DPI handling and line height are inherited, with 16pt
+normally about 32 physical pixels at scale 1.5 (glyph/cell bounds differ).
+Only the dark palette is supplied; explicit switching to Foot's light palette
+retains its existing/default palette. ANSI 256 entries 16–255, application
+truecolour, dim attributes and application palette/cursor overrides remain under
+their existing rules. Real Codex can choose its own colours; this task does not
+retheme Codex. ANSI black is intentionally dark for inverse/light backgrounds
+and is not legible body text on graphite. Other foreground ANSI entries are
+checked at ≥4.5:1 on the default background; arbitrary ANSI background/foreground
+combinations are not guaranteed. Selection surface contrast is 1.83:1 against the
+terminal, with 6.73:1 text contrast; review its visibility on-device.

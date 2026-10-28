@@ -135,3 +135,64 @@ The user visually reviewed and approved the exact candidate as the initial basel
 The existing activation workflow is enabled, with an additional transaction assertion that reverse-merging the old owned values reconstructs the original complete bytes. This rejects changes to anything outside the 16 appearance settings. A read-only `verify` command checks exact approved on-disk values, native syntax and one reachable compositor using the canonical config. Existing atomic replacement, journal, failure restoration and version-controlled rollback remain in place. Successful activation clears the pending journal, so the timed recovery process leaves the committed baseline alone.
 
 Validation: 33 tests passed, including read-only verification, approved activation, repeat activation, completed-operation watchdog behaviour, rollback, nonvisual-change rejection, failed reload and existing native parser suites. The live activation attempt stopped on `mmsg get version` with `connect: Operation not permitted` before any live write. Live file hashes are unchanged; on-device activation/verification must be run from Foot. Rendered appearance cannot be newly certified from this sandbox, although the user has already approved the visual candidate. No shortcuts, gestures, layouts, animations, hardware settings, autostart entries or design values changed.
+
+
+## Foot first candidate — proposed, not activated
+
+The dark developer environment uses the established `#2F303B` graphite foundation
+with `#EAE9F0` chrome text and `#A8A8B4` metal secondary text. This extends the
+original [Braun reference](references/braun-interface-concept.png)'s material
+hierarchy into the developer workbench; it adds no ornamental terminal chrome,
+branding, glow or gradients. Eight logical pixels of padding provide a compact
+inset inside the already approved MangoWM frame. Light applications, window
+styling, foundation colours and shared signals are unchanged.
+
+A small yellow block cursor marks active insertion, becoming hollow on loss of
+focus. Selection uses neutral emphasis blended into graphite (`#575669`) with
+porcelain text. Yellow remains purposeful in search and URL jump labels. Red
+marks search failure. These component mappings and all new terminal values are
+candidates; they do not supersede the approved light-system mappings.
+
+| ANSI role | Regular | Bright |
+| --- | --- | --- |
+| Black / quiet neutral | `#343442` | `#A8A8B4` |
+| Red | `#C88C8B` | `#D2A2A1` |
+| Green | `#9CAA8D` | `#AEBAA3` |
+| Yellow | `#E3BE47` | `#E7CA6B` |
+| Blue | `#9DAFC8` | `#AFBED2` |
+| Magenta | `#B8A2BA` | `#C5B3C7` |
+| Cyan | `#91B8B5` | `#A6C5C3` |
+| White | `#DADAE3` | `#F8F8FA` |
+
+Red mixes the shared red with chrome at 45%; green mixes shared green with chrome
+at 35%. The additional cool blue, muted mauve and mineral cyan serve ANSI syntax
+compatibility, not new semantic signals. Bright chromatic variants mix 20%
+porcelain into the regular values rather than adding saturation. Selection mixes
+55% neutral accent into graphite. The recipes live only in the canonical tokens;
+this table records their first-candidate outcome. Normal text contrast is
+10.84:1, secondary 5.55:1, selection text 6.73:1. Regular ANSI black is reserved for
+light/inverse backgrounds; all other ANSI foregrounds pass 4.5:1 on graphite.
+Applications decide ANSI meanings, so the terminal cannot enforce status-only
+colour use inside every program.
+
+Typography investigation: IBM Plex Mono is absent; Fontconfig resolves its name
+to DejaVu Sans Mono. DejaVu Sans Mono, Adwaita Mono and Ubuntu Mono are installed.
+Plex remains the original developer-font exploration but would require an
+explicit installation before a truthful visual comparison. Adwaita Mono is an
+available developer-oriented alternative; Ubuntu Mono offers a more overtly
+humanist character. Neither has been visually evaluated here at the display
+scale. This candidate retains the existing DejaVu Sans Mono **16pt**, with its
+familiar broad glyphs and current metrics, rather than combining an unverified
+font change with the first palette review. The font name's capitalization is
+normalized; the resolved family remains the same. Line height and DPI policy are
+unchanged. This is a local Foot candidate, not a final system-wide font decision.
+
+Validation: installed Foot 1.28 accepts the fragment and appearance overrides
+layered over the actual live config. The automated suite covers token derivation,
+contrast rejection, visual-only settings, native parsing, harmless specimen input
+and unchanged approved light-component outputs. Live Foot, MangoWM, Mangobar and
+Rofi configuration hashes remain unchanged. Actual launch/capture was attempted
+but Foot could not connect to Wayland in this sandbox; **no rendered screenshot
+or interactive clipboard verification is claimed**. Native visual evaluation,
+font comfort and selection/cursor behaviour remain pending user review using the
+[preview workflow](architecture.md#foot-candidate--separate-window-preview-only).

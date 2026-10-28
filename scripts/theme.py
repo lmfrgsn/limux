@@ -8,6 +8,7 @@ import tomllib
 from mangobar import render as render_mangobar
 from rofi import render as render_rofi
 from mango import render as render_mango
+from foot import render as render_foot
 
 parser = argparse.ArgumentParser()
 parser.add_argument('action', choices=['validate', 'render'])
@@ -27,6 +28,7 @@ try:
     css = render_mangobar(theme)  # Validate the complete adapter contract for both actions.
     rasi = render_rofi(theme)
     mango = render_mango(theme)
+    foot = render_foot(theme)
     if args.action == 'render':
         if args.output is None:
             parser.error('render requires --output')
@@ -35,6 +37,7 @@ try:
         (args.output / 'mangobar.css').write_text(css)
         (args.output / 'rofi.rasi').write_text(rasi)
         (args.output / 'mango.conf').write_text(mango)
+        (args.output / 'foot.ini').write_text(foot)
     print(f"Validated {theme['name']}" + ('; preview written' if args.action == 'render' else ''))
 except (OSError, KeyError, ValueError, TypeError, AssertionError) as e:
     parser.exit(1, f'Invalid theme: {e}\n')

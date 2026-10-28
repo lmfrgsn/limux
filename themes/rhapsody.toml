@@ -85,3 +85,38 @@ maximized_screen_color = "metal"
 scratchpad_color = "dark_terminal"
 global_color = "accent"
 overlay_color = "text_secondary"
+
+[foot]
+# First dark developer candidate: NOT approved or activated.
+# Retain the installed live font and comfortable point size; Plex remains open.
+font = "DejaVu Sans Mono"
+font_size = 16
+padding = 8
+foreground = "chrome"
+background = "dark_terminal"
+secondary = "metal"
+selection_foreground = "surface"
+selection_background = "terminal_selection"
+cursor_foreground = "text"
+cursor_background = "signal_yellow"
+regular = ["text", "terminal_red", "terminal_green", "signal_yellow", "terminal_blue", "terminal_magenta", "terminal_cyan", "canvas"]
+bright = ["metal", "terminal_bright_red", "terminal_bright_green", "terminal_bright_yellow", "terminal_bright_blue", "terminal_bright_magenta", "terminal_bright_cyan", "surface"]
+
+[foot.colors]
+# Muted cool ANSI syntax roles; not new system signals.
+terminal_blue = "#9DAFC8"
+terminal_magenta = "#B8A2BA"
+terminal_cyan = "#91B8B5"
+
+[foot.blends]
+# sRGB channel mixes: source, destination, destination proportion.
+# Lift signal inks for dark-surface text; shared light-system signals unchanged.
+terminal_red = ["signal_red", "chrome", 0.45]
+terminal_green = ["signal_green", "chrome", 0.35]
+terminal_selection = ["dark_terminal", "accent", 0.55]
+terminal_bright_red = ["terminal_red", "surface", 0.20]
+terminal_bright_green = ["terminal_green", "surface", 0.20]
+terminal_bright_yellow = ["signal_yellow", "surface", 0.20]
+terminal_bright_blue = ["terminal_blue", "surface", 0.20]
+terminal_bright_magenta = ["terminal_magenta", "surface", 0.20]
+terminal_bright_cyan = ["terminal_cyan", "surface", 0.20]
