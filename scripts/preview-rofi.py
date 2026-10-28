@@ -12,7 +12,7 @@ import time
 
 def main():
     root = Path(__file__).resolve().parents[1]
-    out = root/'build/rofi-candidate1'
+    out = root/'build/rofi-candidate2'
     subprocess.run(['python3', str(root/'scripts/theme.py'), 'render',
                     str(root/'themes/rhapsody.toml'), '--output', str(out)], check=True)
     command = ['rofi', '-config', str(Path.home()/'.config/rofi/config.rasi'),

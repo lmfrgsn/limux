@@ -1,4 +1,5 @@
 import copy
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -57,3 +58,28 @@ class RofiTests(unittest.TestCase):
             self.assertIn('textbox-heading', result.stdout)
             self.assertIn('box-search', result.stdout)
             self.assertNotIn('Parser error', result.stderr)
+            # Exit code alone missed the installed lexer's greedy string rule.
+            blocks = dict(re.findall(r'(?m)^([\w*-]+) \{([^}]+)\}', result.stdout))
+            def prop(widget, key):
+                match = re.search(r'(?m)^\s*' + re.escape(key) + r':\s*(.*);\s*$', blocks[widget])
+                self.assertIsNotNone(match, (widget, key))
+                return match.group(1).strip()
+            self.assertEqual(prop('textbox-heading', 'content'), '"APPLICATIONS"')
+            self.assertEqual(prop('textbox-heading', 'font'), '"Inter 10"')
+            self.assertEqual(prop('entry', 'placeholder'), '"Search applications"')
+            self.assertEqual(prop('entry', 'font'), '"Inter 14"')
+            self.assertNotIn('RHAPSODY /', result.stdout)
+            self.assertNotIn('textbox-edition', result.stdout)
+            for widget in ('textbox-heading', 'box-search', 'inputbar', 'message'):
+                self.assertEqual(prop(widget, 'expand'), 'false')
+            self.assertEqual(prop('inputbar', 'orientation'), 'horizontal')
+            self.assertEqual(prop('box-search', 'orientation'), 'vertical')
+            self.assertEqual(prop('entry', 'expand'), 'true')
+            self.assertEqual(prop('listview', 'fixed-height'), 'false')
+            self.assertEqual(prop('listview', 'dynamic'), 'true')
+            self.assertEqual(prop('listview', 'cycle'), 'true')
+
+    def test_one_property_per_line(self):
+        # Prevent a second quoted value from being swallowed into a string.
+        for line in render(self.theme).splitlines():
+            self.assertLessEqual(line.count(';'), 1, line)

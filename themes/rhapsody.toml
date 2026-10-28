@@ -50,16 +50,16 @@ hover_radius = 0
 group_gap = 6
 
 [rofi]
-# First light-system candidate, not approved for permanent activation.
-width = 660
+# Second light-system candidate, not approved for permanent activation.
+width = 620
 padding = 16
-spacing = 12
+spacing = 10
 radius = 3
-search_padding = 12
-row_padding = 10
-row_spacing = 4
-icon_size = 22
+search_padding = 10
+row_padding = 8
+row_spacing = 2
+icon_size = 20
 selection_edge = 3
 font_size = 12
 heading_size = 10
-entry_size = 16
+entry_size = 14
