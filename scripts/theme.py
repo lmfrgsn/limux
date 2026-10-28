@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import re
 import tomllib
+from mangobar import render as render_mangobar
 
 parser = argparse.ArgumentParser()
 parser.add_argument('action', choices=['validate', 'render'])
@@ -26,6 +27,7 @@ try:
             parser.error('render requires --output')
         args.output.mkdir(parents=True, exist_ok=True)
         (args.output / 'tokens.json').write_text(json.dumps(theme, indent=2) + '\n')
+        (args.output / 'mangobar.css').write_text(render_mangobar(theme))
     print(f"Validated {theme['name']}" + ('; preview written' if args.action == 'render' else ''))
 except (OSError, KeyError, ValueError, TypeError, AssertionError) as e:
     parser.exit(1, f'Invalid theme: {e}\n')
