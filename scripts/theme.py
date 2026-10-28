@@ -7,6 +7,7 @@ import re
 import tomllib
 from mangobar import render as render_mangobar
 from rofi import render as render_rofi
+from mango import render as render_mango
 
 parser = argparse.ArgumentParser()
 parser.add_argument('action', choices=['validate', 'render'])
@@ -25,6 +26,7 @@ try:
         assert isinstance(theme['geometry'][name], int) and theme['geometry'][name] >= 0
     css = render_mangobar(theme)  # Validate the complete adapter contract for both actions.
     rasi = render_rofi(theme)
+    mango = render_mango(theme)
     if args.action == 'render':
         if args.output is None:
             parser.error('render requires --output')
@@ -32,6 +34,7 @@ try:
         (args.output / 'tokens.json').write_text(json.dumps(theme, indent=2) + '\n')
         (args.output / 'mangobar.css').write_text(css)
         (args.output / 'rofi.rasi').write_text(rasi)
+        (args.output / 'mango.conf').write_text(mango)
     print(f"Validated {theme['name']}" + ('; preview written' if args.action == 'render' else ''))
 except (OSError, KeyError, ValueError, TypeError, AssertionError) as e:
     parser.exit(1, f'Invalid theme: {e}\n')

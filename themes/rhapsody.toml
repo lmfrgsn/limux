@@ -63,3 +63,25 @@ selection_edge = 3
 font_size = 12
 heading_size = 10
 entry_size = 14
+
+[mango]
+# Candidate 1 only: permanent activation requires separate visual approval.
+border_px = 2
+border_radius = 6
+gap_inner_horizontal = 8
+gap_inner_vertical = 8
+gap_outer_horizontal = 12
+gap_outer_vertical = 12
+root_color = "canvas"
+border_color = "metal"
+focus_color = "accent"
+urgent_color = "signal_red"
+# Functional placement indicators, not decorations or generic window success.
+drop_color = "signal_green"
+drop_alpha = 85
+split_color = "signal_yellow"
+# Neutral state overrides; these modes do not mean success/error.
+maximized_screen_color = "metal"
+scratchpad_color = "dark_terminal"
+global_color = "accent"
+overlay_color = "text_secondary"

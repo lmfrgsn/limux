@@ -4,13 +4,13 @@ The [canonical design language](design-language.md), [original visual reference]
 
 Each theme has one canonical semantic token file, such as themes/rhapsody.toml. A theme generator translates tokens into application-native formats. Generated appearance is separate from human-maintained functionality wherever supported; applying a theme must not change shortcuts or hardware. A future `limux theme apply rhapsody` is a design possibility, not an available command.
 
-Targets include MangoWM borders, Mangobar, Rofi, Foot, Mako and GTK/Thunar. Each target needs a reviewed adapter, native-format validation, backup and rollback before live application. The generator emits Mangobar CSS, Rofi Rasi and a JSON token preview. Guarded component-specific activation mechanisms are available below; no generic live theme application command exists.
+Targets include MangoWM borders, Mangobar, Rofi, Foot, Mako and GTK/Thunar. Each target needs a reviewed adapter, native-format validation, backup and rollback before live application. The generator emits Mangobar CSS, Rofi Rasi, a MangoWM appearance fragment and a JSON token preview. Guarded component-specific activation mechanisms are available below; no generic live theme application command exists.
 
 ## Machine audit and ownership
 
 | Component | Current location | Ownership and status |
 |---|---|---|
-| MangoWM | ~/.config/mango/config.conf | Manually maintained functionality and appearance mixed; includes T2 controls, input and display settings. Do not import wholesale or replace. |
+| MangoWM | ~/.config/mango/config.conf | Sole complete live config; functionality stays manually maintained. The candidate adapter can replace only 16 reviewed appearance values, preserving all other bytes. Do not import wholesale or replace from a generated full config. |
 | Mangobar | ~/.config/mangobar/config.jsonc, style.css | Functional config remains manually maintained. The approved generated CSS can replace only the live style through the guarded activation mechanism; the user has activated it successfully, and its live CSS matches the approved baseline. |
 | Rofi | ~/.config/rofi/config.rasi, charcoal.rasi | Functional config stays manually maintained. Approved generated Rhapsody styling can replace only charcoal.rasi through the guarded activation tool; historical theme and icon are versioned for rollback. |
 | Foot | ~/.config/foot/foot.ini | Manually maintained font and clipboard shortcuts; not imported. |
@@ -90,3 +90,23 @@ Desktop functional validation after activation:
 5. If any check fails, close Rofi and run `rollback`, then repeat the checks with the prior theme.
 
 The Codex environment cannot reach the live compositor, so interactive input/application-launch checks are pending on-device. Native parser/default-config checks and isolated activation/rollback tests pass; these do not claim to simulate keyboard input or application launching.
+
+## MangoWM appearance candidate and reversible preview
+
+The `[mango]` section in [Rhapsody tokens](../themes/rhapsody.toml) drives `scripts/mango.py`. The generator writes an appearance-only `mango.conf` fragment under the chosen build directory; it is not a standalone configuration and is not sourced by the live file. `~/.config/mango/config.conf` remains the sole active complete configuration. Only 16 allowlisted values can be replaced; no functional settings are emitted by the adapter. Blur, shadows, radius-disabling behaviour, opacity, hardware and all functional lines remain intact.
+
+From Foot in the running MangoWM session:
+
+```sh
+cd ~/limux
+python3 scripts/mango-appearance.py check
+python3 scripts/mango-appearance.py preview --seconds 30
+# Explicit recovery if a preview was interrupted:
+python3 scripts/mango-appearance.py rollback
+```
+
+`check` validates both the original and merged full configuration with the installed parser, using temporary files removed immediately afterward. `preview` requires MangoWM 0.18.3, one existing compositor using the expected config, working IPC, and screenshot capture. It changes only owned values in the existing file, reloads that compositor, captures before/after images under `build/mango-candidate1/`, and restores after the timeout or Ctrl+C. It does not launch another compositor, bar or autostart entry. Native config reload reapplies the existing configuration; its unchanged `exec_once` entries are retained. Check window layout, focus, scaling and application controls during the preview as well as appearance.
+
+An independent timed restorer is armed before any live replacement and exits after its bounded recovery window (preview duration plus 8 seconds). A single operation lock, pending visual-value journal and overwritten watchdog log live under `${XDG_STATE_HOME:-~/.local/state}/limux/mango-appearance/`. The pending journal is deleted after successful restoration; there are no accumulated full-config backups. After power loss or unavailable IPC, run `rollback` from Foot. Recovery restores disk values before attempting reload and keeps a failed operation journal for retry. Concurrent edits to nonvisual settings survive recovery; concurrent edits to owned visual values require review rather than being silently overwritten.
+
+The [versioned recovery manifest](../themes/recovery/mango.json) records original values and the exact candidate. `python3 scripts/mango-appearance.py activate` is implemented but intentionally refuses while `approved_sha256` is null. After explicit visual approval, record the approved candidate hash in that manifest; never bypass this gate for an unreviewed change. Activation uses the same validation, atomic replacement, journalling and rollback path. Rollback is independent of future token changes. No general `limux theme apply` command is introduced.
