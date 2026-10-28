@@ -119,6 +119,9 @@ def apply(before, after, seconds=None):
     pending = STATE/'pending.json'
     if pending.exists():
         raise RuntimeError('An unfinished operation exists. Run rollback first.')
+    if merge(after, extract(before)) != before:
+        raise RuntimeError('Refusing changes outside the 16 owned appearance values')
+    native_check(after)
     if read_live() != before:
         raise RuntimeError('Config changed during preflight')
     record = {'id': uuid.uuid4().hex, 'before': extract(before), 'after': extract(after)}
@@ -148,7 +151,7 @@ def main():
         watchdog(sys.argv[2], int(sys.argv[3]))
         return
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['check', 'preview', 'activate', 'rollback'])
+    parser.add_argument('action', choices=['check', 'verify', 'preview', 'activate', 'rollback'])
     parser.add_argument('--seconds', type=int, default=30)
     args = parser.parse_args()
     if not 10 <= args.seconds <= 60:
@@ -192,8 +195,16 @@ def main():
     out = ROOT/'build/mango-candidate1'
     out.mkdir(parents=True, exist_ok=True)
     (out/'appearance.conf').write_text(fragment)
-    if args.action == 'check':
-        print('Native full-config validation passed; only 16 appearance values are owned. No live changes.')
+    if args.action in ('check', 'verify'):
+        active = extract(current) == values(t) and manifest['approved_sha256'] == sha
+        if args.action == 'verify':
+            if not active:
+                raise RuntimeError('Live configuration does not contain the approved appearance')
+            session(manifest['version'])
+        state = 'approved baseline' if active else 'previous appearance'
+        print(f'Native validation passed; live config contains {state}. Only 16 appearance values are owned.')
+        if args.action == 'verify':
+            print('One compositor using this config is reachable. Rendered appearance still requires desktop inspection.')
         return
     session(manifest['version'])
     if args.action == 'preview':

@@ -65,7 +65,7 @@ heading_size = 10
 entry_size = 14
 
 [mango]
-# Candidate 1 only: permanent activation requires separate visual approval.
+# Approved initial MangoWM baseline from fd645da; preserve these exact values.
 border_px = 2
 border_radius = 6
 gap_inner_horizontal = 8

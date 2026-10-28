@@ -1,7 +1,7 @@
 {
   "version": "0.18.3",
   "candidate_sha256": "4cf4b0cdc2551be8f0a21e4baaa1532e7851ce6012093f0a15ca8e524036884e",
-  "approved_sha256": null,
+  "approved_sha256": "4cf4b0cdc2551be8f0a21e4baaa1532e7851ce6012093f0a15ca8e524036884e",
   "rollback": {
     "border_radius": "6",
     "gap_inner_horizontal": "5",
@@ -37,5 +37,6 @@
     "scratchpad_color": "0x2F303BFF",
     "global_color": "0x77768FFF",
     "overlay_color": "0x666573FF"
-  }
+  },
+  "approved_commit": "fd645da"
 }

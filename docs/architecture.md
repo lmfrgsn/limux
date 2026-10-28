@@ -1,6 +1,6 @@
 # Architecture
 
-The [canonical design language](design-language.md), [original visual reference](references/braun-interface-concept.png) and [decision log](design-decisions.md) govern appearance. Mangobar candidate 2 and Rofi at `e1f7538` are approved initial baselines. Approval status is recorded in the decision log. This architecture describes ownership and mechanics; it does not override established visual semantics.
+The [canonical design language](design-language.md), [original visual reference](references/braun-interface-concept.png) and [decision log](design-decisions.md) govern appearance. Mangobar candidate 2, Rofi at `e1f7538`, and MangoWM appearance at `fd645da` are approved initial baselines. Approval status is recorded in the decision log. This architecture describes ownership and mechanics; it does not override established visual semantics.
 
 Each theme has one canonical semantic token file, such as themes/rhapsody.toml. A theme generator translates tokens into application-native formats. Generated appearance is separate from human-maintained functionality wherever supported; applying a theme must not change shortcuts or hardware. A future `limux theme apply rhapsody` is a design possibility, not an available command.
 
@@ -91,7 +91,7 @@ Desktop functional validation after activation:
 
 The Codex environment cannot reach the live compositor, so interactive input/application-launch checks are pending on-device. Native parser/default-config checks and isolated activation/rollback tests pass; these do not claim to simulate keyboard input or application launching.
 
-## MangoWM appearance candidate and reversible preview
+## MangoWM approved appearance and reversible preview
 
 The `[mango]` section in [Rhapsody tokens](../themes/rhapsody.toml) drives `scripts/mango.py`. The generator writes an appearance-only `mango.conf` fragment under the chosen build directory; it is not a standalone configuration and is not sourced by the live file. `~/.config/mango/config.conf` remains the sole active complete configuration. Only 16 allowlisted values can be replaced; no functional settings are emitted by the adapter. Blur, shadows, radius-disabling behaviour, opacity, hardware and all functional lines remain intact.
 
@@ -109,4 +109,16 @@ python3 scripts/mango-appearance.py rollback
 
 An independent timed restorer is armed before any live replacement and exits after its bounded recovery window (preview duration plus 8 seconds). A single operation lock, pending visual-value journal and overwritten watchdog log live under `${XDG_STATE_HOME:-~/.local/state}/limux/mango-appearance/`. The pending journal is deleted after successful restoration; there are no accumulated full-config backups. After power loss or unavailable IPC, run `rollback` from Foot. Recovery restores disk values before attempting reload and keeps a failed operation journal for retry. Concurrent edits to nonvisual settings survive recovery; concurrent edits to owned visual values require review rather than being silently overwritten.
 
-The [versioned recovery manifest](../themes/recovery/mango.json) records original values and the exact candidate. `python3 scripts/mango-appearance.py activate` is implemented but intentionally refuses while `approved_sha256` is null. After explicit visual approval, record the approved candidate hash in that manifest; never bypass this gate for an unreviewed change. Activation uses the same validation, atomic replacement, journalling and rollback path. Rollback is independent of future token changes. No general `limux theme apply` command is introduced.
+The [versioned recovery manifest](../themes/recovery/mango.json) records original values and the approved `fd645da` candidate hash. The user has approved that exact initial baseline; future adapter/token changes cannot silently inherit its approval. Activation uses native validation, atomic replacement, journalling and rollback in the existing single config. The transaction rejects any change outside the 16 owned values. Rollback is independent of future token changes. No general `limux theme apply` command is introduced.
+
+Activate and validate from Foot:
+
+```sh
+cd ~/limux
+python3 scripts/mango-appearance.py activate
+python3 scripts/mango-appearance.py verify
+# Restore the pre-Rhapsody appearance if necessary:
+python3 scripts/mango-appearance.py rollback
+```
+
+`check` validates the configuration offline and reports whether its appearance is the approved baseline or the previous version. `verify` additionally requires the exact approved live values and one reachable compositor using that config; it does not claim pixel-level verification. Activation confirms exact post-reload config bytes and compositor IPC responsiveness before clearing the recovery journal. After success the timed restorer sees no pending operation and cannot undo the committed activation. Inspect the desktop to confirm the 2px borders, 8px inner / 12px outer gaps, 6px corners and approved colours. Shortcuts, layouts, gestures, animation and hardware settings are outside ownership and remain unchanged.

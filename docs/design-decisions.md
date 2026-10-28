@@ -127,3 +127,11 @@ Reported only, unchanged:
 - `bind=SUPER,n,switch_layout`: Command+N switches layouts, conflicting with expected application new-window behaviour.
 - `bind=SUPER,m,quit`: Command+M quits MangoWM rather than minimizing a window.
 - Animation durations: move 500ms, open 400ms, tag switch 350ms, close 800ms, focus 0ms. Closing in particular may feel slow; review timing separately, without changing curves or duration in this visual candidate.
+
+## MangoWM initial baseline approved — fd645da
+
+The user visually reviewed and approved the exact candidate as the initial baseline, authorizing permanent activation without redesign. `approved_sha256` now pins the existing candidate hash (`4cf4b0cdc2551be8f0a21e4baaa1532e7851ce6012093f0a15ca8e524036884e`); all 16 values and rendered output remain identical. The preceding candidate's unapproved status is historical and is superseded by this decision.
+
+The existing activation workflow is enabled, with an additional transaction assertion that reverse-merging the old owned values reconstructs the original complete bytes. This rejects changes to anything outside the 16 appearance settings. A read-only `verify` command checks exact approved on-disk values, native syntax and one reachable compositor using the canonical config. Existing atomic replacement, journal, failure restoration and version-controlled rollback remain in place. Successful activation clears the pending journal, so the timed recovery process leaves the committed baseline alone.
+
+Validation: 33 tests passed, including read-only verification, approved activation, repeat activation, completed-operation watchdog behaviour, rollback, nonvisual-change rejection, failed reload and existing native parser suites. The live activation attempt stopped on `mmsg get version` with `connect: Operation not permitted` before any live write. Live file hashes are unchanged; on-device activation/verification must be run from Foot. Rendered appearance cannot be newly certified from this sandbox, although the user has already approved the visual candidate. No shortcuts, gestures, layouts, animations, hardware settings, autostart entries or design values changed.

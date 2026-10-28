@@ -62,7 +62,8 @@ class MangoTests(unittest.TestCase):
         other['mango']['drop_alpha'] = 256
         with self.assertRaises(ValueError):
             values(other)
-        self.assertIsNone(MANIFEST['approved_sha256'])
+        import hashlib
+        self.assertEqual(MANIFEST['approved_sha256'], hashlib.sha256(render(THEME).encode()).hexdigest())
         self.assertEqual(MANIFEST['candidate_values'], values(THEME))
 
     @unittest.skipUnless(shutil.which('mango'), 'MangoWM not installed')
@@ -74,7 +75,9 @@ class MangoTests(unittest.TestCase):
             control.native_check(fixture()+b'unknown_limux_setting=1\n')
 
     def test_permanent_activation_locked_before_live_access(self):
-        with patch.object(sys, 'argv', ['mango-appearance.py','activate']), patch.object(control,'read_live') as read:
+        unapproved = dict(MANIFEST, approved_sha256=None)
+        with patch.object(control.json, 'loads', return_value=unapproved), \
+             patch.object(sys, 'argv', ['mango-appearance.py','activate']), patch.object(control,'read_live') as read:
             with self.assertRaisesRegex(RuntimeError, 'awaits user visual approval'):
                 control.main()
             read.assert_not_called()
@@ -121,3 +124,50 @@ class MangoTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError,'concurrently'):
                     control.restore({'before':extract(fixture()),'after':values(THEME)})
             self.assertEqual(live.read_bytes(),data)
+
+    def test_approved_activation_survives_watchdog_and_rolls_back(self):
+        with tempfile.TemporaryDirectory() as d:
+            state = Path(d)/'state'; state.mkdir()
+            live = Path(d)/'config.conf'; live.write_bytes(fixture())
+            candidate = merge(fixture(), values(THEME))
+            with patch.object(control, 'STATE', state), patch.object(control, 'LIVE', live), \
+                 patch.object(control, 'reload_config') as reload, patch.object(control, 'native_check'), \
+                 patch.object(control.subprocess, 'Popen'), patch.object(control.time, 'sleep'):
+                record = control.apply(fixture(), candidate)
+                self.assertFalse((state/'pending.json').exists())
+                control.watchdog(record['id'], 0)
+                self.assertEqual(live.read_bytes(), candidate)
+                control.apply(candidate, candidate)
+                self.assertEqual(live.read_bytes(), candidate)
+                with patch.object(sys, 'argv', ['mango-appearance.py', 'rollback']):
+                    control.main()
+                self.assertEqual(live.read_bytes(), fixture())
+                self.assertEqual(reload.call_count, 3)
+
+    def test_apply_rejects_nonvisual_change_before_writing(self):
+        with tempfile.TemporaryDirectory() as d:
+            state = Path(d)/'state'; state.mkdir()
+            live = Path(d)/'config.conf'; live.write_bytes(fixture())
+            candidate = merge(fixture(), values(THEME)).replace(b'shadows=0', b'shadows=1')
+            with patch.object(control, 'STATE', state), patch.object(control, 'LIVE', live):
+                with self.assertRaisesRegex(RuntimeError, 'outside the 16'):
+                    control.apply(fixture(), candidate)
+            self.assertEqual(live.read_bytes(), fixture())
+            self.assertFalse((state/'pending.json').exists())
+
+    @unittest.skipUnless(shutil.which('mango'), 'MangoWM not installed')
+    def test_verify_requires_approved_values_and_reachable_session(self):
+        with tempfile.TemporaryDirectory() as d:
+            live = Path(d)/'config.conf'; live.write_bytes(fixture())
+            with patch.object(control, 'LIVE', live), patch.object(control, 'session') as session, \
+                 patch.object(sys, 'argv', ['mango-appearance.py', 'verify']):
+                with self.assertRaisesRegex(RuntimeError, 'does not contain the approved'):
+                    control.main()
+                session.assert_not_called()
+                live.write_bytes(merge(fixture(), values(THEME)))
+                control.main()
+                session.assert_called_once_with(MANIFEST['version'])
+                session.side_effect = RuntimeError('session unavailable')
+                with self.assertRaisesRegex(RuntimeError, 'session unavailable'):
+                    control.main()
+                self.assertEqual(live.read_bytes(), merge(fixture(), values(THEME)))
