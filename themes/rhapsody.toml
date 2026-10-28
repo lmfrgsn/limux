@@ -50,7 +50,7 @@ hover_radius = 0
 group_gap = 6
 
 [rofi]
-# Second light-system candidate, not approved for permanent activation.
+# Approved initial Rofi baseline at e1f7538; future refinements require review.
 width = 620
 padding = 16
 spacing = 10

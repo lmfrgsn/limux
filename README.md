@@ -8,4 +8,4 @@ Mangobar CSS is generated alongside the token preview; see [architecture](docs/a
 
 The initial Rhapsody Mangobar baseline is approved. From Foot, run `python3 scripts/activate-mangobar.py activate`; use `rollback` to restore the version-controlled pre-Rhapsody style. The tool refuses inaccessible sessions or unexpected process/configuration ownership. See [activation and recovery](docs/architecture.md#approved-mangobar-activation-and-recovery).
 
-Rofi is preview-only: `python3 scripts/preview-rofi.py` opens the generated light launcher with the existing functional configuration. Escape closes it; permanent styling remains unchanged.
+Rofi at `e1f7538` is approved. From Foot, run `python3 scripts/activate-rofi.py activate`; normal Command+Space then uses Rhapsody. Use `python3 scripts/activate-rofi.py rollback` for the previous theme, or `check` for read-only validation. See [Rofi activation and rollback](docs/architecture.md#rofi-activation-and-rollback) for on-device search, navigation, Escape and application-launch checks. `scripts/preview-rofi.py` remains available for future reversible reviews.

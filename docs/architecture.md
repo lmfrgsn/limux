@@ -1,10 +1,10 @@
 # Architecture
 
-The [canonical design language](design-language.md), [original visual reference](references/braun-interface-concept.png) and [decision log](design-decisions.md) govern appearance. Mangobar candidate 2 is approved as the initial baseline; Rofi remains an unapproved preview. Approval status is recorded in the decision log. This architecture describes ownership and mechanics; it does not override established visual semantics.
+The [canonical design language](design-language.md), [original visual reference](references/braun-interface-concept.png) and [decision log](design-decisions.md) govern appearance. Mangobar candidate 2 and Rofi at `e1f7538` are approved initial baselines. Approval status is recorded in the decision log. This architecture describes ownership and mechanics; it does not override established visual semantics.
 
 Each theme has one canonical semantic token file, such as themes/rhapsody.toml. A theme generator translates tokens into application-native formats. Generated appearance is separate from human-maintained functionality wherever supported; applying a theme must not change shortcuts or hardware. A future `limux theme apply rhapsody` is a design possibility, not an available command.
 
-Targets include MangoWM borders, Mangobar, Rofi, Foot, Mako and GTK/Thunar. Each target needs a reviewed adapter, native-format validation, backup and rollback before live application. The generator emits Mangobar CSS, Rofi Rasi and a JSON token preview. A guarded Mangobar-only activation mechanism is available below; no generic live theme application command exists.
+Targets include MangoWM borders, Mangobar, Rofi, Foot, Mako and GTK/Thunar. Each target needs a reviewed adapter, native-format validation, backup and rollback before live application. The generator emits Mangobar CSS, Rofi Rasi and a JSON token preview. Guarded component-specific activation mechanisms are available below; no generic live theme application command exists.
 
 ## Machine audit and ownership
 
@@ -12,13 +12,13 @@ Targets include MangoWM borders, Mangobar, Rofi, Foot, Mako and GTK/Thunar. Each
 |---|---|---|
 | MangoWM | ~/.config/mango/config.conf | Manually maintained functionality and appearance mixed; includes T2 controls, input and display settings. Do not import wholesale or replace. |
 | Mangobar | ~/.config/mangobar/config.jsonc, style.css | Functional config remains manually maintained. The approved generated CSS can replace only the live style through the guarded activation mechanism; the user has activated it successfully, and its live CSS matches the approved baseline. |
-| Rofi | ~/.config/rofi/config.rasi, charcoal.rasi | Existing launcher and previously approved live dark styling; manually maintained, not imported. Preserve it operationally; the reconciled Rhapsody target is light Rofi. |
+| Rofi | ~/.config/rofi/config.rasi, charcoal.rasi | Functional config stays manually maintained. Approved generated Rhapsody styling can replace only charcoal.rasi through the guarded activation tool; historical theme and icon are versioned for rollback. |
 | Foot | ~/.config/foot/foot.ini | Manually maintained font and clipboard shortcuts; not imported. |
 | Mako | ~/.config/mako/config | Manually maintained notifications; not imported. |
 | Thunar | ~/.config/Thunar/accels.scm, uca.xml | Manually maintained shortcuts and custom actions; not imported. |
 | T2 | WirePlumber, PipeWire, systemd and helper scripts | Hardware-specific, outside this repository; preserve and audit separately before any import. |
 
-Only the pre-Rhapsody Mangobar CSS has been imported as a historical recovery artifact; no functional configuration is imported. The user subsequently completed Mangobar activation in the desktop session. Audit and separate sensitive and machine-specific values before importing. No credentials, personal data or private keys belong in Git. Prefer Git history and documented rollback over accumulating backups; identify dependencies and verify a replacement before removing anything. Preserve shared dependencies. A future application process must stage, validate, back up and atomically replace only owned files; rollback must be tested. No remote is configured.
+Pre-Rhapsody Mangobar CSS and the Rofi theme/search icon have been imported as historical recovery artifacts; no functional configuration is imported. The user subsequently completed Mangobar activation in the desktop session. Audit and separate sensitive and machine-specific values before importing. No credentials, personal data or private keys belong in Git. Prefer Git history and documented rollback over accumulating backups; identify dependencies and verify a replacement before removing anything. Preserve shared dependencies. A future application process must stage, validate, back up and atomically replace only owned files; rollback must be tested. No remote is configured.
 
 ## Mangobar preview adapter
 
@@ -52,12 +52,41 @@ python3 scripts/activate-mangobar.py rollback
 The [recovery CSS](../themes/recovery/mangobar-before-rhapsody.css) is a historical version-controlled snapshot, guarded by the [manifest](../themes/recovery/mangobar.json). The manifest also pins the approved generated CSS: later token/adapter changes cannot silently become an authorized activation. Update that pin only after a new visual approval. Functional config and hardware are never copied into the repository or rewritten by this mechanism. No additional startup entry or service is installed. Failure during restart/verification restores the prior CSS and attempts a managed restart. Abrupt power loss/SIGKILL cannot run Python recovery, but atomic replacement prevents a partial CSS file; explicit rollback remains available from a healthy managed session. If the bar itself is absent, use the existing `~/.local/bin/limux-bar start` first, inspect its status/log, then retry rollback.
 
 
-## Rofi candidate 2 — preview only
+## Rofi approved baseline — adapter and preview
 
-`python3 scripts/theme.py render themes/rhapsody.toml --output build/rhapsody` now also generates `rofi.rasi`. The adapter uses shared palette and semantics, with component dimensions in `[rofi]`. It emits visual theme properties only; existing `~/.config/rofi/config.rasi` retains fuzzy matching, application names, icons, input bindings and launch behaviour. The current dark theme stays active. Foot and other applications are untouched.
+`python3 scripts/theme.py render themes/rhapsody.toml --output build/rhapsody` now also generates `rofi.rasi`. The adapter uses shared palette and semantics, with component dimensions in `[rofi]`. It emits visual theme properties only; existing `~/.config/rofi/config.rasi` retains fuzzy matching, application names, icons, input bindings and launch behaviour. The current dark theme stays active until the activation command below succeeds. Foot and other applications are untouched.
 
 Run `python3 scripts/preview-rofi.py` from Foot to validate the theme with the installed Rofi parser, capture before/after screenshots and open a temporary launcher with a command-line theme override. Escape closes it; ordinary app selection launches the chosen app. The preview ends after 45 seconds and terminates only its own process. It refuses an already-open Rofi. Artifacts live under ignored `build/rofi-candidate2/`. No live file or shortcut is rewritten, so closing the preview is the rollback.
 
 Native Rasi supports opposing border widths and nested boxes: the darker search floor gets metal top/left edges and porcelain bottom/right edges, giving a shallow recessed treatment. Selection has a narrow yellow edge and neutral row fill rather than a large decorative yellow panel. Exact depth, font scale and selection affordance still need on-device visual review. Rofi's functional configuration dump was compared with and without the candidate: only the theme override differed. Native parser tests pass; desktop screenshot capture is unavailable in this execution environment.
 
-Candidate 2 emits one property per line: the installed Rofi 2.0.0 lexer consumes adjacent quoted values on the same line as one string. Validation now checks exact resolved header/placeholder/font values and expansion properties. The header, search wrapper and inputbar are explicitly non-expanding; only the entry expands horizontally. The list can shrink to the available/filtered results (up to seven visible rows). Width is 620px, section spacing 10px, search padding 10px, row padding 8px and row gap 2px. Branding has been removed; “APPLICATIONS” identifies the current launcher purpose. These are preview decisions, not permanent activation.
+Candidate 2 emits one property per line: the installed Rofi 2.0.0 lexer consumes adjacent quoted values on the same line as one string. Validation now checks exact resolved header/placeholder/font values and expansion properties. The header, search wrapper and inputbar are explicitly non-expanding; only the entry expands horizontally. The list can shrink to the available/filtered results (up to seven visible rows). Width is 620px, section spacing 10px, search padding 10px, row padding 8px and row gap 2px. Branding has been removed; “APPLICATIONS” identifies the current launcher purpose. These values are now approved as the initial baseline, with activation authorized separately below.
+
+
+## Rofi activation and rollback
+
+The user approved commit `e1f7538` and authorized its permanent activation. No design values change in this workflow. From Foot in the desktop session:
+
+```sh
+cd ~/limux
+python3 scripts/activate-rofi.py check
+python3 scripts/activate-rofi.py activate
+# Return to the previous working dark launcher:
+python3 scripts/activate-rofi.py rollback
+```
+
+The tool reuses the token-driven adapter and pins its exact generated output in [rofi.json](../themes/recovery/rofi.json). It stages and parses the chosen theme, checks default config resolution and the existing Command+Space binding, compares complete functional configuration dumps, and requires a reachable Wayland session with no Rofi open before writing. Only `~/.config/rofi/charcoal.rasi` is replaced, atomically. Its historical filename is retained so `config.rasi` and all normal `rofi -show drun` shortcuts remain byte-identical. No wrapper, second active configuration, autostart entry or permanent backup is introduced. Temporary staging files are automatically removed; the operation lock lives in the runtime directory.
+
+After replacement the tool validates the normal launcher with no theme override, verifies the selected theme and all protected hashes, and restores the immediately previous bytes if validation fails. Repeated activation/rollback is idempotent. A process/power failure cannot leave a partially written theme because replacement is atomic; explicit rollback remains available. Rofi reads the new theme on its next normal invocation, so no background service restart is needed.
+
+The [original theme](../themes/recovery/rofi-before-rhapsody.rasi) and [original search icon](../themes/recovery/rofi-search.svg) are version-controlled historical recovery evidence, not additional live configs. The existing live icon is retained and checked for rollback integrity. The tool refuses unknown/modified live themes, functional configs or icons rather than overwriting them. Rollback does not depend on future adapter/token output matching the approved baseline.
+
+Desktop functional validation after activation:
+
+1. Press Command+Space. Confirm the approved Rhapsody launcher opens normally.
+2. Type an installed application's name and confirm filtering; clear the search and use Up/Down (or Control+p/n) to move selection.
+3. Press Escape and confirm dismissal without launching anything.
+4. Reopen with Command+Space, search for a harmless application such as Thunar, select it and press Enter. Confirm it opens and Rofi closes.
+5. If any check fails, close Rofi and run `rollback`, then repeat the checks with the prior theme.
+
+The Codex environment cannot reach the live compositor, so interactive input/application-launch checks are pending on-device. Native parser/default-config checks and isolated activation/rollback tests pass; these do not claim to simulate keyboard input or application launching.
