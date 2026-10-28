@@ -88,8 +88,8 @@ def startup_entries(home):
         for path in root.rglob('*'):
             if not path.is_file():
                 continue
-            # Ignore disabled service definitions; enabled user-unit symlinks
-            # are inspected as well. Fail conservatively on any extra launcher.
+            # Inspect definitions and enabled-unit symlinks. Fail conservatively
+            # on extra launchers, even when a service might be disabled.
             for line in path.read_text(errors='replace').splitlines():
                 line = line.strip()
                 if line.startswith(('exec=', 'exec_once=', 'Exec=', 'ExecStart=')) and any(

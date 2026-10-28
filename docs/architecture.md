@@ -1,24 +1,24 @@
 # Architecture
 
-The [canonical design language](design-language.md), [original visual reference](references/braun-interface-concept.png) and [decision log](design-decisions.md) govern appearance. Current tokens and the Mangobar preview are implementation experiments, not proof of final design approval. This architecture describes ownership and mechanics; it does not override established visual semantics.
+The [canonical design language](design-language.md), [original visual reference](references/braun-interface-concept.png) and [decision log](design-decisions.md) govern appearance. Mangobar candidate 2 is approved as the initial baseline; Rofi remains an unapproved preview. Approval status is recorded in the decision log. This architecture describes ownership and mechanics; it does not override established visual semantics.
 
 Each theme has one canonical semantic token file, such as themes/rhapsody.toml. A theme generator translates tokens into application-native formats. Generated appearance is separate from human-maintained functionality wherever supported; applying a theme must not change shortcuts or hardware. A future `limux theme apply rhapsody` is a design possibility, not an available command.
 
-Targets include MangoWM borders, Mangobar, Rofi, Foot, Mako and GTK/Thunar. Each target needs a reviewed adapter, native-format validation, backup and rollback before live application. The Mangobar adapter generates CSS and a JSON token preview. No live apply exists.
+Targets include MangoWM borders, Mangobar, Rofi, Foot, Mako and GTK/Thunar. Each target needs a reviewed adapter, native-format validation, backup and rollback before live application. The generator emits Mangobar CSS, Rofi Rasi and a JSON token preview. A guarded Mangobar-only activation mechanism is available below; no generic live theme application command exists.
 
 ## Machine audit and ownership
 
 | Component | Current location | Ownership and status |
 |---|---|---|
 | MangoWM | ~/.config/mango/config.conf | Manually maintained functionality and appearance mixed; includes T2 controls, input and display settings. Do not import wholesale or replace. |
-| Mangobar | ~/.config/mangobar/config.jsonc, style.css | Functional config and live style remain manually maintained; a theme-driven CSS preview is generated separately. |
+| Mangobar | ~/.config/mangobar/config.jsonc, style.css | Functional config remains manually maintained. The approved generated CSS can replace only the live style through the guarded activation mechanism; this session has not activated it. |
 | Rofi | ~/.config/rofi/config.rasi, charcoal.rasi | Existing launcher and previously approved live dark styling; manually maintained, not imported. Preserve it operationally; the reconciled Rhapsody target is light Rofi. |
 | Foot | ~/.config/foot/foot.ini | Manually maintained font and clipboard shortcuts; not imported. |
 | Mako | ~/.config/mako/config | Manually maintained notifications; not imported. |
 | Thunar | ~/.config/Thunar/accels.scm, uca.xml | Manually maintained shortcuts and custom actions; not imported. |
 | T2 | WirePlumber, PipeWire, systemd and helper scripts | Hardware-specific, outside this repository; preserve and audit separately before any import. |
 
-No working live configuration is imported or applied yet. Audit and separate sensitive and machine-specific values before importing. No credentials, personal data or private keys belong in Git. Prefer Git history and documented rollback over accumulating backups; identify dependencies and verify a replacement before removing anything. Preserve shared dependencies. A future application process must stage, validate, back up and atomically replace only owned files; rollback must be tested. No remote is configured.
+Only the pre-Rhapsody Mangobar CSS has been imported as a historical recovery artifact; no functional configuration is imported. Live activation remains pending a reachable desktop session. Audit and separate sensitive and machine-specific values before importing. No credentials, personal data or private keys belong in Git. Prefer Git history and documented rollback over accumulating backups; identify dependencies and verify a replacement before removing anything. Preserve shared dependencies. A future application process must stage, validate, back up and atomically replace only owned files; rollback must be tested. No remote is configured.
 
 ## Mangobar preview adapter
 
@@ -50,3 +50,12 @@ python3 scripts/activate-mangobar.py rollback
 ```
 
 The [recovery CSS](../themes/recovery/mangobar-before-rhapsody.css) is a historical version-controlled snapshot, guarded by the [manifest](../themes/recovery/mangobar.json). The manifest also pins the approved generated CSS: later token/adapter changes cannot silently become an authorized activation. Update that pin only after a new visual approval. Functional config and hardware are never copied into the repository or rewritten by this mechanism. No additional startup entry or service is installed. Failure during restart/verification restores the prior CSS and attempts a managed restart. Abrupt power loss/SIGKILL cannot run Python recovery, but atomic replacement prevents a partial CSS file; explicit rollback remains available from a healthy managed session. If the bar itself is absent, use the existing `~/.local/bin/limux-bar start` first, inspect its status/log, then retry rollback.
+
+
+## Rofi candidate 1 — preview only
+
+`python3 scripts/theme.py render themes/rhapsody.toml --output build/rhapsody` now also generates `rofi.rasi`. The adapter uses shared palette and semantics, with component dimensions in `[rofi]`. It emits visual theme properties only; existing `~/.config/rofi/config.rasi` retains fuzzy matching, application names, icons, input bindings and launch behaviour. The current dark theme stays active. Foot and other applications are untouched.
+
+Run `python3 scripts/preview-rofi.py` from Foot to validate the theme with the installed Rofi parser, capture before/after screenshots and open a temporary launcher with a command-line theme override. Escape closes it; ordinary app selection launches the chosen app. The preview ends after 45 seconds and terminates only its own process. It refuses an already-open Rofi. Artifacts live under ignored `build/rofi-candidate1/`. No live file or shortcut is rewritten, so closing the preview is the rollback.
+
+Native Rasi supports opposing border widths and nested boxes: the darker search floor gets metal top/left edges and porcelain bottom/right edges, giving a shallow recessed treatment. Selection has a narrow yellow edge and neutral row fill rather than a large decorative yellow panel. Exact depth, font scale and selection affordance still need on-device visual review. Rofi's functional configuration dump was compared with and without the candidate: only the theme override differed. Native parser tests pass; desktop screenshot capture is unavailable in this execution environment.

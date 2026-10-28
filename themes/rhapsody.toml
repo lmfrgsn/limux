@@ -48,3 +48,18 @@ workspace_min_width = 26
 control_radius = 2
 hover_radius = 0
 group_gap = 6
+
+[rofi]
+# First light-system candidate, not approved for permanent activation.
+width = 660
+padding = 16
+spacing = 12
+radius = 3
+search_padding = 12
+row_padding = 10
+row_spacing = 4
+icon_size = 22
+selection_edge = 3
+font_size = 12
+heading_size = 10
+entry_size = 16
