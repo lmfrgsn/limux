@@ -1,0 +1,19 @@
+name = "Rhapsody"
+
+[colors]
+canvas = "#DADAE3"
+surface = "#F8F8FA"
+chrome = "#EAE9F0"
+accent = "#77768F"
+text = "#343442"
+dark_terminal = "#2F303B"
+
+[typography]
+sans = "IBM Plex Sans"
+mono = "IBM Plex Mono"
+size = 13
+
+[geometry]
+radius = 3
+spacing = 8
+border = 1

@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+"""Validate a Limux theme or render an isolated token preview."""
+import argparse
+import json
+from pathlib import Path
+import re
+import tomllib
+
+parser = argparse.ArgumentParser()
+parser.add_argument('action', choices=['validate', 'render'])
+parser.add_argument('theme', type=Path)
+parser.add_argument('--output', type=Path)
+args = parser.parse_args()
+try:
+    theme = tomllib.loads(args.theme.read_text())
+    assert isinstance(theme['name'], str) and theme['name']
+    for name in ('canvas', 'surface', 'chrome', 'accent', 'text', 'dark_terminal'):
+        assert re.fullmatch(r'#[0-9a-fA-F]{6}', theme['colors'][name])
+    for name in ('sans', 'mono'):
+        assert isinstance(theme['typography'][name], str) and theme['typography'][name]
+    assert isinstance(theme['typography']['size'], int) and theme['typography']['size'] > 0
+    for name in ('radius', 'spacing', 'border'):
+        assert isinstance(theme['geometry'][name], int) and theme['geometry'][name] >= 0
+    if args.action == 'render':
+        if args.output is None:
+            parser.error('render requires --output')
+        args.output.mkdir(parents=True, exist_ok=True)
+        (args.output / 'tokens.json').write_text(json.dumps(theme, indent=2) + '\n')
+    print(f"Validated {theme['name']}" + ('; preview written' if args.action == 'render' else ''))
+except (OSError, KeyError, ValueError, TypeError, AssertionError) as e:
+    parser.exit(1, f'Invalid theme: {e}\n')
