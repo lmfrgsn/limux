@@ -87,7 +87,7 @@ global_color = "accent"
 overlay_color = "text_secondary"
 
 [foot]
-# First dark developer candidate: NOT approved or activated.
+# Palette approved as initial Foot baseline at 5cf323e; activation is separate.
 # Retain the installed live font and comfortable point size; Plex remains open.
 font = "DejaVu Sans Mono"
 font_size = 16

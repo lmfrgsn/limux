@@ -13,7 +13,7 @@ Targets include MangoWM borders, Mangobar, Rofi, Foot, Mako and GTK/Thunar. Each
 | MangoWM | ~/.config/mango/config.conf | Sole complete live config; functionality stays manually maintained. The candidate adapter can replace only 16 reviewed appearance values, preserving all other bytes. Do not import wholesale or replace from a generated full config. |
 | Mangobar | ~/.config/mangobar/config.jsonc, style.css | Functional config remains manually maintained. The approved generated CSS can replace only the live style through the guarded activation mechanism; the user has activated it successfully, and its live CSS matches the approved baseline. |
 | Rofi | ~/.config/rofi/config.rasi, charcoal.rasi | Functional config stays manually maintained. Approved generated Rhapsody styling can replace only charcoal.rasi through the guarded activation tool; historical theme and icon are versioned for rollback. |
-| Foot | ~/.config/foot/foot.ini | Sole live behaviour config, unchanged. Candidate preview layers generated visual overrides onto this file in a separate process. |
+| Foot | ~/.config/foot/foot.ini | Sole live behaviour config, unchanged. Preview layers visual overrides in a separate process; guarded activation replaces only the font line with a generated appearance include. |
 | Mako | ~/.config/mako/config | Manually maintained notifications; not imported. |
 | Thunar | ~/.config/Thunar/accels.scm, uca.xml | Manually maintained shortcuts and custom actions; not imported. |
 | T2 | WirePlumber, PipeWire, systemd and helper scripts | Hardware-specific, outside this repository; preserve and audit separately before any import. |
@@ -124,7 +124,7 @@ python3 scripts/mango-appearance.py rollback
 `check` validates the configuration offline and reports whether its appearance is the approved baseline or the previous version. `verify` additionally requires the exact approved live values and one reachable compositor using that config; it does not claim pixel-level verification. Activation confirms exact post-reload config bytes and compositor IPC responsiveness before clearing the recovery journal. After success the timed restorer sees no pending operation and cannot undo the committed activation. Inspect the desktop to confirm the 2px borders, 8px inner / 12px outer gaps, 6px corners and approved colours. Shortcuts, layouts, gestures, animation and hardware settings are outside ownership and remain unchanged.
 
 
-## Foot candidate — separate-window preview only
+## Foot preview — specimen or normal shell
 
 The `[foot]` tokens generate a native Foot 1.28 appearance fragment through
 `scripts/foot.py`. `[foot.colors]` contains only additional muted ANSI hue roles;
@@ -163,7 +163,7 @@ real cursor; drag to test actual selection. It never executes entered commands.
 Closing this separate window is the entire rollback; no file restoration is
 needed. Ctrl+C in the invoking terminal cleans up only its preview child.
 Generated artifacts and optional screenshot are under `build/foot-candidate1/`.
-No permanent activation command is provided before visual approval.
+The palette is now approved at `5cf323e`; the guarded activation workflow below is separate from preview.
 
 On-device review:
 
@@ -195,3 +195,75 @@ and is not legible body text on graphite. Other foreground ANSI entries are
 checked at ≥4.5:1 on the default background; arbitrary ANSI background/foreground
 combinations are not guaranteed. Selection surface contrast is 1.83:1 against the
 terminal, with 6.73:1 text contrast; review its visibility on-device.
+
+
+## Foot approved baseline — activation and recovery
+
+The approved palette and generated output from `5cf323e` are pinned in
+[foot.json](../themes/recovery/foot.json). No colour, font size, padding, cursor or
+selection value changes in this workflow. DejaVu Sans Mono 16pt remains the local
+Foot baseline while the final font choice is open. IBM Plex Mono is still absent;
+Fontconfig resolves it to DejaVu. To compare later **if Plex is installed**, use
+`python3 scripts/preview-foot.py --shell --font "IBM Plex Mono"`. This is a
+preview-only 16pt comparison, rejects fallback and does not change canonical
+font tokens. Equal point sizes are a starting comparison, not proof of equal
+perceived x-height. No font is installed by these tools.
+
+Before activation, open a real shell:
+
+```sh
+cd ~/limux
+python3 scripts/preview-foot.py --shell
+```
+
+In that separate window, use `pwd` and `git status --short` to inspect normal
+output. Run `seq 1 200` and scroll back with the existing wheel/keyboard controls;
+drag-select text and check Command+C/V and Ctrl+Shift+C/V. Run `sleep 30` and
+interrupt it with Ctrl+C. Run `python3 scripts/preview-foot.py --sample` inside
+this shell for ANSI/selection samples, then `exit` to return to the shell. Open
+`codex` normally and inspect its actual output and navigation without requesting
+project changes. Applications may supply truecolour or change the cursor, so
+palette contrast tests alone cannot certify every Codex view. No Codex settings
+are changed. Close the preview when finished.
+
+After these desktop checks pass:
+
+```sh
+cd ~/limux
+python3 scripts/activate-foot.py check
+python3 scripts/activate-foot.py activate
+python3 scripts/activate-foot.py verify
+# Open a new terminal through the existing shortcut, or run:
+foot
+# Restore previous styling for subsequently opened windows:
+python3 scripts/activate-foot.py rollback
+```
+
+Activation generates `~/.config/foot/rhapsody.ini` and replaces the original
+`font=DEjaVu Sans Mono:size=16` line in the sole functional `foot.ini` with a native
+absolute `include=` path. `XDG_CONFIG_HOME` is respected. All remaining bytes,
+including Command+C/V bindings, stay identical. Foot's include returns parsing
+to the main section; the original following sections remain intact. The generated
+file is appearance-only and cannot serve as a competing functional configuration.
+The existing MangoWM shortcut launches `foot` directly and needs no changes.
+Existing terminals and Foot servers are not restarted; any server already running
+retains its old settings until separately restarted after its sessions finish.
+
+The tool checks the approved output hash, known config state, installed Foot
+1.28.0, native syntax and font resolution. Mutation requires reachable Wayland
+and an exclusive runtime lock. Unknown edits, file ownership or symlinks are
+refused for review. The original font line and original config hash are versioned;
+functional config is not imported into Git. Both old and included configurations
+are parsed before writing. The generated dependency is installed atomically
+before switching the include; rollback restores the original line before removing
+the generated file. Files and directories are synced. Post-write validation
+failure restores the prior bytes. Repeated operations are idempotent; recognized
+intermediate states after power loss/SIGKILL can be repaired by rerunning activate
+or rollback. There are no persistent backups or alternate autostarts. Temporary
+staging files are removed automatically. Rollback ignores current token/adapter
+drift, but refuses unknown local edits rather than overwriting them.
+
+`verify` checks exact approved on-disk contents and native syntax; it does not
+claim to inspect pixels or change existing windows. In the Codex sandbox the
+real-shell launch and activation were blocked by Wayland access, before live
+writes. Desktop shell/Codex/clipboard/scrollback validation remains pending.

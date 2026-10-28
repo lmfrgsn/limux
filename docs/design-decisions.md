@@ -195,4 +195,28 @@ Rofi configuration hashes remain unchanged. Actual launch/capture was attempted
 but Foot could not connect to Wayland in this sandbox; **no rendered screenshot
 or interactive clipboard verification is claimed**. Native visual evaluation,
 font comfort and selection/cursor behaviour remain pending user review using the
-[preview workflow](architecture.md#foot-candidate--separate-window-preview-only).
+[preview workflow](architecture.md#foot-preview--specimen-or-normal-shell).
+
+
+## Foot palette approved — 5cf323e; guarded activation prepared
+
+The user visually approved the graphite ground, colour direction, yellow cursor,
+muted functional colours and relationship to the light desktop as the initial
+baseline. All generated appearance bytes remain identical to `5cf323e`; its hash
+is pinned for activation. DejaVu Sans Mono 16pt is retained, not finalized as a
+system-wide font decision. IBM Plex Mono is not installed, so no rendered Plex
+comparison is claimed. A preview-only family option now supports comparison at
+the same readable point size when available, explicitly rejecting fallback.
+
+The existing `--shell` preview launches the normal configured interactive shell
+and prompt. Activation now uses a generated native include while preserving every
+other live config byte. Rollback restores the original font line and removes the
+include file. No shortcuts, other applications, Codex configuration, hardware,
+shell configuration or startup entries are edited. Existing terminals are not
+restarted. Native syntax and isolated transaction tests cover activation,
+idempotence, exact rollback, verification failure, interrupted intermediate
+states, approval drift and preservation of functional settings. Actual shell
+preview and live activation attempts failed at Wayland access with no live writes;
+interactive shell/Codex readability and clipboard/scrollback checks remain for the
+desktop session before activation. The [workflow](architecture.md#foot-approved-baseline--activation-and-recovery)
+contains the exact commands and limitations.
