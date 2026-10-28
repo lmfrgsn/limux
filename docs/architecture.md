@@ -34,3 +34,19 @@ Run `python scripts/theme.py render themes/rhapsody.toml --output build/rhapsody
 For candidate 2, run `python3 scripts/preview-mangobar.py` from Foot in the active desktop session. It renders into `build/rhapsody-candidate2/`, captures `before.png`, launches a temporary second bar, captures `candidate.png`, then closes only that process after 20 seconds (or Ctrl+C). Capture failure exits before launching. The second bar can affect window area or tray ownership; this is not permanent activation. Earlier images in `build/rhapsody/` are historical, not candidate-2 evidence.
 
 `python3 scripts/proof-mangobar.py` generates an offline schematic `build/rhapsody-candidate2/proof.svg` with fictional labels; it is not a native screenshot. For native parser integration tests, set `MANGOBAR_SOURCE` to a local Mangobar source checkout and run `python3 -m unittest discover -s tests -v`. The test compiles the source parser in a temporary directory; no code is downloaded or installed.
+
+## Approved Mangobar activation and recovery
+
+The user has approved candidate 2 as the initial baseline. `python3 scripts/activate-mangobar.py activate` performs session, startup, process ownership, launcher identity and known-style preflight checks, then atomically replaces only `~/.config/mangobar/style.css` and refreshes through the existing `~/.local/bin/limux-bar`. It requires an existing single managed bar, verifies exactly one afterward and leaves the existing single `exec_once` entry untouched. It refuses unknown styles or modified launchers rather than overwriting them.
+
+Run from Foot in the desktop session:
+
+```sh
+cd ~/limux
+python3 scripts/activate-mangobar.py check
+python3 scripts/activate-mangobar.py activate
+# Restore the pre-Rhapsody styling if needed:
+python3 scripts/activate-mangobar.py rollback
+```
+
+The [recovery CSS](../themes/recovery/mangobar-before-rhapsody.css) is a historical version-controlled snapshot, guarded by the [manifest](../themes/recovery/mangobar.json). The manifest also pins the approved generated CSS: later token/adapter changes cannot silently become an authorized activation. Update that pin only after a new visual approval. Functional config and hardware are never copied into the repository or rewritten by this mechanism. No additional startup entry or service is installed. Failure during restart/verification restores the prior CSS and attempts a managed restart. Abrupt power loss/SIGKILL cannot run Python recovery, but atomic replacement prevents a partial CSS file; explicit rollback remains available from a healthy managed session. If the bar itself is absent, use the existing `~/.local/bin/limux-bar start` first, inspect its status/log, then retry rollback.

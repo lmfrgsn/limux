@@ -1,0 +1,6 @@
+{
+  "approved_commit": "c618e6a",
+  "baseline_sha256": "f82d060029411d566a2789351e4f3faca0def1ae29f43110d819cc5d7e015dc5",
+  "rollback_sha256": "c1b8ce52cedaba83d94a4f78122937db00e2974d3f20fe81ae20d843fc985c1a",
+  "launcher_sha256": "42343522012b965af0c8518e477ed4ac66c32dff33eac810c7978f31eef5ab6b"
+}

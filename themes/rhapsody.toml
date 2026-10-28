@@ -8,7 +8,7 @@ chrome = "#EAE9F0"
 accent = "#77768F"
 text = "#343442"
 dark_terminal = "#2F303B"
-# Candidate 2 additions, pending visual approval.
+# Approved initial Mangobar baseline; not necessarily the final design.
 metal = "#A8A8B4"
 text_secondary = "#666573"
 text_quiet = "#686773"
@@ -29,7 +29,7 @@ urgent = "signal_red"
 on_urgent = "surface"
 
 [typography]
-# Preview choice only; IBM Plex versus Inter remains unresolved.
+# Inter approved for initial Mangobar baseline; system-wide typography remains open.
 sans = "Inter"
 mono = "IBM Plex Mono"
 size = 13
@@ -41,7 +41,7 @@ spacing = 8
 border = 1
 
 [mangobar]
-# Candidate geometry; existing live bar height and buffer scale are untouched.
+# Initial Mangobar baseline geometry; live bar height and buffer scale untouched.
 workspace_padding = 7
 workspace_gap = 1
 workspace_min_width = 26

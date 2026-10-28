@@ -1,0 +1,51 @@
+/* Limux / Rhapsody — initial bar-only treatment, using Mangobar's CSS subset. */
+@define-color rhapsody-surface #dfe2eb;
+@define-color rhapsody-ink #282b35;
+@define-color rhapsody-muted #747a89;
+@define-color rhapsody-lavender #bec2db;
+@define-color rhapsody-hover #cdd2e2;
+
+* {
+    font-family: "Inter";
+    font-size: 13px;
+    font-weight: 500;
+    color: @rhapsody-ink;
+    background: #dfe2eb;
+    padding: 0px 8px;
+    margin: 0px;
+    border-radius: 0px;
+}
+
+#bar {
+    background: @rhapsody-surface;
+    padding: 0px;
+    margin: 0px;
+}
+#bar.sel { background: @rhapsody-surface; }
+
+#tags { padding: 0px 9px; margin: 0px 1px; min-width: 25px; }
+#tags.empty { color: @rhapsody-muted; background: #dfe2eb; }
+#tags.occupied { color: #333745; background: #d4d8e5; }
+#tags.active { color: #252836; background: @rhapsody-lavender; }
+#tags.urgent { color: #7f333b; background: #e4c9d0; }
+#tags:hover { color: #252836; background: @rhapsody-hover; }
+
+#layout { color: #44495b; background: #d1d5e3; padding: 0px 9px; margin: 0px 5px; }
+#title { color: #555b6a; padding: 0px 10px; }
+#clock { color: #242834; padding: 0px 10px; }
+#network { color: #404655; padding: 0px 9px; }
+#network.disconnected { color: #8b5963; }
+#battery { color: #404655; padding: 0px 9px; }
+#volume { color: #404655; padding: 0px 9px; }
+#tray { padding: 0px 9px; }
+
+menu {
+    background-color: #e7e9f0;
+    border-color: #9da3b7;
+    border-radius: 3px;
+    font-size: 13px;
+}
+menuitem { color: #282b35; }
+menuitem:hover { color: #252836; background-color: #c5cbe0; }
+
+#custom-wifi { color: #404655; background: #dfe2eb; padding: 0px 9px; }
