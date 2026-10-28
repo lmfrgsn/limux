@@ -1,9 +1,11 @@
 import importlib.util
 from pathlib import Path
+import sys
 import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT/'scripts'))
 spec = importlib.util.spec_from_file_location('activation', ROOT/'scripts/activate-mangobar.py')
 activation = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(activation)
