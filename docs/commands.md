@@ -47,3 +47,22 @@ The command creates the directory with mode 700 and file with mode 600, and refu
 The single-line command layout and 700px picker width are unchanged. Nonselectable section rows carry Rofi's `active` row flag solely as a style hook. A preview-only theme override gives those rows Inter 11 from the canonical Rhapsody font family, the `text_secondary` neutral colour, 2px top/1px bottom padding and 8px margin above. Rofi has no reliable letter-spacing control in this setup, so no tracking is added. The ordinary command row, yellow selection edge, pale-grey selected fill and recessed search field use the existing approved theme rules. This candidate remains a reversible preview; Command+K is unassigned.
 
 From Foot, run `python3 ~/limux/scripts/limux-commands.py preview`. Check that headings feel quieter, arrow keys skip them, and the long shortcut labels remain complete. Escape dismisses the picker. Interactive rendering remains an on-device check because the development sandbox cannot connect to MangoWM's Wayland socket.
+
+## Approved design and guarded activation
+
+The user approved the fifth preview, including its exact visual design, and authorized Command+K despite Firefox's accelerator conflict. The picker theme override remains unchanged. The existing Command+Space launcher stays in the same MangoWM config. `scripts/activate-commands.py` owns only one exact `SUPER,k` binding; it checks for conflicts, validates the full candidate config with MangoWM's native parser, requires working compositor IPC before writing, reloads after an atomic replacement, and restores the previous bytes if reload or verification fails. Rollback removes that exact binding, preserving all unrelated settings.
+
+Run from Foot in the live MangoWM desktop session:
+
+```sh
+cd ~/limux
+python3 scripts/activate-commands.py check
+python3 scripts/activate-commands.py activate
+# Verify Command+K opens Commands and Command+Space still opens applications.
+# If needed, undo just the Commands binding:
+python3 scripts/activate-commands.py rollback
+```
+
+The Codex sandbox cannot reach the compositor IPC socket, so it cannot complete the live activation. Its attempted activation exited before writing. The full live config and candidate were parsed successfully; isolated activation/rollback tests passed. Visual and keypress checks must be done in Foot after activation.
+
+Personal snippets and quicklinks share `~/.config/limux/commands.toml`, outside Git. `python3 scripts/limux-commands.py init-snippets` creates it with mode 600 and dummy examples, and refuses to overwrite an existing file. Edit `[snippets]` for copyable text and `[quicklinks]` for named HTTPS URLs or absolute paths. The picker rereads it each launch. Keep personal values only in that file.

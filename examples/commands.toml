@@ -6,3 +6,8 @@
 ";phone" = "+1 555 0100"
 ";signature" = "Example Person\nExample City"
 ";lorem" = "Lorem ipsum dolor sit amet."
+
+# Optional personal destinations. Use HTTPS URLs or absolute local paths.
+[quicklinks]
+"Example website" = "https://example.org"
+"Example folder" = "/home/yourname/Documents"

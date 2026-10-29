@@ -128,3 +128,17 @@ class HeadingTypographyTest(unittest.TestCase):
         self.assertIn('padding: 2px 8px 1px 8px;', theme)
         self.assertNotIn('element selected', theme)
         self.assertNotIn('box-search', theme)
+
+class PersonalQuicklinksTest(unittest.TestCase):
+    def test_private_links_and_empty_groups(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'commands.toml'
+            path.write_text('[snippets]\n";email"="person@example.invalid"\n[quicklinks]\n"Project"="/tmp"\n')
+            path.chmod(0o600)
+            self.assertEqual(commands.quicklinks(path)[0][3], ('open', '/tmp'))
+            self.assertEqual(commands.snippets(path)[0][1], ';email')
+            path.write_text('[quicklinks]\n"Bad"="javascript:alert(1)"\n')
+            with self.assertRaises(ValueError):
+                commands.quicklinks(path)
+        groups = commands.registry()
+        self.assertTrue(all(items for _, items in groups))

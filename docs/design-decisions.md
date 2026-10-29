@@ -242,3 +242,7 @@ The third preview's tab-stop and padded monospace column visibly truncated short
 ## Limux Commands fifth preview — utility heading typography, not activated
 
 The user approved the single-line command rows and asked only for quieter section labels. This candidate marks nonselectable heading rows with Rofi's `active` state and applies a preview-only Inter 11 / Rhapsody `text_secondary` treatment with reduced heading padding and more space above than below. No selection, command text, search, shortcut, canonical token, launcher or desktop setting changes. Letter spacing is omitted because a dependable native Rofi control was not established. Command+K stays unassigned pending visual review.
+
+## Limux Commands approved for activation
+
+The user approved the fifth preview's exact appearance and accepted the global Command+K conflict with Firefox's Super accelerator. No appearance tokens or selector values change. A guarded binding controller adds/removes only `bind=SUPER,k` in the sole live MangoWM config, validating through MangoWM and requiring IPC before mutation. User snippets and quicklinks remain in a private config outside Git. Live activation stopped at inaccessible compositor IPC in the sandbox before any config write; the documented Foot workflow completes it.

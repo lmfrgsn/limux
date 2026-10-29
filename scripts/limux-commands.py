@@ -121,16 +121,35 @@ def foot_shortcuts(path=FOOT):
     return result
 
 
-def snippets(path=SNIPPETS):
+def personal_config(path=SNIPPETS):
     if not path.exists():
-        return []
+        return {}, {}
     if path.stat().st_mode & 0o077:
         raise ValueError(f'{path} must be private (chmod 600)')
     data = tomllib.loads(path.read_text())
-    rows = data.get('snippets', {})
-    if not isinstance(rows, dict) or any(not isinstance(k, str) or not isinstance(v, str) for k, v in rows.items()):
+    snippets = data.get('snippets', {})
+    links = data.get('quicklinks', {})
+    if not isinstance(snippets, dict) or any(not isinstance(k, str) or not isinstance(v, str) for k, v in snippets.items()):
         raise ValueError('snippets must be a table of text values')
-    return [('Snippets', name, 'Copy snippet', ('copy', value)) for name, value in rows.items()]
+    if not isinstance(links, dict) or any(not isinstance(k, str) or not isinstance(v, str) for k, v in links.items()):
+        raise ValueError('quicklinks must be a table of text values')
+    for name, target in links.items():
+        if not target.startswith(('https://', 'http://', '/')):
+            raise ValueError(f'quicklink {name} must be an http(s) URL or absolute path')
+    for name in (*snippets, *links):
+        if any(char in name for char in ('\n', '\r', '\0', '\x1f')):
+            raise ValueError('names cannot contain control separators')
+    return snippets, links
+
+
+def snippets(path=SNIPPETS):
+    values, _ = personal_config(path)
+    return [('Snippets', name, 'Copy snippet', ('copy', value)) for name, value in values.items()]
+
+
+def quicklinks(path=SNIPPETS):
+    _, values = personal_config(path)
+    return [('Quicklinks', name, 'Open quicklink', ('open', target)) for name, target in values.items()]
 
 
 def registry():
@@ -150,7 +169,8 @@ def registry():
     groups.append(('Snippets', personal or [('Snippets', 'Set up snippets', 'Open snippet instructions',
                                              ('open', str(HOME / 'limux/docs/commands.md')))]))
     groups.append(('Quicklinks', [('Quicklinks', 'Home folder', 'Open in file manager', ('open', str(HOME))),
-                                  ('Quicklinks', 'Limux project', 'Open in file manager', ('open', str(HOME / 'limux')))]))
+                                  ('Quicklinks', 'Limux project', 'Open in file manager', ('open', str(HOME / 'limux')))]
+                   + quicklinks()))
     groups.append(('Utilities', [('Utilities', 'Lorem Ipsum', 'Copy placeholder paragraph', ('copy', LOREM)),
                                  ('Utilities', 'New UUID', 'Copy UUID', ('uuid', None)),
                                  ('Utilities', 'Current date', 'Copy ISO date', ('date', None))]))
