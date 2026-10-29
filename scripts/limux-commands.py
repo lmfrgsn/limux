@@ -3,7 +3,6 @@
 import argparse
 import configparser
 import datetime
-import html
 import os
 from pathlib import Path
 import subprocess
@@ -161,15 +160,15 @@ def registry():
 
 
 def display_rows(groups):
-    """Rofi section rows share the index space but are never selectable."""
+    """Rofi rows: plain action-first text; metadata keeps categories searchable."""
     labels, actions = [], []
     for category, items in groups:
-        labels.append(f'{html.escape(category.upper())}\0nonselectable\x1ftrue')
+        labels.append(f'{category.upper()}\0nonselectable\x1ftrue')
         actions.append(None)
         for _, shortcut, description, action in items:
-            # Pango tab stop fixes the shortcut column; monospaced padding aligns its right edge.
-            shown = (f'{html.escape(description)}\t<span font_family="DejaVu Sans Mono">{html.escape(shortcut):>24}</span>'
-                     if action is None else f'{html.escape(shortcut)}  ·  {html.escape(description)}')
+            # Rofi's tab stop clipped even short keys. Keep the full key in one text run.
+            shown = (f'{description} — {shortcut}' if action is None
+                     else f'{shortcut} — {description}')
             search_terms = category + (' email address phone signature' if shortcut == 'Set up snippets' else '')
             labels.append(shown + f'\0meta\x1f{search_terms}')
             actions.append(action)
@@ -213,10 +212,10 @@ def main():
         raise RuntimeError('Run preview from Foot in the MangoWM session')
     theme_override = ('textbox-heading {\n content: "COMMANDS";\n}\n'
                       'entry {\n placeholder: "Search commands";\n}\n'
-                      'element-text {\n tab-stops: [ 300px ];\n}\n'
+                      'window {\n width: 700px;\n}\n'
                       'listview {\n lines: 11;\n}')
     result = subprocess.run(['rofi', '-dmenu', '-i', '-no-custom', '-no-sort', '-matching', 'fuzzy',
-                             '-markup-rows', '-format', 'i', '-theme', str(THEME),
+                             '-format', 'i', '-theme', str(THEME),
                              '-theme-str', theme_override, '-p', ''],
                             input='\n'.join(labels) + '\n', text=True, capture_output=True)
     if result.returncode == 1:

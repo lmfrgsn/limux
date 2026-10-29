@@ -47,7 +47,7 @@ class PreviewFlowTest(unittest.TestCase):
         labels, actions = commands.display_rows(groups)
         self.assertIn('nonselectable', labels[0])
         self.assertIsNone(actions[0])
-        self.assertIn('tab', labels[1].replace('\t', 'tab'))
+        self.assertEqual(labels[1].split('\0')[0], 'Open application launcher — ⌘Space')
         self.assertIn('meta\x1fEveryday', labels[1])
 
     def test_cancel_has_no_action(self):
@@ -81,3 +81,30 @@ class RefinementTest(unittest.TestCase):
                  patch.object(commands.sys, 'argv', ['limux-commands', 'init-snippets']):
                 with self.assertRaises(FileExistsError):
                     commands.main()
+
+class FullShortcutLabelsTest(unittest.TestCase):
+    def test_complete_live_shortcuts_in_plain_rows(self):
+        labels, _ = commands.display_rows(commands.registry())
+        visible = [label.split('\0', 1)[0] for label in labels]
+        expected = (
+            'Open application launcher — ⌘Space',
+            'Capture area screenshot — ⌘⇧4',
+            'Move window to workspace left — ⌃⌘←',
+        )
+        for label in expected:
+            self.assertIn(label, visible)
+        for label in visible:
+            self.assertNotIn('\t', label)
+            self.assertNotIn('<span', label)
+            self.assertNotIn('…', label)
+            self.assertNotIn('...', label)
+
+    def test_preview_sends_plain_rows_without_markup(self):
+        with patch.dict(commands.os.environ, {'WAYLAND_DISPLAY': 'wayland-1'}), \
+             patch.object(commands.subprocess, 'run', return_value=MagicMock(returncode=1)) as run, \
+             patch.object(commands.sys, 'argv', ['limux-commands', 'preview']):
+            commands.main()
+        args = run.call_args.args[0]
+        self.assertNotIn('-markup-rows', args)
+        self.assertIn('width: 700px;', args[args.index('-theme-str') + 1])
+        self.assertIn('Open application launcher — ⌘Space', run.call_args.kwargs['input'])

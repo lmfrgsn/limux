@@ -22,14 +22,14 @@ Automatic `;email` expansion is deferred. Espanso has a Wayland build, but compa
 
 ## Refined information hierarchy — second preview
 
-The first rows now show the most-used actions, followed by Snippets, Quicklinks and Utilities before the longer reference sections. Section labels are not selectable. Search also matches a section name such as `Workspaces` or `Gestures` through Rofi row metadata. Descriptions use the approved proportional Inter font; shortcut labels use a narrow monospace span at a fixed tab stop. Rofi's tab stops align text to the left of that position, so the shortcut span is padded to a common right edge. The native parser accepts this preview override. No approved theme file is edited. For a long description, search or select its row to see the full text in the `list` output if it is clipped on screen; the preview avoids adding long category prefixes to each row.
+The first rows show the most-used actions, followed by Snippets, Quicklinks and Utilities before the longer reference sections. Section labels are nonselectable. Search also matches section names through Rofi row metadata. Current shortcut rows use one plain-text run, `Action — ⌘Key`, in the approved proportional Inter row font. The preview widens only this picker to 700px; the approved application launcher remains 620px. Rofi receives no tabs, Pango spans or artificial spaces in command rows.
 
 Firefox's [current shortcut guide](https://support.mozilla.org/en-US/kb/keyboard-shortcuts-perform-firefox-tasks-quickly) lists its search command as the accelerator plus K. This machine's Firefox profile explicitly sets `ui.key.accelKey = 91`, which maps the accelerator to Super/Command on Linux (see [Mozilla's bug discussion](https://bugzilla.mozilla.org/show_bug.cgi?id=2069698)). A global MangoWM `SUPER,k` would therefore override Firefox's Command+K search shortcut, as well as any web app shortcut on that key. `Ctrl+K` may still work as an alternative depending on Firefox's current handling, but is not established here by an interactive test. Command+K remains unassigned until this conflict is resolved explicitly.
 
 
-## Third preview — shortcut visibility and private setup
+## Fourth preview — complete shortcut labels
 
-The shortcut tab stop moved from 435 to 300 logical pixels. The longer spacing pushed the Pango shortcut span beyond Rofi's available row width, leaving an ellipsis. The description retains Inter; the key span remains DejaVu Sans Mono with spaces before it to align the key's right edge, including the longest verified hardware key labels. Section rows use Rofi's `nonselectable` row option and have no action mapped. Rofi's parser accepts the override. The Codex sandbox cannot connect to the compositor, so the final Rofi raster and actual key navigation need on-device review.
+The earlier tab-stop design visibly clipped keys, including short ones, despite passing Rofi's theme parser. It has been replaced by a single-line action-first format. The formatted string sent to Rofi is inspectable with `python3 scripts/limux-commands.py list`; for example, `Open application launcher — ⌘Space`. The heading and row metadata remain. Rofi's native parser accepts the 700px width override. Automated tests assert the complete shortcut strings and absence of tabs/markup. This environment cannot connect to the Wayland compositor, so the actual Rofi rendering still requires on-device inspection.
 
 Create the private snippet file with dummy examples:
 

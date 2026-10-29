@@ -233,3 +233,8 @@ The user requested action-first rows, compact sections, everyday shortcuts first
 ## Limux Commands third preview — visible shortcuts, no activation
 
 The approved direction is retained. The local tab stop is reduced to 300px with a 24-character monospace key field to keep complete Mac-style shortcuts inside Rofi's row width; no shared Rhapsody theme value changes. Section headings remain nonselectable and map to no command. The private snippet setup command creates a mode-600 file outside Git. The user's Firefox profile maps its accelerator to Super, making global Command+K conflict with Firefox search; assignment stays deferred.
+
+
+## Limux Commands fourth preview — single-line shortcut labels, not activated
+
+The third preview's tab-stop and padded monospace column visibly truncated shortcuts in the user's screenshots. This candidate abandons the two-column treatment in favor of plain action-first rows such as `Capture area screenshot — ⌘⇧4`. Only the picker gets a 700px width override. The approved Rofi launcher theme, heading behavior, category order, search metadata, yellow selection and personal-data separation are preserved. Complete labels are asserted in tests; actual Rofi pixels remain for user review. Command+K is still unassigned.
