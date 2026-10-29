@@ -15,7 +15,9 @@ MANGO = HOME / '.config/mango/config.conf'
 FOOT = HOME / '.config/foot/foot.ini'
 SNIPPETS = HOME / '.config/limux/commands.toml'
 THEME = HOME / '.config/rofi/charcoal.rasi'
-EXAMPLE = Path(__file__).resolve().parents[1] / 'examples/commands.toml'
+PROJECT = Path(__file__).resolve().parents[1]
+EXAMPLE = PROJECT / 'examples/commands.toml'
+TOKENS = PROJECT / 'themes/rhapsody.toml'
 MOD = {'super': '⌘', 'alt': '⌥', 'ctrl': '⌃', 'control': '⌃', 'shift': '⇧', 'none': ''}
 ACTION = {
     'reload_config': ('System', 'Reload MangoWM configuration'),
@@ -163,7 +165,7 @@ def display_rows(groups):
     """Rofi rows: plain action-first text; metadata keeps categories searchable."""
     labels, actions = [], []
     for category, items in groups:
-        labels.append(f'{category.upper()}\0nonselectable\x1ftrue')
+        labels.append(f'{category.upper()}\0nonselectable\x1ftrue\x1factive\x1ftrue')
         actions.append(None)
         for _, shortcut, description, action in items:
             # Rofi's tab stop clipped even short keys. Keep the full key in one text run.
@@ -189,6 +191,23 @@ def execute(action):
     subprocess.run(['wl-copy', '--', value], check=True)
 
 
+def preview_theme(tokens_path=TOKENS):
+    tokens = tomllib.loads(tokens_path.read_text())
+    font = tokens['typography']['sans']
+    quiet = tokens['colors']['text_secondary']
+    if not font.replace(' ', '').isalpha() or not quiet.startswith('#') or len(quiet) != 7:
+        raise ValueError('invalid Rhapsody heading tokens')
+    return ('textbox-heading {\n content: "COMMANDS";\n}\n'
+            'entry {\n placeholder: "Search commands";\n}\n'
+            'window {\n width: 700px;\n}\n'
+            'listview {\n lines: 11;\n}\n'
+            'element normal.active, element alternate.active {\n'
+            ' margin: 8px 0px 0px 0px;\n padding: 2px 8px 1px 8px;\n'
+            f' text-color: {quiet};\n' ' }\n'
+            'element-text normal.active, element-text alternate.active {\n'
+            f' font: "{font} 11";\n' ' }')
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('mode', choices=['preview', 'list', 'check', 'init-snippets'])
@@ -210,10 +229,7 @@ def main():
         return
     if not os.environ.get('WAYLAND_DISPLAY'):
         raise RuntimeError('Run preview from Foot in the MangoWM session')
-    theme_override = ('textbox-heading {\n content: "COMMANDS";\n}\n'
-                      'entry {\n placeholder: "Search commands";\n}\n'
-                      'window {\n width: 700px;\n}\n'
-                      'listview {\n lines: 11;\n}')
+    theme_override = preview_theme()
     result = subprocess.run(['rofi', '-dmenu', '-i', '-no-custom', '-no-sort', '-matching', 'fuzzy',
                              '-format', 'i', '-theme', str(THEME),
                              '-theme-str', theme_override, '-p', ''],

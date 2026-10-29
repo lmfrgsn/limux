@@ -65,7 +65,7 @@ class RefinementTest(unittest.TestCase):
         joined = '\n'.join(labels).lower()
         for term in ('workspace', 'screenshot', 'lorem', 'email'):
             self.assertIn(term, joined)
-        self.assertTrue(labels[0].endswith('nonselectable\x1ftrue'))
+        self.assertTrue('nonselectable\x1ftrue\x1factive\x1ftrue' in labels[0])
         self.assertIsNone(actions[0])
         self.assertIn('⌘space', joined)
 
@@ -108,3 +108,23 @@ class FullShortcutLabelsTest(unittest.TestCase):
         self.assertNotIn('-markup-rows', args)
         self.assertIn('width: 700px;', args[args.index('-theme-str') + 1])
         self.assertIn('Open application launcher — ⌘Space', run.call_args.kwargs['input'])
+
+class HeadingTypographyTest(unittest.TestCase):
+    def test_only_section_rows_receive_heading_state(self):
+        labels, actions = commands.display_rows(commands.registry())
+        for label, action in zip(labels, actions):
+            if 'nonselectable\x1ftrue' in label:
+                self.assertIn('active\x1ftrue', label)
+                self.assertIsNone(action)
+            else:
+                self.assertNotIn('active\x1ftrue', label)
+        self.assertIn('Open application launcher — ⌘Space', labels[1])
+
+    def test_heading_theme_uses_current_rhapsody_tokens(self):
+        theme = commands.preview_theme()
+        self.assertIn('font: "Inter 11";', theme)
+        self.assertIn('text-color: #666573;', theme)
+        self.assertIn('margin: 8px 0px 0px 0px;', theme)
+        self.assertIn('padding: 2px 8px 1px 8px;', theme)
+        self.assertNotIn('element selected', theme)
+        self.assertNotIn('box-search', theme)

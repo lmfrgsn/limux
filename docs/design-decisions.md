@@ -238,3 +238,7 @@ The approved direction is retained. The local tab stop is reduced to 300px with 
 ## Limux Commands fourth preview — single-line shortcut labels, not activated
 
 The third preview's tab-stop and padded monospace column visibly truncated shortcuts in the user's screenshots. This candidate abandons the two-column treatment in favor of plain action-first rows such as `Capture area screenshot — ⌘⇧4`. Only the picker gets a 700px width override. The approved Rofi launcher theme, heading behavior, category order, search metadata, yellow selection and personal-data separation are preserved. Complete labels are asserted in tests; actual Rofi pixels remain for user review. Command+K is still unassigned.
+
+## Limux Commands fifth preview — utility heading typography, not activated
+
+The user approved the single-line command rows and asked only for quieter section labels. This candidate marks nonselectable heading rows with Rofi's `active` state and applies a preview-only Inter 11 / Rhapsody `text_secondary` treatment with reduced heading padding and more space above than below. No selection, command text, search, shortcut, canonical token, launcher or desktop setting changes. Letter spacing is omitted because a dependable native Rofi control was not established. Command+K stays unassigned pending visual review.

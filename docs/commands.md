@@ -41,3 +41,9 @@ python3 scripts/limux-commands.py preview
 ```
 
 The command creates the directory with mode 700 and file with mode 600, and refuses to overwrite an existing file. Replace all dummy values before use. Search `email` to find `;email`, press Enter, then paste into Foot to check the clipboard. Also try `workspace`, `screenshot` and `lorem`; search metadata keeps section names searchable without repeating them on each row. Check that arrows skip section labels, Escape dismisses, and Command+Space still opens the normal application launcher.
+
+## Fifth preview — quieter section labels
+
+The single-line command layout and 700px picker width are unchanged. Nonselectable section rows carry Rofi's `active` row flag solely as a style hook. A preview-only theme override gives those rows Inter 11 from the canonical Rhapsody font family, the `text_secondary` neutral colour, 2px top/1px bottom padding and 8px margin above. Rofi has no reliable letter-spacing control in this setup, so no tracking is added. The ordinary command row, yellow selection edge, pale-grey selected fill and recessed search field use the existing approved theme rules. This candidate remains a reversible preview; Command+K is unassigned.
+
+From Foot, run `python3 ~/limux/scripts/limux-commands.py preview`. Check that headings feel quieter, arrow keys skip them, and the long shortcut labels remain complete. Escape dismisses the picker. Interactive rendering remains an on-device check because the development sandbox cannot connect to MangoWM's Wayland socket.
