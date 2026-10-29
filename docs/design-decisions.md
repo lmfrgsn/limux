@@ -220,3 +220,7 @@ preview and live activation attempts failed at Wayland access with no live write
 interactive shell/Codex readability and clipboard/scrollback checks remain for the
 desktop session before activation. The [workflow](architecture.md#foot-approved-baseline--activation-and-recovery)
 contains the exact commands and limitations.
+
+## Limux Commands — preview candidate, not activated
+
+The Command hub reuses the approved Rhapsody Rofi theme with a local `COMMANDS` heading and search placeholder. No canonical colour, geometry, typography, state meaning or application-launcher value changes. Category/shortcut rows are derived from live MangoWM and Foot configurations on each launch. Snippets live outside the repository. Command+K remains unassigned pending on-device visual and interaction review. The original concept's recessed input, quiet neutral surfaces and narrow yellow selection are inherited from the existing approved launcher; no extra branding is introduced.
