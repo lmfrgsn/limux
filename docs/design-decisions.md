@@ -228,3 +228,8 @@ The Command hub reuses the approved Rhapsody Rofi theme with a local `COMMANDS` 
 ## Limux Commands second preview — hierarchy refinement, not activated
 
 The user requested action-first rows, compact sections, everyday shortcuts first and faster access to snippets and utilities. This candidate reuses the approved Rofi surface/search/selection, adds only a local Rofi tab stop and Pango monospace shortcut span, and leaves canonical theme tokens unchanged. Section rows are nonselectable; row metadata keeps category search useful. Command+K remains unassigned, and the Firefox/global-shortcut tradeoff is documented in `docs/commands.md`.
+
+
+## Limux Commands third preview — visible shortcuts, no activation
+
+The approved direction is retained. The local tab stop is reduced to 300px with a 24-character monospace key field to keep complete Mac-style shortcuts inside Rofi's row width; no shared Rhapsody theme value changes. Section headings remain nonselectable and map to no command. The private snippet setup command creates a mode-600 file outside Git. The user's Firefox profile maps its accelerator to Super, making global Command+K conflict with Firefox search; assignment stays deferred.

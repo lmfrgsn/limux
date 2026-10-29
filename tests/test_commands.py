@@ -57,3 +57,27 @@ class PreviewFlowTest(unittest.TestCase):
             with patch.object(commands.sys, 'argv', ['limux-commands', 'preview']):
                 commands.main()
             execute.assert_not_called()
+
+class RefinementTest(unittest.TestCase):
+    def test_required_search_terms_are_present(self):
+        groups = commands.registry()
+        labels, actions = commands.display_rows(groups)
+        joined = '\n'.join(labels).lower()
+        for term in ('workspace', 'screenshot', 'lorem', 'email'):
+            self.assertIn(term, joined)
+        self.assertTrue(labels[0].endswith('nonselectable\x1ftrue'))
+        self.assertIsNone(actions[0])
+        self.assertIn('⌘space', joined)
+
+    def test_private_snippet_setup(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'limux' / 'commands.toml'
+            with patch.object(commands, 'SNIPPETS', path), \
+                 patch.object(commands.sys, 'argv', ['limux-commands', 'init-snippets']):
+                commands.main()
+            self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+            self.assertIn(';email', path.read_text())
+            with patch.object(commands, 'SNIPPETS', path), \
+                 patch.object(commands.sys, 'argv', ['limux-commands', 'init-snippets']):
+                with self.assertRaises(FileExistsError):
+                    commands.main()

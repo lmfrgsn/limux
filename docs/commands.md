@@ -24,4 +24,20 @@ Automatic `;email` expansion is deferred. Espanso has a Wayland build, but compa
 
 The first rows now show the most-used actions, followed by Snippets, Quicklinks and Utilities before the longer reference sections. Section labels are not selectable. Search also matches a section name such as `Workspaces` or `Gestures` through Rofi row metadata. Descriptions use the approved proportional Inter font; shortcut labels use a narrow monospace span at a fixed tab stop. Rofi's tab stops align text to the left of that position, so the shortcut span is padded to a common right edge. The native parser accepts this preview override. No approved theme file is edited. For a long description, search or select its row to see the full text in the `list` output if it is clipped on screen; the preview avoids adding long category prefixes to each row.
 
-Firefox's [current shortcut guide](https://support.mozilla.org/en-US/kb/keyboard-shortcuts-perform-firefox-tasks-quickly) lists **Ctrl+K** for focusing search on Linux and **Command+K** on macOS. On this Linux desktop, Limux's Command key is Super; a global `SUPER,k` would intercept Super+K before Firefox or any other application receives it. Firefox's standard Linux Ctrl+K would remain available, but custom Firefox or web-app uses of Super+K would lose that key. Command+K remains unassigned until you decide this tradeoff is acceptable.
+Firefox's [current shortcut guide](https://support.mozilla.org/en-US/kb/keyboard-shortcuts-perform-firefox-tasks-quickly) lists its search command as the accelerator plus K. This machine's Firefox profile explicitly sets `ui.key.accelKey = 91`, which maps the accelerator to Super/Command on Linux (see [Mozilla's bug discussion](https://bugzilla.mozilla.org/show_bug.cgi?id=2069698)). A global MangoWM `SUPER,k` would therefore override Firefox's Command+K search shortcut, as well as any web app shortcut on that key. `Ctrl+K` may still work as an alternative depending on Firefox's current handling, but is not established here by an interactive test. Command+K remains unassigned until this conflict is resolved explicitly.
+
+
+## Third preview — shortcut visibility and private setup
+
+The shortcut tab stop moved from 435 to 300 logical pixels. The longer spacing pushed the Pango shortcut span beyond Rofi's available row width, leaving an ellipsis. The description retains Inter; the key span remains DejaVu Sans Mono with spaces before it to align the key's right edge, including the longest verified hardware key labels. Section rows use Rofi's `nonselectable` row option and have no action mapped. Rofi's parser accepts the override. The Codex sandbox cannot connect to the compositor, so the final Rofi raster and actual key navigation need on-device review.
+
+Create the private snippet file with dummy examples:
+
+```sh
+cd ~/limux
+python3 scripts/limux-commands.py init-snippets
+$EDITOR ~/.config/limux/commands.toml
+python3 scripts/limux-commands.py preview
+```
+
+The command creates the directory with mode 700 and file with mode 600, and refuses to overwrite an existing file. Replace all dummy values before use. Search `email` to find `;email`, press Enter, then paste into Foot to check the clipboard. Also try `workspace`, `screenshot` and `lorem`; search metadata keeps section names searchable without repeating them on each row. Check that arrows skip section labels, Escape dismisses, and Command+Space still opens the normal application launcher.

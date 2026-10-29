@@ -16,6 +16,7 @@ MANGO = HOME / '.config/mango/config.conf'
 FOOT = HOME / '.config/foot/foot.ini'
 SNIPPETS = HOME / '.config/limux/commands.toml'
 THEME = HOME / '.config/rofi/charcoal.rasi'
+EXAMPLE = Path(__file__).resolve().parents[1] / 'examples/commands.toml'
 MOD = {'super': '⌘', 'alt': '⌥', 'ctrl': '⌃', 'control': '⌃', 'shift': '⇧', 'none': ''}
 ACTION = {
     'reload_config': ('System', 'Reload MangoWM configuration'),
@@ -167,9 +168,10 @@ def display_rows(groups):
         actions.append(None)
         for _, shortcut, description, action in items:
             # Pango tab stop fixes the shortcut column; monospaced padding aligns its right edge.
-            shown = (f'{html.escape(description)}\t<span font_family="DejaVu Sans Mono">{html.escape(shortcut):>15}</span>'
+            shown = (f'{html.escape(description)}\t<span font_family="DejaVu Sans Mono">{html.escape(shortcut):>24}</span>'
                      if action is None else f'{html.escape(shortcut)}  ·  {html.escape(description)}')
-            labels.append(shown + f'\0meta\x1f{category}')
+            search_terms = category + (' email address phone signature' if shortcut == 'Set up snippets' else '')
+            labels.append(shown + f'\0meta\x1f{search_terms}')
             actions.append(action)
     return labels, actions
 
@@ -190,8 +192,15 @@ def execute(action):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('mode', choices=['preview', 'list', 'check'])
+    parser.add_argument('mode', choices=['preview', 'list', 'check', 'init-snippets'])
     args = parser.parse_args()
+    if args.mode == 'init-snippets':
+        SNIPPETS.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        descriptor = os.open(SNIPPETS, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, 'w') as output:
+            output.write(EXAMPLE.read_text())
+        print(f'Created {SNIPPETS} with dummy values; edit it to add your own snippets')
+        return
     groups = registry()
     labels, actions = display_rows(groups)
     if args.mode == 'check':
@@ -204,7 +213,7 @@ def main():
         raise RuntimeError('Run preview from Foot in the MangoWM session')
     theme_override = ('textbox-heading {\n content: "COMMANDS";\n}\n'
                       'entry {\n placeholder: "Search commands";\n}\n'
-                      'element-text {\n tab-stops: [ 435px ];\n}\n'
+                      'element-text {\n tab-stops: [ 300px ];\n}\n'
                       'listview {\n lines: 11;\n}')
     result = subprocess.run(['rofi', '-dmenu', '-i', '-no-custom', '-no-sort', '-matching', 'fuzzy',
                              '-markup-rows', '-format', 'i', '-theme', str(THEME),
