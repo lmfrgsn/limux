@@ -37,3 +37,23 @@ class CommandsTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+class PreviewFlowTest(unittest.TestCase):
+    def test_order_and_section_rows(self):
+        groups = commands.registry()
+        self.assertEqual(groups[0][0], 'Everyday')
+        self.assertEqual(groups[1][0], 'Snippets')
+        self.assertTrue(any(row[1] == '⌘Space' for row in groups[0][1]))
+        labels, actions = commands.display_rows(groups)
+        self.assertIn('nonselectable', labels[0])
+        self.assertIsNone(actions[0])
+        self.assertIn('tab', labels[1].replace('\t', 'tab'))
+        self.assertIn('meta\x1fEveryday', labels[1])
+
+    def test_cancel_has_no_action(self):
+        with patch.dict(commands.os.environ, {'WAYLAND_DISPLAY': 'wayland-1'}), \
+             patch.object(commands.subprocess, 'run', return_value=MagicMock(returncode=1)), \
+             patch.object(commands, 'execute') as execute:
+            with patch.object(commands.sys, 'argv', ['limux-commands', 'preview']):
+                commands.main()
+            execute.assert_not_called()

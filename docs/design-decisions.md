@@ -224,3 +224,7 @@ contains the exact commands and limitations.
 ## Limux Commands — preview candidate, not activated
 
 The Command hub reuses the approved Rhapsody Rofi theme with a local `COMMANDS` heading and search placeholder. No canonical colour, geometry, typography, state meaning or application-launcher value changes. Category/shortcut rows are derived from live MangoWM and Foot configurations on each launch. Snippets live outside the repository. Command+K remains unassigned pending on-device visual and interaction review. The original concept's recessed input, quiet neutral surfaces and narrow yellow selection are inherited from the existing approved launcher; no extra branding is introduced.
+
+## Limux Commands second preview — hierarchy refinement, not activated
+
+The user requested action-first rows, compact sections, everyday shortcuts first and faster access to snippets and utilities. This candidate reuses the approved Rofi surface/search/selection, adds only a local Rofi tab stop and Pango monospace shortcut span, and leaves canonical theme tokens unchanged. Section rows are nonselectable; row metadata keeps category search useful. Command+K remains unassigned, and the Firefox/global-shortcut tradeoff is documented in `docs/commands.md`.

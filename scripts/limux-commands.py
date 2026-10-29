@@ -3,6 +3,7 @@
 import argparse
 import configparser
 import datetime
+import html
 import os
 from pathlib import Path
 import subprocess
@@ -131,13 +132,46 @@ def snippets(path=SNIPPETS):
 
 
 def registry():
-    rows = shortcuts() + foot_shortcuts() + snippets()
-    rows += [('Quicklinks', 'Home folder', 'Open in file manager', ('open', str(HOME))),
-             ('Quicklinks', 'Limux project', 'Open in file manager', ('open', str(HOME / 'limux'))),
-             ('Utilities', 'Lorem Ipsum', 'Copy placeholder paragraph', ('copy', LOREM)),
-             ('Utilities', 'New UUID', 'Copy UUID', ('uuid', None)),
-             ('Utilities', 'Current date', 'Copy ISO date', ('date', None))]
-    return rows
+    """Ordered groups; a binding appears once, and only if present in live config."""
+    live = shortcuts() + foot_shortcuts()
+    priority = {'Open application launcher', 'Focus next window', 'Close focused window',
+                'Open terminal', 'Open files', 'Capture full screenshot', 'Capture area screenshot'}
+    groups = []
+    common = [row for row in live if row[2] in priority and row[1] not in ('⌥Space', 'XF86Search')]
+    rank = {'Open application launcher': 0, 'Focus next window': 1, 'Close focused window': 2,
+            'Open files': 3, 'Open terminal': 4, 'Capture area screenshot': 5,
+            'Capture full screenshot': 6}
+    common.sort(key=lambda row: rank[row[2]])
+    used = {id(row) for row in common}
+    groups.append(('Everyday', common))
+    personal = snippets()
+    groups.append(('Snippets', personal or [('Snippets', 'Set up snippets', 'Open snippet instructions',
+                                             ('open', str(HOME / 'limux/docs/commands.md')))]))
+    groups.append(('Quicklinks', [('Quicklinks', 'Home folder', 'Open in file manager', ('open', str(HOME))),
+                                  ('Quicklinks', 'Limux project', 'Open in file manager', ('open', str(HOME / 'limux')))]))
+    groups.append(('Utilities', [('Utilities', 'Lorem Ipsum', 'Copy placeholder paragraph', ('copy', LOREM)),
+                                 ('Utilities', 'New UUID', 'Copy UUID', ('uuid', None)),
+                                 ('Utilities', 'Current date', 'Copy ISO date', ('date', None))]))
+    for category in ('Workspaces', 'Windows', 'Gestures', 'Foot', 'Apps', 'Hardware', 'Layout', 'Mouse', 'System'):
+        items = [row for row in live if row[0] == category and id(row) not in used]
+        if items:
+            groups.append((category, items))
+    return groups
+
+
+def display_rows(groups):
+    """Rofi section rows share the index space but are never selectable."""
+    labels, actions = [], []
+    for category, items in groups:
+        labels.append(f'{html.escape(category.upper())}\0nonselectable\x1ftrue')
+        actions.append(None)
+        for _, shortcut, description, action in items:
+            # Pango tab stop fixes the shortcut column; monospaced padding aligns its right edge.
+            shown = (f'{html.escape(description)}\t<span font_family="DejaVu Sans Mono">{html.escape(shortcut):>15}</span>'
+                     if action is None else f'{html.escape(shortcut)}  ·  {html.escape(description)}')
+            labels.append(shown + f'\0meta\x1f{category}')
+            actions.append(action)
+    return labels, actions
 
 
 def execute(action):
@@ -158,25 +192,32 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('mode', choices=['preview', 'list', 'check'])
     args = parser.parse_args()
-    rows = registry()
+    groups = registry()
+    labels, actions = display_rows(groups)
     if args.mode == 'check':
-        print(f'{len(rows)} commands valid; Command+K remains unassigned')
+        print(f'{sum(len(items) for _, items in groups)} commands valid; Command+K remains unassigned')
         return
-    labels = [f'{shortcut:<22}  {category:<11}  {description}' for category, shortcut, description, _ in rows]
     if args.mode == 'list':
         print('\n'.join(labels))
         return
     if not os.environ.get('WAYLAND_DISPLAY'):
         raise RuntimeError('Run preview from Foot in the MangoWM session')
-    result = subprocess.run(['rofi', '-dmenu', '-i', '-no-custom', '-matching', 'fuzzy',
-                             '-format', 'i', '-theme', str(THEME),
-                             '-theme-str', 'textbox-heading {\n content: "COMMANDS";\n}\nentry {\n placeholder: "Search commands";\n}\nelement-text {\n font: "DejaVu Sans Mono 11";\n}',
-                             '-p', ''], input='\n'.join(labels) + '\n', text=True, capture_output=True)
+    theme_override = ('textbox-heading {\n content: "COMMANDS";\n}\n'
+                      'entry {\n placeholder: "Search commands";\n}\n'
+                      'element-text {\n tab-stops: [ 435px ];\n}\n'
+                      'listview {\n lines: 11;\n}')
+    result = subprocess.run(['rofi', '-dmenu', '-i', '-no-custom', '-no-sort', '-matching', 'fuzzy',
+                             '-markup-rows', '-format', 'i', '-theme', str(THEME),
+                             '-theme-str', theme_override, '-p', ''],
+                            input='\n'.join(labels) + '\n', text=True, capture_output=True)
     if result.returncode == 1:
         return  # Escape
     if result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or 'Rofi failed')
-    execute(rows[int(result.stdout.strip())][3])
+    selected = int(result.stdout.strip())
+    if not 0 <= selected < len(actions):
+        raise RuntimeError('Rofi returned an invalid selection')
+    execute(actions[selected])
 
 
 if __name__ == '__main__':
