@@ -350,5 +350,5 @@ The user asked for the remaining follow-ups to be done. Thunar now has Mac-style
 
 ## Night light — wlsunset — 2026-10-30
 
-The user chose location-based night light over fixed times. MangoWM supports the wlroots gamma-control protocol, so `wlsunset` (already installed) now starts from one `exec_once` line in the MangoWM config, after the notifications entry, with the coordinates of the system timezone's city rather than a personal location. Defaults are kept (4000K at night, 6500K by day). The Quiet Strip activation pins the whole MangoWM config by hash, so its pin was updated in the same change; its `check` passed before and after. This is a display behaviour, not a Rhapsody token output.
+The user chose location-based night light over fixed times. MangoWM supports the wlroots gamma-control protocol, so `wlsunset` (already installed) now starts from one `exec_once` line in the MangoWM config, after the notifications entry, with approximate coordinates for the user's city, kept only in the live config. Defaults are kept (4000K at night, 6500K by day). The Quiet Strip activation pins the whole MangoWM config by hash, so its pin was updated in the same change; its `check` passed before and after. This is a display behaviour, not a Rhapsody token output.
 
