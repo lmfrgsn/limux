@@ -42,7 +42,9 @@ def render(output=OUT):
     return output
 
 
-def preview(output=OUT):
+def preview(output=OUT, seconds=25):
+    if not 15 <= seconds <= 300:
+        raise ValueError('preview duration must be 15–300 seconds')
     output = render(output)
     before = output / 'revised-before.png'
     after = output / 'revised-candidate.png'
@@ -56,10 +58,10 @@ def preview(output=OUT):
         if bar.poll() is not None:
             raise RuntimeError('preview bar exited before capture')
         subprocess.run(['grim', str(after)], check=True)
-        print('Revised preview visible for 25 seconds; move the pointer across all nine workspaces.', flush=True)
+        print(f'Revised preview visible for {seconds} seconds; move across all nine workspaces.', flush=True)
         time.sleep(10)
         subprocess.run(['grim', str(hover)], check=True)
-        time.sleep(15)
+        time.sleep(seconds - 10)
     finally:
         if bar.poll() is None:
             bar.terminate()
@@ -74,11 +76,12 @@ def preview(output=OUT):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('action', choices=['render', 'preview'])
+    parser.add_argument('--seconds', type=int, default=25)
     args = parser.parse_args()
     try:
         if args.action == 'render':
             print(render())
         else:
-            preview()
+            preview(seconds=args.seconds)
     except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as exc:
         raise SystemExit(f'Quiet Workspace Strip: {exc}')

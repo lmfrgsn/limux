@@ -25,6 +25,10 @@ THEME = tomllib.loads((ROOT / 'themes/rhapsody.toml').read_text())
 
 
 class QuietBarTest(unittest.TestCase):
+    def test_preview_duration_is_bounded_before_launch(self):
+        with self.assertRaises(ValueError):
+            quiet.preview(seconds=301)
+
     def test_one_candidate_has_unboxed_states_and_readable_active_number(self):
         css = render_quiet(THEME)
         q = THEME['mangobar_candidate']
