@@ -78,9 +78,9 @@ title_max_width = 240
 active_text_contrast_exception = "approved-white-on-orange"
 
 [bar_status]
-# Status readings and agent indicators, design target approved 2026-10-30; not yet
-# active. Tabler line icons at the bar's text size with their values. display is
-# "text" (current), "icon-value" or "icons". Gaps in logical pixels: pair (icon to
+# Status readings and agent indicators, approved and activated 2026-10-30.
+# Tabler line icons at the bar's text size with their values. display is
+# "text" (the earlier style), "icon-value" or "icons". Gaps in logical pixels: pair (icon to
 # value), item (between pairs), group (agents to system readings), edge (right
 # inset, mirroring the left).
 display = "icon-value"

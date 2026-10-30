@@ -15,6 +15,7 @@ efibootmgr
 firefox
 foot
 git
+github-cli
 grim
 grub
 gvfs
