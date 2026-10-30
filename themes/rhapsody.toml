@@ -19,6 +19,8 @@ workspace_orange = "#D46A43"
 signal_green = "#728858"
 signal_red = "#AD4038"
 signal_ink = "#141810"
+# Exact white is reserved here for the explicitly approved active-workspace ink.
+pure_white = "#FFFFFF"
 
 # Distinct purposes may currently share a colour. These mappings preserve the
 # approved outputs; future colour changes need separate visual review.
@@ -28,7 +30,7 @@ emphasis = "accent"
 selected = "signal_yellow"
 on_selected = "text"
 workspace_active = "workspace_orange"
-on_workspace_active = "signal_ink"
+on_workspace_active = "pure_white"
 list_selected = "signal_yellow"
 on_list_selected = "text"
 # Preview-only neutral list treatment for Limux Commands; not activated.
@@ -74,6 +76,8 @@ workspace_gap = 1
 active_radius = 4
 active_inset = 4
 title_max_width = 240
+# This specific white-on-orange active label is a user-approved contrast exception.
+active_text_contrast_exception = "approved-white-on-orange"
 
 [rofi]
 # Approved initial Rofi baseline at e1f7538; future refinements require review.

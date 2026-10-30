@@ -37,7 +37,7 @@ def patched_sources():
     with tempfile.TemporaryDirectory() as directory:
         source = prepare_source(Path(directory) / 'source')
         return {name: (source / name).read_text()
-                for name in ('style.h', 'style.c', 'mangobar.c')}
+                for name in ('style.h', 'style.c', 'mangobar.c', 'rtconfig.h', 'rtconfig.c')}
 
 
 def build():

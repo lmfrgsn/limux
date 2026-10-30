@@ -78,8 +78,18 @@ def render_quiet(theme):
     active_ink = c[semantics['on_workspace_active']]
     if not re.fullmatch(r'#[0-9a-fA-F]{6}', accent):
         raise ValueError('invalid Quiet Workspace Strip accent')
-    if contrast(accent, active_ink) < 4.5:
-        raise ValueError('insufficient active workspace contrast')
+    ratio = contrast(accent, active_ink)
+    if ratio < 4.5:
+        # Narrow, explicit exception approved for this exact semantic pairing;
+        # all general text, urgency and status checks remain unchanged.
+        exception = q.get('active_text_contrast_exception')
+        if (exception != 'approved-white-on-orange' or
+                active_ink != c.get('pure_white') or
+                semantics['workspace_active'] != 'workspace_orange' or
+                semantics['on_workspace_active'] != 'pure_white' or
+                accent != c['workspace_orange'] or
+                not 3.5 <= ratio <= 3.6):
+            raise ValueError('unapproved active workspace contrast exception')
     for key in ('workspace_padding', 'workspace_gap', 'active_radius', 'active_inset'):
         value = q[key]
         if type(value) is not int or not 0 <= value <= 20:
@@ -92,11 +102,11 @@ def render_quiet(theme):
     # The native bar forces workspace minimum width to bar height after loading
     # CSS. A #tags min-width would then be reapplied from the hover overlay and
     # shrink the hotspot. Keep every state and hover free of min-width.
-    return f'''/* Limux Quiet Workspace Strip: isolated Mangobar 0.2.2 preview. */
+    return f'''/* Limux Quiet Workspace Strip: generated from canonical Rhapsody tokens. */
 * {{ font-family: "{font}"; font-size: {size}px; font-weight: {weight}; padding: 0px 8px; margin: 0px; }}
 #bar {{ background: {c['surface']}; padding: 0px; margin: 0px; }}
 #bar.sel {{ background: {c['surface']}; }}
-#tags {{ padding: 0px {q['workspace_padding']}px; margin: 0px {q['workspace_gap']}px; }}
+#tags {{ padding: 0px {q['workspace_padding']}px; margin: 0px {q['workspace_gap']}px; margin-left: {theme['geometry']['spacing']}px; }}
 #tags.empty {{ color: {c['text_quiet']}; background: none; }}
 #tags.inactive {{ color: {c['text_quiet']}; background: none; }}
 #tags.occupied {{ color: {c['text_secondary']}; background: none; }}

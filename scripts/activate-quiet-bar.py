@@ -34,8 +34,8 @@ EXPECTED = {
     'config': '13d8cd1666d70a1beac55c358363af2be0f4305bfda6fec7b875ea830f049c48',
     'css': 'f82d060029411d566a2789351e4f3faca0def1ae29f43110d819cc5d7e015dc5',
     'mango': '37d07c20b8c25df2eca5a8b04c2c215d5a23a96745cb71e499e99894154598f5',
-    'candidate_config': 'b906220cd7ac83704a3ce23ff558b1698813d0e3ee261c99361266bd8ba5a7c8',
-    'candidate_css': '03c674d5acb12287503b9fd08b9adb6903e8c7feaaf083d11dc8f93db598ab7c',
+    'candidate_config': '2db6d858b089621079a2df73210664e9c62ad558e9f6a18387130a429a6a6467',
+    'candidate_css': '66fbb5d94cbf629a58cd8d4916698cbf42a2c89a602e0f80d43cf9fec2b73267',
 }
 OLD_LINE = "BINARY = HOME / '.local/bin/mangobar'"
 NEW_LINE = "BINARY = HOME / '.local/libexec/limux/mangobar-0.2.2-quiet/mangobar'"
@@ -187,6 +187,125 @@ def backup():
     return manifest, original
 
 
+def save_manifest(manifest):
+    atomic_write(STATE / 'manifest.json',
+                 (json.dumps(manifest, indent=2) + '\n').encode())
+
+
+def refinement_snapshot(manifest, files):
+    """Pin the immediately previous active candidate without replacing baseline rollback."""
+    destination = STATE / 'previous-refinement'
+    if destination.exists():
+        raise RuntimeError('an earlier refinement snapshot exists; restore it before another update')
+    staged = Path(tempfile.mkdtemp(prefix='.refinement-', dir=STATE))
+    try:
+        for name, data in files.items():
+            (staged / name).write_bytes(data)
+        (staged / 'manifest.json').write_text(json.dumps({
+            'candidate': manifest['candidate'],
+            'binary': manifest['binary'],
+        }, indent=2) + '\n')
+        os.replace(staged, destination)
+    finally:
+        if staged.exists():
+            shutil.rmtree(staged)
+
+
+def refine():
+    """Apply an approved small change while retaining both rollback levels."""
+    if not STATE.exists():
+        raise RuntimeError('Quiet Workspace Strip is not active; use the normal activation workflow')
+    manifest, _ = backup()
+    if 'previous_refinement' in manifest:
+        raise RuntimeError('a refinement is already pending; use restore-prior before another update')
+    startup_entry()
+    require_session()
+    checked_file(PATCHED, manifest['binary'])
+    files = {'config': CONFIG.read_bytes(), 'css': CSS.read_bytes(),
+             'launcher': LAUNCHER.read_bytes()}
+    for name, path in (('config', CONFIG), ('css', CSS), ('launcher', LAUNCHER)):
+        if path.is_symlink() or digest(files[name]) != manifest['candidate'][name]:
+            raise RuntimeError(f'{name} differs from the active pinned candidate')
+    managed_bar(PATCHED)
+    config, css, binary = generate_candidate()
+    if digest(binary) != manifest['binary']:
+        raise RuntimeError('pinned Mangobar build changed; refusing style-only refinement')
+    target = {'config': config, 'css': css, 'launcher': files['launcher']}
+    target_hashes = {name: digest(data) for name, data in target.items()}
+    if target_hashes == manifest['candidate']:
+        print('Approved refinement already active; one managed bar verified.')
+        return
+
+    refinement_snapshot(manifest, files)
+    manifest['previous_refinement'] = {
+        'candidate': manifest['candidate'], 'target': target_hashes,
+        'binary': manifest['binary'],
+    }
+    manifest['candidate'] = target_hashes
+    try:
+        save_manifest(manifest)
+    except BaseException:
+        shutil.rmtree(STATE / 'previous-refinement')
+        raise
+    try:
+        for name, path in (('config', CONFIG), ('css', CSS), ('launcher', LAUNCHER)):
+            atomic_write(path, target[name])
+        refresh_and_verify(PATCHED)
+        if any(digest(path.read_bytes()) != target_hashes[name]
+               for name, path in (('config', CONFIG), ('css', CSS), ('launcher', LAUNCHER))):
+            raise RuntimeError('refined live files differ from staged bytes')
+    except BaseException as failure:
+        try:
+            previous = {name: (STATE / 'previous-refinement' / name).read_bytes()
+                        for name in ('config', 'css', 'launcher')}
+            for name, path in (('config', CONFIG), ('css', CSS), ('launcher', LAUNCHER)):
+                atomic_write(path, previous[name])
+            refresh_and_verify(PATCHED)
+            manifest['candidate'] = manifest['previous_refinement']['candidate']
+            manifest.pop('previous_refinement')
+            save_manifest(manifest)
+            shutil.rmtree(STATE / 'previous-refinement')
+        except BaseException as recovery:
+            raise RuntimeError(f'refinement failed; recovery snapshot retained at {STATE}/previous-refinement: {recovery}') from failure
+        raise RuntimeError('refinement failed; previous active Mangobar restored') from failure
+    print('Approved refinement active; one managed patched Mangobar verified.')
+
+
+def restore_prior():
+    """Undo the last refinement while preserving the original Quiet Strip rollback."""
+    if not STATE.exists():
+        raise RuntimeError('Quiet Workspace Strip is not active')
+    manifest, _ = backup()
+    prior = manifest.get('previous_refinement')
+    folder = STATE / 'previous-refinement'
+    if not prior or not folder.is_dir():
+        raise RuntimeError('no previous refinement snapshot is available')
+    startup_entry()
+    require_session()
+    checked_file(PATCHED, manifest['binary'])
+    snapshot = json.loads((folder / 'manifest.json').read_text())
+    if snapshot['candidate'] != prior['candidate'] or snapshot['binary'] != manifest['binary']:
+        raise RuntimeError('previous refinement snapshot failed integrity checks')
+    previous = {name: (folder / name).read_bytes() for name in ('config', 'css', 'launcher')}
+    for name, path in (('config', CONFIG), ('css', CSS), ('launcher', LAUNCHER)):
+        if path.is_symlink():
+            raise RuntimeError(f'{name} is a symlink; refusing refinement recovery')
+        current_hash = digest(path.read_bytes())
+        if current_hash not in (prior['target'][name], prior['candidate'][name]):
+            raise RuntimeError(f'{name} has an unreviewed edit; refusing refinement recovery')
+        if digest(previous[name]) != prior['candidate'][name]:
+            raise RuntimeError(f'previous {name} snapshot failed integrity checks')
+    managed_bar(PATCHED)
+    for name, path in (('config', CONFIG), ('css', CSS), ('launcher', LAUNCHER)):
+        atomic_write(path, previous[name])
+    refresh_and_verify(PATCHED)
+    manifest['candidate'] = prior['candidate']
+    manifest.pop('previous_refinement')
+    save_manifest(manifest)
+    shutil.rmtree(folder)
+    print('Previous Quiet Strip appearance restored; original baseline rollback retained.')
+
+
 def refresh_and_verify(binary):
     subprocess.run([str(LAUNCHER), 'refresh'], check=True, timeout=25)
     time.sleep(1)
@@ -284,12 +403,13 @@ def check():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['check', 'activate', 'rollback'])
+    parser.add_argument('action', choices=['check', 'activate', 'refine', 'restore-prior', 'rollback'])
     action = parser.parse_args().action
     runtime = Path(os.environ['XDG_RUNTIME_DIR'])
     with (runtime / 'limux-quiet-bar-activation.lock').open('w') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        {'check': check, 'activate': activate, 'rollback': rollback}[action]()
+        {'check': check, 'activate': activate, 'refine': refine,
+         'restore-prior': restore_prior, 'rollback': rollback}[action]()
 
 
 if __name__ == '__main__':

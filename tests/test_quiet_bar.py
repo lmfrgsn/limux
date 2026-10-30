@@ -1,6 +1,7 @@
 import importlib.util
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -29,7 +30,7 @@ class QuietBarTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             quiet.preview(seconds=301)
 
-    def test_one_candidate_has_unboxed_states_and_readable_active_number(self):
+    def test_one_candidate_preserves_orange_geometry_with_approved_white_ink_exception(self):
         css = render_quiet(THEME)
         q = THEME['mangobar_candidate']
         self.assertEqual(q['bar_height'], 30)  # B geometry retained
@@ -39,7 +40,14 @@ class QuietBarTest(unittest.TestCase):
         self.assertIn(f'background-inset: {q["active_inset"]}px;', css)
         self.assertIn(f'border-radius: {q["active_radius"]}px;', css)
         ink = THEME['colors'][THEME['semantics']['on_workspace_active']]
-        self.assertGreaterEqual(contrast(accent, ink), 4.5)
+        self.assertEqual(ink, '#FFFFFF')
+        self.assertEqual(THEME['semantics']['on_workspace_active'], 'pure_white')
+        self.assertEqual(THEME['semantics']['on_terminal_cursor'], 'signal_ink')
+        self.assertAlmostEqual(contrast(accent, ink), 3.53, places=2)
+        self.assertEqual(q['active_text_contrast_exception'], 'approved-white-on-orange')
+        self.assertIn('margin-left: 8px;', css)
+        self.assertIn(f'margin: 0px {q["workspace_gap"]}px;', css)
+        self.assertIn(f'background: {accent};', css)
         for state in ('empty', 'inactive', 'occupied', 'urgent'):
             self.assertIn(f'#tags.{state} {{', css)
             self.assertIn('background: none;', css.split(f'#tags.{state} {{', 1)[1].split('}', 1)[0])
@@ -47,20 +55,71 @@ class QuietBarTest(unittest.TestCase):
         self.assertNotIn('#tags:hover', css)
         self.assertNotIn('#layout {', css)
 
+    def test_white_contrast_exception_is_scoped_and_general_validation_stays_strict(self):
+        import copy
+        from mangobar import render
+        changed = copy.deepcopy(THEME)
+        changed['semantics']['on_selected'] = 'pure_white'
+        with self.assertRaisesRegex(ValueError, 'selected text contrast'):
+            render(changed)
+        changed = copy.deepcopy(THEME)
+        changed['colors']['pure_white'] = '#FDFDFD'
+        with self.assertRaisesRegex(ValueError, 'unapproved active workspace contrast exception'):
+            render_quiet(changed)
+
     def test_preview_config_preserves_functional_modules(self):
         original = json.loads(quiet.LIVE.read_text())
-        # This preview transformer expects the pre-activation module list.
-        # The live bar now already uses the approved list without Layout T.
-        original['modules-left'] = ['workspaces', 'layout', 'window']
+        # The active Quiet Strip has already hidden the layout indicator.
         with tempfile.TemporaryDirectory() as d:
-            source = Path(d) / 'baseline.jsonc'
+            source = Path(d) / 'active.jsonc'
             source.write_text(json.dumps(original))
             candidate = quiet.candidate_config(THEME, source)
-        expected = json.loads(json.dumps(original))
-        expected['modules-left'] = ['workspaces', 'window']
-        expected['height'] = 30
-        expected['window']['max-length'] = 240
-        self.assertEqual(candidate, expected)
+        self.assertEqual(candidate['modules-left'], ['workspaces', 'window'])
+        self.assertEqual(candidate['height'], 30)
+        self.assertEqual(candidate['window']['max-length'], 240)
+        battery = candidate['battery']
+        self.assertEqual(battery['device'], 'BAT0')
+        self.assertEqual(battery['format'], 'Bat {percent}%{icon}')
+        self.assertEqual(battery['icon-charging'], ' chg')
+        self.assertEqual(battery['icon-full'], '')
+        self.assertEqual(battery['icons'], [''] * 11)
+        self.assertFalse(battery['hide-on-ac'])
+
+    def test_generated_battery_config_parses_with_pinned_native_parser(self):
+        if not builder.SOURCE.exists():
+            self.skipTest('retained Mangobar source not available')
+        sources = builder.patched_sources()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)
+            source = path / 'rtconfig.c'
+            header = path / 'rtconfig.h'
+            source.write_text(sources['rtconfig.c'])
+            header.write_text(sources['rtconfig.h'])
+            config = path / 'candidate.jsonc'
+            config.write_text(json.dumps(quiet.candidate_config(THEME)))
+            harness = path / 'check.c'
+            harness.write_text(r'''
+#include "rtconfig.h"
+#include <assert.h>
+#include <string.h>
+int main(int argc, char **argv) {
+  assert(argc == 2 && mango_config_load(argv[1]) == 0);
+  assert(g_cfg.battery_count == 1);
+  MangoBatteryCfg *b = &g_cfg.batteries[0];
+  assert(strcmp(b->device, "BAT0") == 0);
+  assert(strcmp(b->fmt, "Bat {percent}%{icon}") == 0);
+  assert(strcmp(b->icon_charging, " chg") == 0);
+  assert(strcmp(b->icon_full, "") == 0);
+  assert(b->icon_count == 11);
+  for (int i = 0; i < b->icon_count; i++) assert(strcmp(b->icons[i], "") == 0);
+  return 0;
+}
+''')
+            executable = path / 'check'
+            subprocess.run(['cc', '-I', str(path), '-I/usr/include/cjson',
+                            str(harness), str(source), '-lcjson', '-o', str(executable)],
+                           check=True)
+            subprocess.run([str(executable), str(config)], check=True)
 
     def test_isolated_native_css_and_hover_geometry(self):
         if not builder.SOURCE.exists():
@@ -80,6 +139,7 @@ int main(int argc, char **argv) {
   Style hover = style_resolve(&ss, "tags", "hover");
   assert(active.background_set && active.background_inset_set);
   assert(active.background_inset == 4 && active.radius == 4);
+  assert(active.margin_left == 8 && active.margin_right == 1);
   assert(!hover.background_inset_set && !hover.min_width_set);
   assert(!hover.radius_set && !hover.color_set && !hover.background_set);
   Style combined = style_overlay(&active, &hover);

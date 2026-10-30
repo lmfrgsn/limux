@@ -7,7 +7,7 @@ The [canonical design language](design-language.md), [original visual reference]
 | Component | Current approved state | Appearance owner | Recovery |
 | --- | --- | --- | --- |
 | MangoWM | Rhapsody border/gap baseline; live config retains functional bindings and T2 settings | `[mango]` tokens, `scripts/mango.py` | `scripts/mango-appearance.py rollback` |
-| Mangobar | Activated Quiet Workspace Strip, patched pinned 0.2.2 binary, inset orange active control | `workspace_active` semantic, `[mangobar_candidate]` geometry, `render_quiet()` | `scripts/activate-quiet-bar.py rollback`; old binary/CSS and patched source retained |
+| Mangobar | Quiet Workspace Strip active on pinned patched 0.2.2; white-text/inset/charging refinement approved, activation pending Foot session | `workspace_active` / `on_workspace_active` semantics, `[mangobar_candidate]` geometry, `render_quiet()` | After refinement, `restore-prior` reverts it; `rollback` restores the pre-Strip baseline |
 | Rofi application launcher | Activated light Rhapsody launcher on Command+Space; yellow list edge | `[rofi]` tokens, `scripts/rofi.py` | `scripts/activate-rofi.py rollback` |
 | Limux Commands | Activated Command+K picker; small nonselectable headings and private snippets | Base Rofi plus `[limux_commands]` override | `scripts/activate-commands.py rollback` removes binding |
 | Foot | Approved graphite palette with orange block cursor and hollow unfocused state | `[foot]` tokens, `scripts/foot.py` | `scripts/activate-foot.py rollback` restores previous yellow cursor; `restore-original` restores pre-Rhapsody config |
@@ -41,7 +41,7 @@ Mangobar 0.2.2 reads generated CSS independently from its JSON behaviour config.
 
 Inspection of the locally retained native `style.c` and `mangobar.c` confirms horizontal padding/margins, minimum width, corner radius and menu border colour. Workspace border width, shadows and vertical control inset are unavailable. Global typography applies throughout. Hover overlays inherited base/global styles, so global and base-tag rules deliberately omit colours; a radius-only hover preserves selected/urgent colours. This is covered by an optional compiled native-parser test. Inter is installed and remains the preview choice; final typography is unresolved.
 
-Workspace actions, tags, clock, Wi-Fi helper, battery device, corrected battery computation, PipeWire controls, tray, scaling and startup remain in the existing live configuration and scripts. The Quiet Strip's approved JSON removes only the visible layout module and sets the approved bar/title metrics; MangoWM layout switching remains available. Generated files under build/ are disposable and ignored by Git.
+Workspace actions, tags, clock, Wi-Fi helper, battery device, corrected battery computation, PipeWire controls, tray, scaling and startup remain in the existing live configuration and scripts. The approved refinement's generated config hides only the visible layout module, preserves battery percentage calculation, and uses Mangobar's native battery status to append `chg` only when sysfs reports `Charging`; Inter lacks the lightning glyph and the current renderer has no configured fallback. Its workspace group uses the existing 8px Rhapsody spacing token as a left inset; workspace gaps and button geometry remain unchanged. MangoWM layout switching remains available. Generated files under build/ are disposable and ignored by Git.
 
 Run `python scripts/theme.py render themes/rhapsody.toml --output build/rhapsody` and inspect `build/rhapsody/mangobar.css`. For a temporary visual preview from a Foot window on the desktop, run `timeout 15s ~/.local/bin/mangobar -c ~/.config/mangobar/config.jsonc -s "$HOME/limux/build/rhapsody/mangobar.css"`. This starts a second bar for 15 seconds; it may overlap the existing bar and the existing tray watcher can prevent its tray from appearing. It does not replace or stop the running bar. Exit early with Ctrl+C. Close the preview and confirm the original bar remains. Visual verification and any future apply/rollback remain separate steps.
 
@@ -65,6 +65,20 @@ python3 scripts/activate-mangobar.py rollback
 ```
 
 The [recovery CSS](../themes/recovery/mangobar-before-rhapsody.css) is a historical version-controlled snapshot, guarded by the [manifest](../themes/recovery/mangobar.json). The manifest also pins the approved generated CSS: later token/adapter changes cannot silently become an authorized activation. Update that pin only after a new visual approval. Functional config and hardware are never copied into the repository or rewritten by this mechanism. No additional startup entry or service is installed. Failure during restart/verification restores the prior CSS and attempts a managed restart. Abrupt power loss/SIGKILL cannot run Python recovery, but atomic replacement prevents a partial CSS file; explicit rollback remains available from a healthy managed session. If the bar itself is absent, use the existing `~/.local/bin/limux-bar start` first, inspect its status/log, then retry rollback.
+
+From Foot in the live session:
+
+```sh
+cd ~/limux
+python3 scripts/activate-quiet-bar.py refine
+~/.local/bin/limux-bar status
+# Undo only these refinements:
+python3 scripts/activate-quiet-bar.py restore-prior
+# Restore the pre-Quiet-Strip baseline instead:
+python3 scripts/activate-quiet-bar.py rollback
+```
+
+The refinement updates only generated candidate config/CSS and preserves the current launcher bytes; the pinned 0.2.2 binary, patches, MangoWM startup and hardware configuration remain untouched. The controller snapshots the previous active candidate in its existing private state while retaining the original pre-Strip rollback bytes. `restore-prior` reverts only the latest refinement; `rollback` still restores the original pre-Strip configuration and upstream binary. The Codex sandbox could not write its runtime activation lock or reach the managed bar process, so the refinement remains pending and must be run from the live Foot session.
 
 
 ## Rofi approved baseline — adapter and preview

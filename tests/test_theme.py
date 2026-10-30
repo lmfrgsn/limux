@@ -61,13 +61,17 @@ class ThemeTests(unittest.TestCase):
         self.assertEqual(colors[roles['terminal_cursor']], '#D46A43')
         self.assertEqual(roles['terminal_cursor'], 'workspace_orange')
         self.assertEqual(roles['workspace_active'], 'workspace_orange')
+        self.assertEqual(colors[roles['on_workspace_active']], '#FFFFFF')
+        self.assertEqual(roles['on_workspace_active'], 'pure_white')
         self.assertEqual(colors[roles['on_terminal_cursor']], '#141810')
         self.assertIn('background: #D46A43;', render_quiet(theme))
         self.assertIn('border-color: #E3BE47;', render_rofi(theme))
         self.assertIn('cursor=141810 D46A43', render_foot(theme))
         changed = copy.deepcopy(theme)
         changed['colors']['workspace_orange'] = '#CC693F'
-        self.assertNotEqual(render_quiet(changed), render_quiet(theme))
+        # The approved white-on-#D46A43 exception is tightly color-pinned.
+        with self.assertRaisesRegex(ValueError, 'unapproved active workspace contrast exception'):
+            render_quiet(changed)
         self.assertEqual(render_rofi(changed), render_rofi(theme))
         self.assertNotEqual(render_foot(changed), render_foot(theme))
         cursor_only = copy.deepcopy(theme)
@@ -75,6 +79,10 @@ class ThemeTests(unittest.TestCase):
         self.assertEqual(render_quiet(cursor_only), render_quiet(theme))
         self.assertNotEqual(render_foot(cursor_only), render_foot(theme))
         self.assertIn('cursor=141810 E3BE47', render_foot(cursor_only))
+        workspace_ink_only = copy.deepcopy(theme)
+        workspace_ink_only['semantics']['on_workspace_active'] = 'signal_ink'
+        self.assertNotEqual(render_quiet(workspace_ink_only), render_quiet(theme))
+        self.assertEqual(render_foot(workspace_ink_only), render_foot(theme))
 
     def test_hover_cannot_override_state_colours(self):
         css = render(self.theme)

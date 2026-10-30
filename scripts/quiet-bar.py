@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the approved Quiet Workspace Strip; preview needs the old module list."""
+"""Render approved Quiet Workspace Strip config and styling from live settings."""
 import argparse
 import json
 from pathlib import Path
@@ -17,15 +17,24 @@ BAR = OUT / 'mangobar-build/mangobar'
 
 def candidate_config(theme, path=LIVE):
     # Current live JSONC is strict JSON. Refuse unfamiliar syntax rather than
-    # risk dropping a commented setting while generating an isolated preview.
+    # risk dropping a commented setting while producing generated config.
     data = json.loads(path.read_text())
     left = data['modules-left']
-    if left != ['workspaces', 'layout', 'window']:
-        raise ValueError('unexpected left modules; inspect before changing the preview')
+    if left not in (['workspaces', 'layout', 'window'], ['workspaces', 'window']):
+        raise ValueError('unexpected left modules; inspect before generating config')
     candidate = theme['mangobar_candidate']
     data['modules-left'] = ['workspaces', 'window']
     data['height'] = candidate['bar_height']
     data['window']['max-length'] = candidate['title_max_width']
+    # Mangobar's native battery module reads sysfs status. Its charging icon is
+    # selected only for Charging; blank level/full icons keep other states quiet.
+    data['battery'].update({
+        'format': 'Bat {percent}%{icon}',
+        'icon-charging': ' chg',
+        'icon-full': '',
+        'icon-discharging': '',
+        'icons': [''] * 11,
+    })
     return data
 
 
