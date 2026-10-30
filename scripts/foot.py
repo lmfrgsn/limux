@@ -27,8 +27,8 @@ def settings(theme):
     f, c = theme['foot'], palette(theme)
     if not re.fullmatch(r'[\w .-]+', f['font']):
         raise ValueError('invalid Foot font')
-    for key, low, high in [('font_size', 8, 32), ('padding', 0, 32)]:
-        if type(f[key]) is not int or not low <= f[key] <= high:
+    for key, low, high, kinds in [('font_size', 8, 32, (int, float)), ('padding', 0, 32, (int,))]:
+        if type(f[key]) not in kinds or not low <= f[key] <= high:
             raise ValueError(f'invalid Foot {key}')
     if len(f['regular']) != 8 or len(f['bright']) != 8:
         raise ValueError('Foot requires eight regular and bright colors')

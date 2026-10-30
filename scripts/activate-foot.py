@@ -183,9 +183,9 @@ def main():
             if before != active or old_style != desired:
                 raise RuntimeError('Approved Rhapsody Foot is not active on disk')
             native(config)
-        state = ('Rhapsody orange cursor' if before == active and old_style and
+        state = ('Rhapsody Adwaita Mono' if before == active and old_style and
                  digest(old_style) == manifest['baseline_sha256'] else
-                 'Rhapsody yellow cursor' if before == active and old_style else
+                 'previous Rhapsody DejaVu Sans Mono' if before == active and old_style else
                  'previous styling (or recoverable incomplete activation)')
         print(f'Native syntax and approval/recovery checks passed. On disk: {state}.')
         print('New Foot processes read this config; existing windows/servers keep their current appearance.')
@@ -209,9 +209,9 @@ def main():
                 raise RuntimeError('Live appearance differs from approved bytes')
             native(config)
         transition(config, style, original, active, desired, verify)
-    message = {'rollback': 'Restored the approved yellow-cursor Foot styling.',
+    message = {'rollback': 'Restored the previous DejaVu Sans Mono Rhapsody Foot styling.',
                'restore-original': 'Restored the original pre-Rhapsody Foot configuration.',
-               'activate': 'Activated approved orange-cursor Rhapsody Foot styling.'}[args.action]
+               'activate': 'Activated approved Adwaita Mono Rhapsody Foot styling.'}[args.action]
     print(message)
     print('Open a NEW normal Foot window to use it. No running terminal or server was restarted.')
 

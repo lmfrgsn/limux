@@ -104,13 +104,13 @@ class FootActivationTests(unittest.TestCase):
             self.apply(None, lambda _: None)
         self.assertEqual(self.config.read_bytes(), self.original)
 
-    def test_previous_yellow_cursor_is_pinned_and_restorable(self):
+    def test_previous_dejavu_styling_is_pinned_and_restorable(self):
         self.assertEqual(a.digest(self.previous), self.manifest['previous_sha256'])
         self.apply(self.data, lambda _: None)
         self.apply(self.previous, lambda _: None)
         self.assertEqual(self.style.read_bytes(), self.previous)
         self.assertEqual(self.config.read_bytes(), self.active)
-        self.assertIn(b'cursor=343442 E3BE47', self.style.read_bytes())
+        self.assertIn(b'font=DejaVu Sans Mono:size=16', self.style.read_bytes())
 
     def test_real_cli_stops_before_writes_without_wayland(self):
         # Use fixture's hash to exercise main while all writes are intercepted.

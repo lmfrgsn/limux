@@ -1,8 +1,8 @@
 {
-  "approved_commit": "orange-cursor-approved",
-  "baseline_sha256": "330981f6fb494d75c6503da5e85dbae25222097abd66de4c7667785194d24178",
-  "previous_sha256": "06d5b2f901282cb00c97ccbba61d2cdf641ed061cc6ebe3cc78eae2a8e76e01f",
-  "previous_file": "foot-yellow-cursor.ini",
+  "approved_commit": "adwaita-mono-approved",
+  "baseline_sha256": "6e2f4fd341b0d1db3b39eb8c658819b8234b6ad41fc584eb0a14811f1c0d10e6",
+  "previous_sha256": "330981f6fb494d75c6503da5e85dbae25222097abd66de4c7667785194d24178",
+  "previous_file": "foot-dejavu-orange.ini",
   "original_config_sha256": "fc9dc98aaacfbdca3806182c795f35c71f4a759179c8e4bd207ba5ba9f4ace02",
   "original_font_line": "font=DEjaVu Sans Mono:size=16\n",
   "foot_version": "1.28.0"

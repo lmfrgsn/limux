@@ -61,7 +61,7 @@ def sample(theme):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check', action='store_true', help='native validation only; no window')
-    parser.add_argument('--font', choices=['DejaVu Sans Mono', 'IBM Plex Mono'], help='preview-only family comparison at the same 16pt size; requires installed font')
+    parser.add_argument('--font', choices=['DejaVu Sans Mono', 'IBM Plex Mono'], help='preview-only family comparison at the current token size; requires installed font')
     parser.add_argument('--shell', action='store_true', help='open normal configured shell instead of specimen')
     parser.add_argument('--capture', action='store_true', help='capture the actual desktop after two seconds (may contain private windows)')
     parser.add_argument('--sample', action='store_true', help=argparse.SUPPRESS)

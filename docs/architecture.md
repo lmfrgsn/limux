@@ -10,7 +10,7 @@ The [canonical design language](design-language.md), [original visual reference]
 | Mangobar | Refined Quiet Workspace Strip active on pinned patched 0.2.2; white active number, 8px left inset and charging text | `workspace_active` / `on_workspace_active` semantics, `[mangobar_candidate]` geometry, `render_quiet()` | `restore-prior` reverts this refinement; `rollback` restores the pre-Strip baseline |
 | Rofi application launcher | Activated light Rhapsody launcher on Command+Space; yellow list edge | `[rofi]` tokens, `scripts/rofi.py` | `scripts/activate-rofi.py rollback` |
 | Limux Commands | Functional Command+K picker with nonselectable headings and private snippets. Visual design **not approved**; redesign parked. A neutral-v1 appearance marker is present on disk, so Command+K currently uses the unapproved `[limux_commands_candidate]` styling | Base Rofi plus `[limux_commands]` / `[limux_commands_candidate]` override | `scripts/activate-commands-appearance.py rollback` removes only the appearance marker; `scripts/activate-commands.py rollback` removes the binding |
-| Foot | Approved graphite palette with orange block cursor and hollow unfocused state | `[foot]` tokens, `scripts/foot.py` | `scripts/activate-foot.py rollback` restores previous yellow cursor; `restore-original` restores pre-Rhapsody config |
+| Foot | Approved graphite palette with orange block cursor and hollow unfocused state | `[foot]` tokens, `scripts/foot.py` | `scripts/activate-foot.py rollback` restores the previous DejaVu Sans Mono 16 styling; `restore-original` restores pre-Rhapsody config |
 | Thunar / GTK 3 (Limux Files) | Approved design, implemented; activation requires the `adw-gtk-theme` package | `[thunar]` tokens, `scripts/gtk.py` | `scripts/activate-gtk.py rollback` restores default GTK theme, icons and Thunar view settings |
 | Mako | Existing independent configuration; Rhapsody styling pending separate design | No Limux adapter yet | Existing application configuration |
 
@@ -233,15 +233,12 @@ The approved orange-cursor palette is pinned by
 [foot.json](../themes/recovery/foot.json). Foot uses the independent
 `terminal_cursor` and `on_terminal_cursor` semantic roles, currently mapped to
 `workspace_orange` (`#D46A43`) and `signal_ink` (`#141810`). The block cursor and
-hollow unfocused state are approved. DejaVu Sans Mono 16pt remains the local
-Foot baseline while the final font choice is open. IBM Plex Mono is still absent;
-Fontconfig resolves it to DejaVu. To compare later **if Plex is installed**, use
-`python3 scripts/preview-foot.py --shell --font "IBM Plex Mono"`. This is a
-preview-only 16pt comparison, rejects fallback and does not change canonical
-font tokens. Equal point sizes are a starting comparison, not proof of equal
-perceived x-height. No font is installed by these tools.
+hollow unfocused state are approved. Adwaita Mono 12.5 with 16px padding is the
+approved Foot typography (2026-10-30), chosen over DejaVu Sans Mono, JetBrains Mono
+and IBM Plex Mono in isolated previews matched by visible x-height. Adwaita Mono is
+installed and is already the GTK monospace font; no font package is added.
 
-The orange appearance is active in `~/.config/foot/rhapsody.ini`, included by the
+The approved appearance is active in `~/.config/foot/rhapsody.ini`, included by the
 single functional `~/.config/foot/foot.ini`. Check it without modifying the live
 configuration:
 
@@ -252,7 +249,7 @@ foot -C -c ~/.config/foot/foot.ini
 foot
 ```
 
-The newly opened `foot` process reads the approved orange include. Existing Foot
+The newly opened `foot` process reads the approved include. Existing Foot
 windows or a persistent server are not restarted by activation and keep their
 current appearance until their lifecycle naturally ends. The optional specimen
 preview remains available through `scripts/preview-foot.py`; it does not alter
@@ -262,7 +259,7 @@ Recovery remains guarded and exact:
 
 ```sh
 cd ~/limux
-# Restore the exact prior yellow-cursor Rhapsody fragment for new windows:
+# Restore the exact prior DejaVu Sans Mono 16 Rhapsody fragment for new windows:
 python3 scripts/activate-foot.py rollback
 # Or remove the Rhapsody include and restore the original font line:
 python3 scripts/activate-foot.py restore-original

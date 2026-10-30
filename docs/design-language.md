@@ -62,7 +62,7 @@ The screenshot is source context, not a layout target. Avoid gratuitous boxes, s
 
 ## Typography, geometry and states
 
-Typography is compact, readable and aligned; technical metadata is quieter than primary actions. Inter is the approved system interface face: the bar, Rofi, Thunar and the GTK interface font (Inter 10, `typography.ui_size`), which Firefox's interface and GTK dialogs also use. Foot currently uses DejaVu Sans Mono. IBM Plex remains an unapproved future comparison. Check installed fonts and native rendering before changing them.
+Typography is compact, readable and aligned; technical metadata is quieter than primary actions. Inter is the approved system interface face: the bar, Rofi, Thunar and the GTK interface font (Inter 10, `typography.ui_size`), which Firefox's interface and GTK dialogs also use. Foot uses Adwaita Mono 12.5 with 16px padding: GNOME's companion to the Inter-based Adwaita Sans, already the system monospace font. IBM Plex Mono and JetBrains Mono were compared and not chosen. Check installed fonts and native rendering before changing them.
 
 The live component geometries are approved individually; they are not universal spacing or radius rules. The original 1px edge and 4-unit rhythm are historical exploration. Preserve stable hover geometry, especially across all workspace states.
 
