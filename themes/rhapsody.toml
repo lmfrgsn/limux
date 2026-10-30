@@ -50,29 +50,14 @@ hover_radius = 0
 group_gap = 6
 
 [mangobar_candidate]
-# Option A exploration only. Does not change the approved live bar or semantics.
-signal_vermilion = "#AD492F"
-signal_vermilion_soft = "#A55A43"
+# Revised single preview, pending visual approval. No global semantic change.
+active_orange = "#D46A43"
+bar_height = 30
+workspace_padding = 7
 workspace_gap = 1
+active_radius = 4
+active_inset = 4
 title_max_width = 240
-
-[mangobar_candidate.A]
-bar_height = 26
-workspace_padding = 4
-active_radius = 2
-active_color = "signal_vermilion"
-
-[mangobar_candidate.B]
-bar_height = 30
-workspace_padding = 7
-active_radius = 3
-active_color = "signal_vermilion"
-
-[mangobar_candidate.C]
-bar_height = 30
-workspace_padding = 7
-active_radius = 3
-active_color = "signal_vermilion_soft"
 
 [rofi]
 # Approved initial Rofi baseline at e1f7538; future refinements require review.

@@ -1,29 +1,21 @@
-# Quiet Workspace Strip — filled active workspace, preview only
+# Quiet Workspace Strip — one revised preview, pending review
 
-These are three refinements of the selected Limux direction for **Mangobar 0.2.2**. The nine workspaces remain plain numbers; only the active number has a compact orange fill. The porcelain background, quiet title, centered clock and status area are shared. The preview config removes the visible layout module, while MangoWM's `SUPER,n` layout switching remains intact. It retains the live workspace, tray, network, battery and volume configuration. No candidate is activated.
+The user preferred candidate B's workspace spacing but rejected its segmented surface and full-height active fill. This single revised preview keeps B's 30px bar and 7px workspace padding. Eight inactive workspace numbers sit on one uninterrupted porcelain surface; only the active number has a 30×22px orange fill, inset 4px above and below, with a 4px radius. The orange is a candidate-only `#D46A43`. Dark `signal_ink` text on it measures 5.09:1. No canonical selection semantic or live styling changes.
 
-| Candidate | Bar height | Workspace padding | Active radius | Active fill | Contrast with porcelain text |
-| --- | ---: | ---: | ---: | --- | ---: |
-| A — Compact | 26px | 4px | 2px | `#AD492F` | 5.25:1 |
-| B — Balanced | 30px | 7px | 3px | `#AD492F` | 5.25:1 |
-| C — Softer | 30px | 7px | 3px | `#A55A43` | 4.78:1 |
+## Renderer finding
 
-The values are candidate-only tokens in `themes/rhapsody.toml`. The approved global yellow selection semantic and live CSS do not change. Mangobar paints a workspace background at the full bar height; its CSS subset does not provide a reliable vertical inset. The filled active shape therefore uses the bar height, with a small corner radius rather than a pill. The original Braun reference supports the restrained fill as a purposeful state marker, while the running bar's boxed workspaces and `Layout T` compete with the information in the strip. B is the provisional recommendation: it keeps the current 30px status-bar height and makes the active number easier to scan without changing the status hierarchy. A is tighter; C has the same geometry as B with a quieter signal. This recommendation needs the on-device screenshots below before approval.
+In stock Mangobar 0.2.2, `paint_module()` paints every tag background from the bar's top through its full height. The stylesheet parser accepts `margin-top`, but the module painter does not use it. It does not support an inset tag fill. The stock compositor also fills only the middle region behind the modules; gaps around workspace raster slots therefore expose the desktop. That is why surface-coloured individual tags still looked like rectangles in the reviewed screenshot.
 
-## Stable hover geometry
+The revised preview **uses an isolated, minimally patched 0.2.2 build**. [The build script](../scripts/quiet-mangobar-build.py) verifies exact retained upstream source hashes, copies that source into ignored `build/quiet-workspace-strip/`, and adds one explicit `background-inset` stylesheet property for tag fills. It also paints a full-width porcelain backing surface. Inactive tag backgrounds use native `background: none`; the backing surface shows through their slots and gaps. The CSS does not define a hover colour or any width/spacing override. The patch does not change tag hit areas or text baselines. The installed Mangobar binary and source tree are untouched. This isolated build is a preview mechanism, **not an activation plan**; adopting the design would require a reviewed maintenance decision for the renderer change.
 
-The previous shifting came from the native implementation: after CSS loading, Mangobar sets every workspace state's minimum width from bar height and margins, but a CSS `min-width` can be reapplied by the hover overlay. These candidate rules omit `min-width` and do not define a hover selector. Every workspace state has identical padding and margins, and only the active state changes colour and radius. Native parser tests cover empty, inactive, occupied, active and urgent states, plus hover overlays. Visual pointer checks are still required.
+The preview JSONC copies the live modules and commands, removes only the visible layout module and retains the previous candidate's 240px window-title limit. MangoWM layout switching remains available. Clock, window information, Wi-Fi, battery, volume and tray stay in their current positions and use the same rules as B.
 
-## Native previews
-
-From Foot in the MangoWM session, run each command separately:
+## Preview in Foot
 
 ```sh
-cd ~/limux && python3 scripts/quiet-bar.py preview --variant A
-cd ~/limux && python3 scripts/quiet-bar.py preview --variant B
-cd ~/limux && python3 scripts/quiet-bar.py preview --variant C
+cd ~/limux && python3 scripts/quiet-bar.py preview
 ```
 
-Each invocation renders token-derived CSS and a temporary JSONC config under ignored `build/quiet-workspace-strip/`, captures the current desktop, starts a second native Mangobar for 25 seconds, captures the candidate and a hover frame, then stops only that preview process. Put the pointer over a workspace number before the hover capture at about 10 seconds. While the preview is visible, move across all nine numbers, switch between occupied and empty workspaces, and check that no slot or neighbour moves. Compare the active shape, number spacing, title and status alignment, contrast, and balance against the light desktop and graphite Foot at 1.5 display scaling. The second bar may overlap the live one during capture; Ctrl+C closes it early. Repeating a command regenerates the same candidate files.
+The command renders one CSS/JSONC pair, checks screenshot access, builds the isolated bar using the already installed Meson/Ninja and native libraries, captures before/candidate/hover images in ignored `build/quiet-workspace-strip/`, then closes only its preview process after 25 seconds. Ctrl+C closes it early. At the hover capture, roughly 10 seconds after startup, put the pointer over a workspace number. Move across all nine numbers and switch among occupied and empty workspaces while the preview is visible. Check that the orange fill has visible air above and below, inactive numbers have no tile edges, no slot or neighbour shifts, and the clock/status/title hierarchy remains quiet at 1.5 scaling. The second bar may overlap the live bar while open.
 
-The Codex sandbox cannot access the Wayland session, so it cannot capture or judge these new real frames. Native CSS parsing and tests pass; final visual approval remains with the user after running these previews. Rollback of a preview is automatic when its command exits. No live files are replaced.
+Native parser tests verify transparent inactive states, active inset, contrast and unchanged hover geometry. The patched binary builds and loads its generated config. The Codex sandbox cannot capture the live Wayland output, so actual visual and pointer inspection remains pending. Nothing has been permanently activated; exiting the preview restores the unchanged live bar automatically.

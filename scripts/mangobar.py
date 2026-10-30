@@ -68,40 +68,38 @@ menuitem:hover {{ color: {c['text']}; background-color: {c['canvas']}; }}
 '''
 
 
-def render_quiet(theme, variant='B'):
-    """Unapproved filled-active previews; preserve render() and its approved output."""
+def render_quiet(theme):
+    """One unapproved inset preview for the isolated Mangobar 0.2.2 build."""
     render(theme)  # Reuse complete token and contrast validation.
-    if variant not in ('A', 'B', 'C'):
-        raise ValueError('unknown Quiet Workspace Strip variant')
     c = theme['colors']
     q = theme['mangobar_candidate']
-    spec = q[variant]
-    accent = q[spec['active_color']]
+    accent = q['active_orange']
     if not re.fullmatch(r'#[0-9a-fA-F]{6}', accent):
         raise ValueError('invalid Quiet Workspace Strip accent')
-    if contrast(accent, c['surface']) < 4.5:
+    if contrast(accent, c['signal_ink']) < 4.5:
         raise ValueError('insufficient active workspace contrast')
-    for key, value in (('workspace_padding', spec['workspace_padding']),
-                       ('active_radius', spec['active_radius']),
-                       ('workspace_gap', q['workspace_gap'])):
+    for key in ('workspace_padding', 'workspace_gap', 'active_radius', 'active_inset'):
+        value = q[key]
         if type(value) is not int or not 0 <= value <= 20:
             raise ValueError(f'invalid {key}')
-    if type(spec['bar_height']) is not int or not 20 <= spec['bar_height'] <= 40:
+    if type(q['bar_height']) is not int or not 20 <= q['bar_height'] <= 40:
         raise ValueError('invalid candidate bar height')
+    if q['active_inset'] * 3 > q['bar_height']:
+        raise ValueError('active inset exceeds renderer limit')
     font, size, weight = (theme['typography'][k] for k in ('sans', 'size', 'weight'))
     # The native bar forces workspace minimum width to bar height after loading
     # CSS. A #tags min-width would then be reapplied from the hover overlay and
     # shrink the hotspot. Keep every state and hover free of min-width.
-    return f'''/* Limux Option A: Quiet Workspace Strip ({variant}), preview only. */
-* {{ font-family: "{font}"; font-size: {size}px; font-weight: {weight}; padding: 0px 8px; margin: 0px; border-radius: 0px; }}
+    return f'''/* Limux Quiet Workspace Strip: isolated Mangobar 0.2.2 preview. */
+* {{ font-family: "{font}"; font-size: {size}px; font-weight: {weight}; padding: 0px 8px; margin: 0px; }}
 #bar {{ background: {c['surface']}; padding: 0px; margin: 0px; }}
 #bar.sel {{ background: {c['surface']}; }}
-#tags {{ padding: 0px {spec['workspace_padding']}px; margin: 0px {q['workspace_gap']}px; }}
-#tags.empty {{ color: {c['text_quiet']}; background: {c['surface']}; }}
-#tags.inactive {{ color: {c['text_quiet']}; background: {c['surface']}; }}
-#tags.occupied {{ color: {c['text_secondary']}; background: {c['surface']}; }}
-#tags.active {{ color: {c['surface']}; background: {accent}; border-radius: {spec['active_radius']}px; }}
-#tags.urgent {{ color: {c['signal_red']}; background: {c['surface']}; }}
+#tags {{ padding: 0px {q['workspace_padding']}px; margin: 0px {q['workspace_gap']}px; }}
+#tags.empty {{ color: {c['text_quiet']}; background: none; }}
+#tags.inactive {{ color: {c['text_quiet']}; background: none; }}
+#tags.occupied {{ color: {c['text_secondary']}; background: none; }}
+#tags.active {{ color: {c['signal_ink']}; background: {accent}; border-radius: {q['active_radius']}px; background-inset: {q['active_inset']}px; }}
+#tags.urgent {{ color: {c['signal_red']}; background: none; }}
 #title {{ color: {c['text_quiet']}; background: {c['surface']}; margin-left: 12px; }}
 #clock {{ color: {c['text']}; background: {c['surface']}; }}
 #battery {{ color: {c['text_secondary']}; background: {c['surface']}; }}
