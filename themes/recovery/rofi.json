@@ -1,7 +1,9 @@
 {
-  "approved_commit": "e1f7538",
-  "baseline_sha256": "bda89c21078d90e0f20eaaf4980408f9e46d0b9611dac31e7766840f47c5f64f",
+  "approved_commit": "limux-picker-2026-10-30",
+  "baseline_sha256": "e38ba5a76b6de1fe5502532a41bd132c45278fd4a3d4de9b1a60128b3f21bb4c",
   "rollback_sha256": "444304aa344be5e981fb03fa4260674f0b38111753e77d41664d3e693a4d95da",
   "config_sha256": "8a00d185f746b8a6c4bb6e43bc5f742c36f8ea7e70b178c6bc25bf8c067cef23",
-  "search_icon_sha256": "4e2154b401d755f7e75ef3cd5eb29545754d81d50c86e56a8ebc000c1926040f"
+  "search_icon_sha256": "4e2154b401d755f7e75ef3cd5eb29545754d81d50c86e56a8ebc000c1926040f",
+  "previous_sha256": "bda89c21078d90e0f20eaaf4980408f9e46d0b9611dac31e7766840f47c5f64f",
+  "previous_file": "rofi-rhapsody-yellow-edge.rasi"
 }

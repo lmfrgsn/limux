@@ -1,6 +1,6 @@
 # Limux Commands — functional picker and design history
 
-**Current status (2026-10-30):** Limux Commands is functional and bound to Command+K. Command+Space remains the application launcher. The user is not satisfied with its visual design: the redesign is **parked, not approved**. The private appearance marker `~/.local/state/limux/commands-appearance` is present and matches the neutral-v1 candidate hash, so Command+K currently renders the `[limux_commands_candidate]` styling. That styling is not a design decision. `python3 scripts/activate-commands-appearance.py rollback` removes only the marker and returns to the `[limux_commands]` styling; whether to do so is a separate choice.
+**Current status (2026-10-30):** Limux Commands uses the approved Limux picker design shared with the launcher: actions with a quiet key or verb column, quiet uppercase section labels, graphite selection, opening on the first command. See [the Limux picker](architecture.md#limux-picker--launcher-and-command-menu). The earlier neutral candidate and its appearance marker were retired; the notes below are history.
 
 The script retains native Rofi syntax and behaviour. The preview and approval notes below are history; earlier "approved" wording describes the state at that time.
 

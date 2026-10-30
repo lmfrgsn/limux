@@ -1,12 +1,13 @@
 from contextlib import contextmanager
 import importlib.util
-import hashlib
 import os
 from pathlib import Path
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
+import tomllib
 import unittest
 from unittest.mock import patch, MagicMock
 
@@ -17,21 +18,16 @@ spec.loader.exec_module(commands)
 
 @contextmanager
 def isolated_picker():
-    """Run the picker against temporary state and lock paths, never the live desktop's."""
+    """Run the picker against a temporary lock path, never the live desktop's."""
     with tempfile.TemporaryDirectory() as folder:
         folder = Path(folder)
-        with patch.dict(os.environ, {'XDG_STATE_HOME': str(folder / 'state'), 'WAYLAND_DISPLAY': 'wayland-1'}), \
-             patch.object(commands, 'HOME', folder):
-            marker = commands.appearance_state()
-            assert marker.is_relative_to(folder), marker
-            yield marker
+        with patch.dict(os.environ, {'WAYLAND_DISPLAY': 'wayland-1'}), patch.object(commands, 'HOME', folder):
+            yield folder
 
 
-def write_candidate_marker(marker):
-    marker.parent.mkdir(parents=True)
-    marker.write_text('neutral-v1 ' + hashlib.sha256(
-        commands.preview_theme(candidate=True).encode()).hexdigest() + '\n')
-    marker.chmod(0o600)
+def visible(label):
+    """What Rofi shows for a markup row: tags removed, metadata dropped."""
+    return re.sub(r'<[^>]+>', '', label.split('\0', 1)[0])
 
 class CommandsTest(unittest.TestCase):
     def test_actual_bindings_and_gestures(self):
@@ -72,7 +68,7 @@ class PreviewFlowTest(unittest.TestCase):
         labels, actions = commands.display_rows(groups)
         self.assertIn('nonselectable', labels[0])
         self.assertIsNone(actions[0])
-        self.assertEqual(labels[1].split('\0')[0], 'Open application launcher — ⌘Space')
+        self.assertEqual(visible(labels[1]), 'Open application launcher\t⌘Space')
         self.assertIn('meta\x1fEveryday', labels[1])
 
     def test_cancel_has_no_action(self):
@@ -108,31 +104,34 @@ class RefinementTest(unittest.TestCase):
                     commands.main()
 
 class FullShortcutLabelsTest(unittest.TestCase):
-    def test_complete_live_shortcuts_in_plain_rows(self):
-        labels, _ = commands.display_rows(commands.registry())
-        visible = [label.split('\0', 1)[0] for label in labels]
-        expected = (
-            'Open application launcher — ⌘Space',
-            'Capture area screenshot — ⌘⇧4',
-            'Move window to workspace left — ⌃⌘←',
-        )
-        for label in expected:
-            self.assertIn(label, visible)
-        for label in visible:
-            self.assertNotIn('\t', label)
-            self.assertNotIn('<span', label)
-            self.assertNotIn('…', label)
-            self.assertNotIn('...', label)
+    def test_action_then_quiet_key_column(self):
+        labels, actions = commands.display_rows(commands.registry())
+        shown = [visible(label) for label in labels]
+        for row in ('Open application launcher\t⌘Space', 'Capture area screenshot\t⌘⇧4',
+                    'Move window to workspace left\t⌃⌘←', ';email\tCopy', 'Home folder\tOpen'):
+            self.assertIn(row, shown)
+        for label, action, text in zip(labels, actions, shown):
+            if 'nonselectable\x1ftrue' in label:
+                continue
+            self.assertEqual(text.count('\t'), 1, text)
+            self.assertNotIn(' — ', text)
+            self.assertIn('<span fgalpha="75%">', label)
 
-    def test_preview_sends_plain_rows_without_markup(self):
+    def test_user_text_is_escaped_for_markup(self):
+        rows = [('Snippets', 'R&D <draft>', 'Copy snippet', ('copy', 'x'))]
+        labels, _ = commands.display_rows([('Snippets', rows)])
+        self.assertIn('R&amp;D &lt;draft&gt;\t', labels[1])
+
+    def test_preview_opens_markup_rows_on_the_first_command(self):
         with isolated_picker(), \
              patch.object(commands.subprocess, 'run', return_value=MagicMock(returncode=1)) as run, \
              patch.object(commands.sys, 'argv', ['limux-commands', 'preview']):
             commands.main()
         args = run.call_args.args[0]
-        self.assertNotIn('-markup-rows', args)
-        self.assertIn('width: 700px;', args[args.index('-theme-str') + 1])
-        self.assertIn('Open application launcher — ⌘Space', run.call_args.kwargs['input'])
+        self.assertIn('-markup-rows', args)
+        self.assertEqual(args[args.index('-selected-row') + 1], '1')
+        self.assertIn('Search commands', args[args.index('-theme-str') + 1])
+        self.assertIn('Open application launcher\t', run.call_args.kwargs['input'])
 
 class HeadingTypographyTest(unittest.TestCase):
     def test_only_section_rows_receive_heading_state(self):
@@ -143,77 +142,38 @@ class HeadingTypographyTest(unittest.TestCase):
                 self.assertIsNone(action)
             else:
                 self.assertNotIn('active\x1ftrue', label)
-        self.assertIn('Open application launcher — ⌘Space', labels[1])
 
-    def test_heading_theme_uses_current_rhapsody_tokens(self):
+    def test_override_is_small_and_uses_tokens(self):
         theme = commands.preview_theme()
-        self.assertIn('font: "Inter 11";', theme)
-        self.assertIn('text-color: #666573;', theme)
-        self.assertIn('margin: 8px 0px 0px 0px;', theme)
-        self.assertIn('padding: 2px 8px 1px 8px;', theme)
-        self.assertNotIn('element selected', theme)
+        self.assertIn('font: "Inter 8";', theme)
+        self.assertIn('text-color: #686773;', theme)
+        self.assertIn('padding: 12px 12px 4px 12px;', theme)
+        self.assertIn('cursor: default;', theme)
         self.assertNotIn('box-search', theme)
+        self.assertNotIn('width', theme)
 
 
-class NeutralCandidateTest(unittest.TestCase):
-    def test_approved_override_and_picker_behaviour_are_preserved(self):
-        self.assertEqual(hashlib.sha256(commands.preview_theme().encode()).hexdigest(),
-                         '924c247930d332c008108d5b0a79c5c2f2e407dc697af0295240d2dcdfdc8faf')
-        invocations = []
-        with isolated_picker() as marker, \
-             patch.object(commands.subprocess, 'run', side_effect=lambda *a, **k: (
-                 invocations.append((a, k)) or MagicMock(returncode=1))), \
-             patch.object(commands, 'execute') as execute:
-            self.assertFalse(commands.appearance_active())
-            for mode in ('preview', 'candidate'):
-                with patch.object(commands.sys, 'argv', ['limux-commands', mode]):
-                    commands.main()
-            self.assertFalse(marker.exists())
-        self.assertEqual(invocations[0][1]['input'], invocations[1][1]['input'])
-        before, candidate = (list(call[0][0]) for call in invocations)
-        style_index = before.index('-theme-str') + 1
-        self.assertNotEqual(before[style_index], candidate[style_index])
-        candidate[style_index] = before[style_index]
-        self.assertEqual(before, candidate)
-        execute.assert_not_called()
-
-    def test_marker_path_follows_xdg_state_home_with_home_fallback(self):
-        with patch.dict(os.environ, {'XDG_STATE_HOME': '/xdg/state'}):
-            self.assertEqual(commands.appearance_state(), Path('/xdg/state/limux/commands-appearance'))
-        without = {k: v for k, v in os.environ.items() if k != 'XDG_STATE_HOME'}
-        with patch.dict(os.environ, without, clear=True), patch.object(commands, 'HOME', Path('/home/example')):
-            self.assertEqual(commands.appearance_state(),
-                             Path('/home/example/.local/state/limux/commands-appearance'))
-
+class PickerThemeTest(unittest.TestCase):
     @unittest.skipUnless(shutil.which('rofi'), 'Rofi is not installed')
-    def test_native_parser_resolves_neutral_selection_and_compact_hierarchy(self):
-        result = subprocess.run(['rofi', '-theme', str(commands.THEME), '-theme-str',
-                                 commands.preview_theme(candidate=True), '-dump-theme'],
-                                capture_output=True, text=True)
+    def test_native_parser_resolves_shared_picker_and_command_override(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+        from rofi import render
+        theme = tomllib.loads((Path(__file__).resolve().parents[1] / 'themes/rhapsody.toml').read_text())
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'picker.rasi'
+            path.write_text(render(theme))
+            result = subprocess.run(['rofi', '-theme', str(path), '-theme-str', commands.preview_theme(), '-dump-theme'],
+                                    capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         blocks = dict(re.findall(r'(?m)^([\w*. -]+) \{([^}]+)\}', result.stdout))
         self.assertIn('"box-search","listview","message"', blocks['mainbox'].replace(' ', ''))
-        self.assertIn('border:           0px', blocks['element'])
-        selected = blocks['element selected.normal']
-        self.assertIn('199, 199, 210', selected)
-        self.assertNotIn('227, 190, 71', selected)
+        self.assertIn('52, 52, 66', blocks['element selected.normal'])
+        self.assertNotIn('227, 190, 71', result.stdout)
         for state in ('element normal.active', 'element alternate.active', 'element selected.active'):
             self.assertIn('background-color: transparent', blocks[state])
-            self.assertIn('6px 0px 0px', blocks[state])
             self.assertIn('cursor:           default', blocks[state])
-            self.assertIn('104, 103, 115', blocks[state])
-        self.assertIn('font: "Inter 10"', blocks['element-text selected.active'])
-        self.assertIn('8px', blocks['inputbar'])
-
-    def test_activated_marker_selects_candidate_only_for_command_k_mode(self):
-        with isolated_picker() as marker, \
-             patch.object(commands.subprocess, 'run', return_value=MagicMock(returncode=1)) as run, \
-             patch.object(commands.sys, 'argv', ['limux-commands', 'preview']):
-            write_candidate_marker(marker)
-            self.assertTrue(commands.appearance_active())
-            commands.main()
-        args = run.call_args.args[0]
-        self.assertEqual(args[args.index('-theme-str') + 1], commands.preview_theme(candidate=True))
+        self.assertIn('font: "Inter 8"', blocks['element-text selected.active'])
+        self.assertIn('430px', blocks['element-text'])
 
 class PersonalQuicklinksTest(unittest.TestCase):
     def test_private_links_and_empty_groups(self):

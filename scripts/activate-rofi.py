@@ -12,7 +12,7 @@ import signal
 import subprocess
 import tempfile
 import tomllib
-from rofi import render
+from rofi import THEME_CONFIGURATION, render
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -80,7 +80,10 @@ def theme_properties(text):
 
 
 def functional_config(text):
-    return '\n'.join(line for line in text.splitlines() if not line.startswith('@theme '))
+    # The picker theme owns only how launcher entries are shown and searched.
+    # Rofi prints unset defaults as /* key: value; */ comments; match both forms.
+    return '\n'.join(line for line in text.splitlines() if not line.startswith('@theme ')
+                     and line.strip().lstrip('/*').strip().split(':', 1)[0] not in THEME_CONFIGURATION)
 
 
 def require_session():
@@ -107,17 +110,22 @@ def payload(action, manifest):
         raise RuntimeError('Recovery theme differs from the versioned manifest')
     if digest((recovery/'rofi-search.svg').read_bytes()) != manifest['search_icon_sha256']:
         raise RuntimeError('Recovery icon differs from the versioned manifest')
-    if action == 'rollback':
+    if action == 'restore-original':
         return old  # Recovery must work even if future tokens/adapter drift.
+    if action == 'rollback':
+        previous = (recovery/manifest['previous_file']).read_bytes()
+        if digest(previous) != manifest['previous_sha256']:
+            raise RuntimeError('Previous Rhapsody theme differs from the versioned manifest')
+        return previous
     new = render(tomllib.loads((ROOT/'themes/rhapsody.toml').read_text())).encode()
     if digest(new) != manifest['baseline_sha256']:
-        raise RuntimeError('Generated theme differs from approved e1f7538; refusing activation')
+        raise RuntimeError('Generated theme differs from the approved picker; refusing activation')
     return new
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['check', 'activate', 'rollback'])
+    parser.add_argument('action', choices=['check', 'activate', 'rollback', 'restore-original'])
     args = parser.parse_args()
     home = Path.home()
     config = home/'.config/rofi/config.rasi'
@@ -130,7 +138,7 @@ def main():
     if digest(regular(icon)) != manifest['search_icon_sha256']:
         raise RuntimeError('Rollback icon changed/missing; review the versioned recovery asset')
     before = regular(live)
-    if digest(before) not in (manifest['baseline_sha256'], manifest['rollback_sha256']):
+    if digest(before) not in (manifest['baseline_sha256'], manifest['previous_sha256'], manifest['rollback_sha256']):
         raise RuntimeError('Unknown live theme; preserve/review it before activation')
     mango = home/'.config/mango/config.conf'
     if 'bind=SUPER,space,spawn,rofi -show drun' not in regular(mango).decode().splitlines():
@@ -152,7 +160,8 @@ def main():
         if functional_config(dump(['-config', str(config), '-theme', str(stage), '-dump-config'])) != current_function:
             raise RuntimeError('Staged theme changes Rofi functionality')
         if args.action == 'check':
-            state = 'Rhapsody' if digest(before) == manifest['baseline_sha256'] else 'previous theme'
+            state = {manifest['baseline_sha256']: 'Limux picker', manifest['previous_sha256']: 'previous yellow-edge Rhapsody',
+                     manifest['rollback_sha256']: 'pre-Rhapsody theme'}[digest(before)]
             print(f'Native syntax, approved hash, default launcher and preserved config verified. Live: {state}.')
             print('Search/navigation/Enter/Escape bindings preserved; interactive checks require the desktop.')
             return
@@ -176,7 +185,8 @@ def main():
                     raise RuntimeError('Protected configuration changed')
 
             changed = transition(live, desired, verify)
-    print(('Activated' if changed else 'Already using') + (' previous Rofi styling.' if args.action == 'rollback' else ' approved Rhapsody Rofi.'))
+    print(('Activated' if changed else 'Already using') + {'rollback': ' the previous yellow-edge Rhapsody launcher.',
+          'restore-original': ' the pre-Rhapsody launcher.', 'activate': ' the approved Limux picker.'}[args.action])
     print('Command+Space uses it normally. Check search, Up/Down, Escape, then reopen and launch an app with Enter.')
 
 

@@ -4,7 +4,7 @@ import argparse
 import configparser
 import datetime
 import fcntl
-import hashlib
+from html import escape
 import os
 from pathlib import Path
 import subprocess
@@ -18,6 +18,8 @@ FOOT = HOME / '.config/foot/foot.ini'
 SNIPPETS = HOME / '.config/limux/commands.toml'
 THEME = HOME / '.config/rofi/charcoal.rasi'
 PROJECT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT / 'scripts'))
+from rofi import secondary, validate  # noqa: E402  shared picker tokens
 EXAMPLE = PROJECT / 'examples/commands.toml'
 TOKENS = PROJECT / 'themes/rhapsody.toml'
 MOD = {'super': '⌘', 'alt': '⌥', 'ctrl': '⌃', 'control': '⌃', 'shift': '⇧', 'none': ''}
@@ -54,9 +56,9 @@ LOREM = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
 
 def key(modifiers, name):
     parts = [MOD.get(x.lower(), x) for x in modifiers.split('+') if x.lower() != 'none']
-    names = {'space': 'Space', 'Return': '↵', 'Left': '←', 'Right': '→', 'Up': '↑', 'Down': '↓',
-             'backslash': '\\', 'Tab': 'Tab'}
-    return ''.join(parts) + names.get(name, name.upper() if len(name) == 1 else name)
+    names = {'space': 'Space', 'return': '↵', 'left': '←', 'right': '→', 'up': '↑', 'down': '↓',
+             'backslash': '\\', 'tab': 'Tab'}
+    return ''.join(parts) + names.get(name.lower(), name.upper() if len(name) == 1 else name)
 
 
 def shortcuts(path=MANGO):
@@ -183,18 +185,24 @@ def registry():
     return groups
 
 
-def display_rows(groups):
-    """Rofi rows: plain action-first text; metadata keeps categories searchable."""
+VERBS = {'Copy snippet': 'Copy', 'Open quicklink': 'Open', 'Open in file manager': 'Open',
+         'Copy placeholder paragraph': 'Copy', 'Copy UUID': 'Copy', 'Copy ISO date': 'Copy',
+         'Open snippet instructions': 'Open'}
+
+
+def display_rows(groups, tokens_path=TOKENS):
+    """Rofi markup rows: the action, a tab, then its key or verb as quiet secondary
+    text. Section rows are nonselectable; metadata keeps categories searchable."""
+    r = tomllib.loads(tokens_path.read_text())['rofi']
     labels, actions = [], []
     for category, items in groups:
-        labels.append(f'{category.upper()}\0nonselectable\x1ftrue\x1factive\x1ftrue')
+        labels.append(f'{escape(category.upper())}\0nonselectable\x1ftrue\x1factive\x1ftrue')
         actions.append(None)
         for _, shortcut, description, action in items:
-            # Rofi's tab stop clipped even short keys. Keep the full key in one text run.
-            shown = (f'{description} — {shortcut}' if action is None
-                     else f'{shortcut} — {description}')
+            primary, detail = ((description, shortcut) if action is None
+                               else (shortcut, VERBS.get(description, description)))
             search_terms = category + (' email address phone signature' if shortcut == 'Set up snippets' else '')
-            labels.append(shown + f'\0meta\x1f{search_terms}')
+            labels.append(f'{escape(primary)}\t{secondary(r, escape(detail))}\0meta\x1f{search_terms}')
             actions.append(action)
     return labels, actions
 
@@ -213,73 +221,23 @@ def execute(action):
     subprocess.run(['wl-copy', '--', value], check=True)
 
 
-def preview_theme(tokens_path=TOKENS, candidate=False):
-    tokens = tomllib.loads(tokens_path.read_text())
-    font = tokens['typography']['sans']
-    colors = tokens['colors']
-    overrides = tokens['limux_commands_candidate'] if candidate else {}
-    metrics = {**tokens['limux_commands'],
-               **{key: value for key, value in overrides.items() if key != 'heading_text_color'}}
-    quiet = colors[overrides['heading_text_color']] if candidate else colors['text_secondary']
-    if not font.replace(' ', '').isalpha() or not quiet.startswith('#') or len(quiet) != 7:
-        raise ValueError('invalid Rhapsody heading tokens')
-    for name, value in metrics.items():
-        minimum = 1 if name in ('width', 'list_lines', 'heading_size') else 0
-        if type(value) is not int or not minimum <= value <= (1600 if name == 'width' else 100):
+def preview_theme(tokens_path=TOKENS):
+    """Only what differs from the shared picker theme: placeholder, length and the
+    quiet, nonselectable section labels."""
+    theme = tomllib.loads(tokens_path.read_text())
+    colors, _, rofi, font = validate(theme)
+    m = theme['limux_commands']
+    for name, value in m.items():
+        if type(value) is not int or not (1 if name == 'list_lines' else 0) <= value <= 100:
             raise ValueError(f'invalid Commands geometry: {name}')
-    heading_states = ('element normal.active, element alternate.active, element selected.active'
-                      if candidate else 'element normal.active, element alternate.active')
-    heading_text_states = ('element-text normal.active, element-text alternate.active, element-text selected.active'
-                           if candidate else 'element-text normal.active, element-text alternate.active')
-    base = ('textbox-heading {\n content: "COMMANDS";\n}\n'
-            'entry {\n placeholder: "Search commands";\n}\n'
-            f'window {{\n width: {metrics["width"]}px;\n}}\n'
-            f'listview {{\n lines: {metrics["list_lines"]};\n}}\n'
-            f'{heading_states} {{\n'
-            f' margin: {metrics["heading_margin_top"]}px 0px 0px 0px;\n'
-            f' padding: {metrics["heading_padding_top"]}px {metrics["heading_padding_horizontal"]}px {metrics["heading_padding_bottom"]}px {metrics["heading_padding_horizontal"]}px;\n'
-            f' text-color: {quiet};\n' ' }\n'
-            f'{heading_text_states} {{\n'
-            f' font: "{font} {metrics["heading_size"]}";\n' ' }')
-    if not candidate:
-        return base
-    semantics = tokens['semantics']
-    selection = colors[semantics['list_selected_neutral']]
-    selected_ink = colors[semantics['on_list_selected_neutral']]
-    if not all(value.startswith('#') and len(value) == 7 for value in (selection, selected_ink)):
-        raise ValueError('invalid Commands selection tokens')
-    return (base + '\n'
-            'mainbox {\n children: [ box-search, listview, message ];\n'
-            f' spacing: {metrics["mainbox_spacing"]}px;\n}}\n'
-            f'window {{\n padding: {metrics["window_padding"]}px;\n}}\n'
-            f'inputbar {{\n padding: {metrics["search_padding"]}px;\n}}\n'
-            f'element {{\n padding: {metrics["row_padding"]}px;\n border: 0px;\n}}\n'
-            'element selected.normal {\n'
-            f' background-color: {selection};\n border-color: {selection};\n'
-            f' text-color: {selected_ink};\n}}\n'
+    return ('entry {\n placeholder: "Search commands";\n}\n'
+            f'listview {{\n lines: {m["list_lines"]};\n}}\n'
             'element normal.active, element alternate.active, element selected.active {\n'
-            f' background-color: transparent;\n border-color: transparent;\n'
-            f' text-color: {quiet};\n cursor: default;\n}}\n')
-
-
-def appearance_state():
-    """Resolve the marker per call so XDG_STATE_HOME can redirect it."""
-    return Path(os.environ.get('XDG_STATE_HOME', HOME / '.local/state')) / 'limux/commands-appearance'
-
-
-def appearance_active(path=None):
-    """Read the single activation marker; reject unreviewed appearance drift."""
-    path = path or appearance_state()
-    if not path.exists() and not path.is_symlink():
-        return False
-    if path.is_symlink() or not path.is_file() or path.stat().st_uid != os.getuid():
-        raise RuntimeError('Commands appearance marker is not an owned regular file')
-    if path.stat().st_mode & 0o077:
-        raise RuntimeError('Commands appearance marker must have mode 600')
-    expected = 'neutral-v1 ' + hashlib.sha256(preview_theme(candidate=True).encode()).hexdigest() + '\n'
-    if path.read_text() != expected:
-        raise RuntimeError('Commands appearance marker does not match the reviewed candidate')
-    return True
+            f' background-color: transparent;\n text-color: {colors["text_quiet"]};\n cursor: default;\n'
+            f' padding: {m["heading_padding_top"]}px {rofi["row_padding_horizontal"]}px'
+            f' {m["heading_padding_bottom"]}px {rofi["row_padding_horizontal"]}px;\n}}\n'
+            'element-text normal.active, element-text alternate.active, element-text selected.active {\n'
+            f' font: "{font} {rofi["heading_size"]}";\n}}\n')
 
 
 def picker_lock():
@@ -298,7 +256,7 @@ def picker_lock():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('mode', choices=['preview', 'candidate', 'list', 'check', 'init-snippets'])
+    parser.add_argument('mode', choices=['preview', 'list', 'check', 'init-snippets'])
     args = parser.parse_args()
     if args.mode == 'init-snippets':
         SNIPPETS.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -320,12 +278,12 @@ def main():
     lock_fd = picker_lock()
     if lock_fd is None:
         return
-    theme_override = preview_theme(candidate=args.mode == 'candidate' or
-                                   (args.mode == 'preview' and appearance_active()))
+    # Open on the first command, not the first section label.
+    first = next(i for i, action in enumerate(actions) if action is not None or '\0nonselectable' not in labels[i])
     try:
         result = subprocess.run(['rofi', '-dmenu', '-i', '-no-custom', '-no-sort', '-matching', 'fuzzy',
-                                 '-format', 'i', '-theme', str(THEME),
-                                 '-theme-str', theme_override, '-p', ''],
+                                 '-markup-rows', '-format', 'i', '-selected-row', str(first),
+                                 '-theme', str(THEME), '-theme-str', preview_theme(), '-p', ''],
                                 input='\n'.join(labels) + '\n', text=True, capture_output=True)
     finally:
         os.close(lock_fd)

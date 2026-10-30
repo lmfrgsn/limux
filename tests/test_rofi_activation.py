@@ -51,9 +51,10 @@ class RofiActivationTests(unittest.TestCase):
         manifest = json.loads((ROOT/'themes/recovery/rofi.json').read_text())
         self.assertEqual(activation.digest(activation.payload('activate', manifest)), manifest['baseline_sha256'])
         with patch.object(activation, 'render', return_value='unapproved future design'):
-            with self.assertRaisesRegex(RuntimeError, 'differs from approved'):
+            with self.assertRaisesRegex(RuntimeError, 'differs from the approved picker'):
                 activation.payload('activate', manifest)
-            self.assertEqual(activation.digest(activation.payload('rollback', manifest)), manifest['rollback_sha256'])
+            self.assertEqual(activation.digest(activation.payload('rollback', manifest)), manifest['previous_sha256'])
+            self.assertEqual(activation.digest(activation.payload('restore-original', manifest)), manifest['rollback_sha256'])
 
     @unittest.skipUnless(shutil.which('rofi'), 'Rofi not installed')
     def test_real_parser_default_launcher_activation_and_rollback_in_isolated_home(self):
@@ -63,7 +64,7 @@ class RofiActivationTests(unittest.TestCase):
             home = Path(directory)
             repo = home/'repo'
             (repo/'themes/recovery').mkdir(parents=True)
-            for file in ('rofi-before-rhapsody.rasi', 'rofi-search.svg', 'rofi.json'):
+            for file in ('rofi-before-rhapsody.rasi', 'rofi-rhapsody-yellow-edge.rasi', 'rofi-search.svg', 'rofi.json'):
                 shutil.copyfile(ROOT/'themes/recovery'/file, repo/'themes/recovery'/file)
             shutil.copyfile(ROOT/'themes/rhapsody.toml', repo/'themes/rhapsody.toml')
             config = home/'.config/rofi/config.rasi'
@@ -92,12 +93,13 @@ class RofiActivationTests(unittest.TestCase):
                  patch.dict(os.environ, {'HOME': str(home), 'XDG_CONFIG_HOME': str(home/'.config'), 'XDG_RUNTIME_DIR': str(runtime)}), \
                  patch.object(activation, 'require_session'), patch.object(activation, 'require_closed'):
                 before = activation.functional_config(activation.dump(['-dump-config']))
-                for action in ('activate', 'activate', 'check', 'rollback'):
+                expected = {'activate': 'baseline_sha256', 'check': 'baseline_sha256',
+                            'rollback': 'previous_sha256', 'restore-original': 'rollback_sha256'}
+                for action in ('activate', 'activate', 'check', 'rollback', 'activate', 'restore-original'):
                     with patch.object(sys, 'argv', ['activate-rofi.py', action]):
                         activation.main()
                     self.assertEqual(activation.functional_config(activation.dump(['-dump-config'])), before)
-                    expected = manifest['rollback_sha256'] if action == 'rollback' else manifest['baseline_sha256']
-                    self.assertEqual(activation.digest(live.read_bytes()), expected)
+                    self.assertEqual(activation.digest(live.read_bytes()), manifest[expected[action]])
                 self.assertEqual(live.read_bytes(), old)
                 live.write_bytes(b'unknown user edits')
                 with patch.object(sys, 'argv', ['activate-rofi.py', 'activate']):

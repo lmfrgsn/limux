@@ -10,8 +10,6 @@ text = "#343442"
 dark_terminal = "#2F303B"
 # Approved initial Mangobar baseline; not necessarily the final design.
 metal = "#A8A8B4"
-# Commands-only preview between metal and canvas; not an approved global surface.
-commands_selection_cool = "#C7C7D2"
 text_secondary = "#666573"
 text_quiet = "#686773"
 signal_yellow = "#E3BE47"
@@ -31,11 +29,9 @@ selected = "signal_yellow"
 on_selected = "text"
 workspace_active = "workspace_orange"
 on_workspace_active = "pure_white"
-list_selected = "signal_yellow"
-on_list_selected = "text"
-# Preview-only neutral list treatment for Limux Commands; not activated.
-list_selected_neutral = "commands_selection_cool"
-on_list_selected_neutral = "text"
+# Launcher and Command menu selection: the graphite inset shared with Thunar.
+list_selected = "text"
+on_list_selected = "surface"
 # Separate terminal/workspace roles intentionally share the approved orange swatch.
 terminal_cursor = "workspace_orange"
 on_terminal_cursor = "signal_ink"
@@ -82,42 +78,31 @@ title_max_width = 240
 active_text_contrast_exception = "approved-white-on-orange"
 
 [rofi]
-# Approved initial Rofi baseline at e1f7538; future refinements require review.
-width = 620
-padding = 16
-spacing = 10
-radius = 3
-search_padding = 10
-row_padding = 8
-row_spacing = 2
-icon_size = 20
-selection_edge = 3
-font_size = 12
-heading_size = 10
-entry_size = 14
+# Limux pickers (launcher and Command menu), approved 2026-10-30: the notification
+# card, the recessed search field, one shared left edge, graphite inset selection,
+# a quiet secondary column at a fixed tab stop, no icons. Font sizes in points.
+width = 640
+padding = 12
+spacing = 8
+radius = 6
+field_radius = 3
+search_padding_vertical = 9
+search_padding_horizontal = 12
+row_padding_vertical = 8
+row_padding_horizontal = 12
+row_radius = 4
+font_size = 10
+entry_size = 11
+heading_size = 8
+secondary_stop = 430
+secondary_alpha = 75
+lines = 7
 
 [limux_commands]
-# Approved Commands-specific Rofi geometry. Search and command behaviour stay
-# in the native adapter; these values preserve the current theme override.
-width = 700
+# Command menu differences from the shared picker; behaviour stays in the script.
 list_lines = 11
-heading_size = 11
-heading_margin_top = 8
-heading_padding_top = 2
-heading_padding_horizontal = 8
-heading_padding_bottom = 1
-
-[limux_commands_candidate]
-# Overrides only. All unchanged Commands dimensions inherit the approved base.
-window_padding = 14
-mainbox_spacing = 8
-search_padding = 8
-row_padding = 7
-heading_size = 10
-heading_margin_top = 6
-heading_padding_top = 1
-heading_padding_bottom = 0
-heading_text_color = "text_quiet"
+heading_padding_top = 12
+heading_padding_bottom = 4
 
 [mako]
 # Approved 2026-10-30: porcelain card on the window grid with a label, summary

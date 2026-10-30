@@ -10,7 +10,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'scripts'))
-from rofi import render
+from rofi import render, THEME_CONFIGURATION
 from mangobar import render as render_bar
 import hashlib
 import json
@@ -20,16 +20,17 @@ class RofiTests(unittest.TestCase):
     def setUp(self):
         self.theme = tomllib.loads((ROOT/'themes/rhapsody.toml').read_text())
 
-    def test_visual_only_and_shared_signals(self):
+    def test_visual_only_and_shared_selection(self):
         rasi = render(self.theme)
-        self.assertNotIn('configuration {', rasi)
-        for forbidden in ('kb-', 'matching:', 'terminal:', 'modi:', 'exec:'):
+        configuration = re.search(r'configuration \{\n(.*?)\n\}', rasi, re.S).group(1)
+        keys = {line.strip().split(':', 1)[0] for line in configuration.splitlines() if line.strip()}
+        self.assertEqual(keys, set(THEME_CONFIGURATION))
+        for forbidden in ('kb-', 'matching:', 'terminal:', 'modi:', 'exec:', 'element-icon'):
             self.assertNotIn(forbidden, rasi)
-        other = copy.deepcopy(self.theme)
-        other['colors']['signal_yellow'] = '#E8C64E'
-        changed = render(other)
-        self.assertIn('#E8C64E', changed)
-        self.assertNotIn('#E3BE47', changed)
+        # Selection is the graphite inset shared with Thunar, not the old yellow edge.
+        self.assertIn('background-color: #343442;', re.search(r'element selected.normal \{([^}]+)', rasi).group(1))
+        self.assertNotIn('#E3BE47', rasi)
+        self.assertIn('tab-stops: [ 430px ];', rasi)
         self.assertIn('box-search', rasi)
         self.assertIn('highlight: bold;', rasi)
 
@@ -55,7 +56,7 @@ class RofiTests(unittest.TestCase):
             result = subprocess.run(['rofi', '-no-config', '-theme', str(theme), '-dump-theme'],
                                     capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn('textbox-heading', result.stdout)
+            self.assertNotIn('textbox-heading', result.stdout)
             self.assertIn('box-search', result.stdout)
             self.assertNotIn('Parser error', result.stderr)
             # Exit code alone missed the installed lexer's greedy string rule.
@@ -64,13 +65,11 @@ class RofiTests(unittest.TestCase):
                 match = re.search(r'(?m)^\s*' + re.escape(key) + r':\s*(.*);\s*$', blocks[widget])
                 self.assertIsNotNone(match, (widget, key))
                 return match.group(1).strip()
-            self.assertEqual(prop('textbox-heading', 'content'), '"APPLICATIONS"')
-            self.assertEqual(prop('textbox-heading', 'font'), '"Inter 10"')
             self.assertEqual(prop('entry', 'placeholder'), '"Search applications"')
-            self.assertEqual(prop('entry', 'font'), '"Inter 14"')
+            self.assertEqual(prop('entry', 'font'), '"Inter 11"')
             self.assertNotIn('RHAPSODY /', result.stdout)
             self.assertNotIn('textbox-edition', result.stdout)
-            for widget in ('textbox-heading', 'box-search', 'inputbar', 'message'):
+            for widget in ('box-search', 'inputbar', 'message'):
                 self.assertEqual(prop(widget, 'expand'), 'false')
             self.assertEqual(prop('inputbar', 'orientation'), 'horizontal')
             self.assertEqual(prop('box-search', 'orientation'), 'vertical')

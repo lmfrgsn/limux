@@ -39,7 +39,7 @@ The original concept explored the following material and signal roles. Its sampl
 | Cool grey | Quiet backgrounds and chrome, barely lavender-tinted | `#DCDCE5` |
 | Metal | Secondary and recessed surfaces, borders, control treatments and structural separation | `#A8A8B4` |
 | Graphite | Dark surfaces, developer tools and technical depth | `#303039` |
-| Signal yellow | Original active workspace; current Rofi list edge and ANSI yellow have separate roles | `#E3BE47` |
+| Signal yellow | Original active workspace and former Rofi list edge; now Foot search/ANSI yellow and the MangoWM split indicator | `#E3BE47` |
 | Workspace orange | Approved active Quiet Workspace Strip control only | `#D46A43` |
 | Signal green | Meaningful positive, connected, successful or functional status where justified | `#728858` |
 | Signal red | Destructive actions, errors and urgent states | No agreed hex |
@@ -53,8 +53,7 @@ The token file now names active workspace, list selection, terminal cursor and t
 Study the complete image, including its rationale and palette, before visual work:
 
 - The image's light bar and yellow boxed workspaces explain the original concept. The approved live Mangobar uses nine plain numbers on one uninterrupted porcelain surface, with one small inset orange active control and no visible layout indicator.
-- The approved Rofi launcher retains a recessed search field and compact rows. “RHAPSODY / 01” was rejected as decorative branding.
-- The current Rofi list uses a pale-grey selected row with a narrow yellow edge. This is an approved baseline, open to a separate future colour review. Limux Commands is built on the same Rofi theme and is functional, but it has no approved visual design: its redesign is parked, and its candidate neutral styling is not a decision.
+- The launcher (Command+Space) and Command menu (Command+K) are one Limux picker: the notification card, the recessed search field, one shared left edge for search text, labels and rows, a graphite inset selection, quiet uppercase section labels, and a quiet secondary column (generic name, key or verb) at a fixed tab stop. No icons. The launcher lists Firefox, Files and Terminal. “RHAPSODY / 01” and the separate “APPLICATIONS” heading were rejected.
 - Limux Files (Thunar) applies the bar's patterns to a window: one porcelain surface with hairlines, the path as text, the launcher's recessed input, a graphite inset-style selection, quiet labels and measurements, and outline icons. Its approved target and known GTK 3 gaps are in the [decision log](design-decisions.md#limux-files--thunar-design-approved-and-implemented--2026-10-30).
 - Notifications (Mako) are porcelain cards on the window grid with a label, summary and body hierarchy; signal red marks critical only, and there are no icons.
 - Controls, content and passive information are visibly different. Typography, boundaries and surface depth work together: porcelain foregrounds, cool neutral ground, metal-like recesses and graphite ink. Passive measurements should not become competing badges.
@@ -84,7 +83,7 @@ Light and dark components share hierarchy, alignment and contrast discipline. Da
 | Role | Current mapping | Owner and status |
 | --- | --- | --- |
 | Active workspace/navigation | `workspace_active` → `workspace_orange` (`#D46A43`); `on_workspace_active` → `pure_white` (`#FFFFFF`) | Approved Quiet Workspace Strip; white on orange is a narrow, documented contrast exception (~3.53:1); inset geometry is component-specific |
-| Selected list row | `list_selected` → `signal_yellow` | Approved Rofi and Commands edge; visual reconsideration requires separate approval |
+| Selected list row | `list_selected` → `text` (graphite); `on_list_selected` → `surface` | Approved Limux picker selection, shared with Thunar; replaces the former yellow edge |
 | Terminal cursor | `terminal_cursor` → `workspace_orange`; `on_terminal_cursor` → `signal_ink` | Approved Foot block cursor; semantic role is independent of workspace-active |
 | Terminal match/URL | `terminal_match` → `signal_yellow` | Existing Foot search/URL presentation; review with Foot separately |
 | Urgency/error and positive status | `urgent` → `signal_red`; `success` → `signal_green` | Red is used for supported urgent states; green is reserved where positive meaning is verified |
@@ -95,7 +94,7 @@ Light and dark components share hierarchy, alignment and contrast discipline. Da
 
 The first migration step is complete: approved values are named by purpose, and active adapter output is generated from the tokens. Workspace and cursor roles may point to the same canonical colour while retaining independent mappings. The active-workspace white foreground exception is enforced only in the Mangobar adapter; other general contrast validation remains unchanged. The old boxed renderer and its guarded recovery hash remain. Later visual changes should alter only the relevant role mapping and recovery pins. Do not alter the six foundation colours to accomplish these reviews. Retire the legacy `selected` name only when the old renderer and rollback path have a reviewed replacement.
 
-Approved repeated design constants belong in theme tokens: Commands picker width, visible row count and heading metrics now use `[limux_commands]`, while Rofi launcher metrics remain in `[rofi]` and the active bar geometry remains in `[mangobar_candidate]` for compatibility with its guarded activation. Native selector syntax, Rofi metadata, headings' nonselectability, search behaviour, shortcut parsing and clipboard actions belong in adapters. Literal application labels and text are content, not design tokens. Further tokenization should follow a real second use or an approved visual change.
+Approved repeated design constants belong in theme tokens: shared picker geometry is in `[rofi]`, the Command menu's row count and section-label spacing in `[limux_commands]`, and the active bar geometry remains in `[mangobar_candidate]` for compatibility with its guarded activation. Native selector syntax, Rofi metadata, headings' nonselectability, search behaviour, shortcut parsing and clipboard actions belong in adapters. Literal application labels and text are content, not design tokens. Further tokenization should follow a real second use or an approved visual change.
 
 ## Architecture, review and approval boundaries
 
@@ -110,4 +109,4 @@ Before each future visual iteration:
 3. Generate supported styling from shared tokens, validate native formats and inspect real screenshots at native scale, including hover, focus, selected and urgent states. Check functional precision, subtle lavender, purposeful signals, depth, accessibility and light/dark cohesion.
 4. Preserve behaviour and hardware. Live activation requires explicit authorization and a validated rollback path; a generated preview is not proof of visual approval.
 
-The Quiet Workspace Strip, Rofi launcher, MangoWM appearance and Foot palette are the current approved, activated baselines. Limux Commands is active and functional, but its appearance is not an approved baseline; its redesign is parked. The approved Strip supersedes the older boxed yellow Mangobar appearance without deleting its recovery path. Activation, interactive verification limits and pending design work are recorded in the [architecture](architecture.md) and [decision log](design-decisions.md).
+The Quiet Workspace Strip, the Limux picker (launcher and Command menu), MangoWM appearance, Foot, Limux Files and notifications are the current approved, activated baselines. The approved Strip supersedes the older boxed yellow Mangobar appearance without deleting its recovery path. Activation, interactive verification limits and pending design work are recorded in the [architecture](architecture.md) and [decision log](design-decisions.md).

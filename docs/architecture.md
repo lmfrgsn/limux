@@ -8,8 +8,8 @@ The [canonical design language](design-language.md), [original visual reference]
 | --- | --- | --- | --- |
 | MangoWM | Rhapsody border/gap baseline; live config retains functional bindings and T2 settings | `[mango]` tokens, `scripts/mango.py` | `scripts/mango-appearance.py rollback` |
 | Mangobar | Refined Quiet Workspace Strip active on pinned patched 0.2.2; white active number, 8px left inset and charging text | `workspace_active` / `on_workspace_active` semantics, `[mangobar_candidate]` geometry, `render_quiet()` | `restore-prior` reverts this refinement; `rollback` restores the pre-Strip baseline |
-| Rofi application launcher | Activated light Rhapsody launcher on Command+Space; yellow list edge | `[rofi]` tokens, `scripts/rofi.py` | `scripts/activate-rofi.py rollback` |
-| Limux Commands | Functional Command+K picker with nonselectable headings and private snippets. Visual design **not approved**; redesign parked. A neutral-v1 appearance marker is present on disk, so Command+K currently uses the unapproved `[limux_commands_candidate]` styling | Base Rofi plus `[limux_commands]` / `[limux_commands_candidate]` override | `scripts/activate-commands-appearance.py rollback` removes only the appearance marker; `scripts/activate-commands.py rollback` removes the binding |
+| Rofi application launcher | Approved Limux picker on Command+Space: graphite selection, quiet secondary column, no icons; lists Firefox, Files and Terminal | `[rofi]` tokens, `scripts/rofi.py`; entries in `scripts/launcher-entries.py` | `scripts/activate-rofi.py rollback` (previous yellow-edge launcher) or `restore-original`; `scripts/launcher-entries.py rollback` |
+| Limux Commands | Approved Limux picker on Command+K: actions with a quiet key or verb column, quiet section labels, opens on the first command | Shared picker theme plus a small `[limux_commands]` override in `scripts/limux-commands.py` | Follows the launcher theme's rollback; `scripts/activate-commands.py rollback` removes the binding |
 | Foot | Approved graphite palette with orange block cursor and hollow unfocused state | `[foot]` tokens, `scripts/foot.py` | `scripts/activate-foot.py rollback` restores the previous DejaVu Sans Mono 16 styling; `restore-original` restores pre-Rhapsody config |
 | Thunar / GTK 3 (Limux Files) | Approved design, implemented; activation requires the `adw-gtk-theme` package | `[thunar]` tokens, `scripts/gtk.py` | `scripts/activate-gtk.py rollback` restores default GTK theme, icons and Thunar view settings |
 | Mako notifications | Approved Rhapsody cards, active; behaviour lines stay in the user's config | `[mako]` tokens, `scripts/mako.py` | `scripts/activate-mako.py rollback` restores the exact previous config |
@@ -328,3 +328,24 @@ python3 scripts/activate-mako.py rollback
 ```
 
 Activation writes `~/.config/mako/rhapsody`, then removes appearance lines from the sole `~/.config/mako/config` and adds one `include=` at the end of its global section. Anchor, timeouts, visible count and the critical no-timeout rule stay in the user's file. Each config is validated first in a private Mako on its own D-Bus session; the live daemon is updated with `makoctl reload`, and any failure restores the prior bytes and reloads. Unknown configs or fragments are refused. The `mango-notifications` launcher and its single startup entry are unchanged.
+
+
+## Limux picker — launcher and Command menu
+
+The launcher and Command menu share one generated Rofi theme, `scripts/rofi.py` from `[rofi]` tokens, installed as the existing `~/.config/rofi/charcoal.rasi` by `scripts/activate-rofi.py`. Its only `configuration` keys are `drun-display-format` (the name, a tab, then the generic name as quiet secondary text) and `drun-match-fields` (`name,generic`, so Files and Terminal are still found as Thunar and Foot); the activation's functional-config comparison excludes exactly those two. Icons are left out by the theme; the functional `config.rasi` is unchanged. Secondary text uses Pango `fgalpha` so it stays legible on porcelain rows and the graphite selection.
+
+The Command menu (`scripts/limux-commands.py`) sends markup rows: the action, a tab, and its key or verb. User text is escaped; Rofi matches the visible text, not the markup. Its override sets only the placeholder, row count and the quiet, nonselectable section labels, and it opens on the first command.
+
+```sh
+cd ~/limux
+python3 scripts/activate-rofi.py check
+python3 scripts/activate-rofi.py activate
+python3 scripts/activate-rofi.py rollback          # previous yellow-edge Rhapsody launcher
+python3 scripts/activate-rofi.py restore-original  # pre-Rhapsody launcher
+python3 scripts/launcher-entries.py check
+python3 scripts/launcher-entries.py activate
+python3 scripts/launcher-entries.py rollback       # show all system entries again
+```
+
+`launcher-entries.py` writes per-user overrides in `~/.local/share/applications`: `Hidden=true` shadows for Foot Client, Foot Server, both Qt V4L2 tools, Rofi, Rofi Theme Selector, Bulk Rename, Thunar Preferences and About Xfce, and renamed copies of the Thunar and Foot entries (`Files`/`Thunar`, `Terminal`/`Foot`) that change only the main entry's names. `themes/recovery/launcher-entries.json` pins both the overrides and the system entries they copy, so a package update to those entries is reported for review rather than leaving a stale copy. Existing files are never overwritten; rollback removes only files still matching what it wrote.
+
