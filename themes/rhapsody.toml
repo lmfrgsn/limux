@@ -49,6 +49,13 @@ control_radius = 2
 hover_radius = 0
 group_gap = 6
 
+[mangobar_candidate]
+# Option A exploration only. Does not change the approved live bar or semantics.
+signal_vermilion = "#AD492F"
+workspace_padding = 6
+workspace_gap = 1
+title_max_width = 240
+
 [rofi]
 # Approved initial Rofi baseline at e1f7538; future refinements require review.
 width = 620
