@@ -77,6 +77,26 @@ title_max_width = 240
 # This specific white-on-orange active label is a user-approved contrast exception.
 active_text_contrast_exception = "approved-white-on-orange"
 
+[bar_status]
+# Status readings and agent indicators, design target approved 2026-10-30; not yet
+# active. Tabler line icons at the bar's text size with their values. display is
+# "text" (current), "icon-value" or "icons". Gaps in logical pixels: pair (icon to
+# value), item (between pairs), group (agents to system readings), edge (right
+# inset, mirroring the left).
+display = "icon-value"
+icon_font = "tabler-icons"
+pair_gap = 4
+item_gap = 20
+group_gap = 36
+edge = 20
+# Agent state colours: needs input is the workspace orange, error the urgent red.
+agent_quiet = "text_secondary"
+agent_name_alert = "text"
+agent_input = "workspace_orange"
+agent_error = "signal_red"
+# Real-time signal (SIGRTMIN+n) that refreshes the agent modules at once.
+refresh_signal = 8
+
 [rofi]
 # Limux pickers (launcher and Command menu), approved 2026-10-30: the notification
 # card, the recessed search field, one shared left edge, graphite inset selection,

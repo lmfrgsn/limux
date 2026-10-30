@@ -1,0 +1,13 @@
+--- a/mangobar.c
++++ b/mangobar.c
+@@ -1007,6 +1007,10 @@
+   if (ci < 0 || ci >= g_cfg.custom_count || !g_cfg.customs[ci].enabled)
+     return false;
+   const MangoCustomModule *cm = &g_cfg.customs[ci];
++  // Limux: an empty custom module takes no space, so state-specific modules
++  // (for example one per agent state) can collapse without leaving padding.
++  if (!cm->output[0])
++    return false;
+   snprintf(name, namesz, "custom-%s", cm->name);
+   format_value(module_fmt(name, cm->format, bar), cm->output, "", dst, dstsz);
+   return true;
