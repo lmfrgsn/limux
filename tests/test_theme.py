@@ -9,7 +9,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
-from mangobar import render, contrast
+from mangobar import render, render_quiet, contrast
+from rofi import render as render_rofi
+from foot import render as render_foot
 
 class ThemeTests(unittest.TestCase):
     def setUp(self):
@@ -50,6 +52,21 @@ class ThemeTests(unittest.TestCase):
         t['semantics']['on_selected'] = 'surface'
         with self.assertRaisesRegex(ValueError, 'contrast'):
             render(t)
+
+    def test_distinct_current_state_roles(self):
+        theme = self.theme
+        colors, roles = theme['colors'], theme['semantics']
+        self.assertEqual(colors[roles['workspace_active']], '#D46A43')
+        self.assertEqual(colors[roles['list_selected']], '#E3BE47')
+        self.assertEqual(colors[roles['terminal_cursor']], '#E3BE47')
+        self.assertIn('background: #D46A43;', render_quiet(theme))
+        self.assertIn('border-color: #E3BE47;', render_rofi(theme))
+        self.assertIn('cursor=343442 E3BE47', render_foot(theme))
+        changed = copy.deepcopy(theme)
+        changed['colors']['workspace_orange'] = '#CC693F'
+        self.assertNotEqual(render_quiet(changed), render_quiet(theme))
+        self.assertEqual(render_rofi(changed), render_rofi(theme))
+        self.assertEqual(render_foot(changed), render_foot(theme))
 
     def test_hover_cannot_override_state_colours(self):
         css = render(self.theme)

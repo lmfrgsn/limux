@@ -1,20 +1,20 @@
 # Limux design language — Rhapsody
 
-This is the canonical reconciled design specification. Established direction takes precedence over later implementation experiments; the newest document or token is not automatically an approved design decision. Read alongside the [vision](vision.md), [architecture](architecture.md), [current implementation tokens](../themes/rhapsody.toml) and [decision log and implementation audit](design-decisions.md).
+This is the maintained design specification. Read alongside the [vision](vision.md), [architecture](architecture.md), [current implementation tokens](../themes/rhapsody.toml) and [decision log](design-decisions.md). Approved component states take precedence over earlier proposals; a new token or preview is not approval.
 
 The [original reference specification](references/original-design-reference.md) is archived evidence, not a competing maintained specification. Its [original visual reference](references/braun-interface-concept.png) is a concept, not a capture of the working desktop or a pixel-perfect layout requirement.
 
 ![Original Limux concept: light bar, yellow active workspace, recessed launcher and material palette](references/braun-interface-concept.png)
 
-## Identity and influences — established
+## Current direction and influences
 
-Limux is the desktop product, interaction model, engineering philosophy and enduring design language. Rhapsody is its first theme. Braun industrial design is fundamental to Limux itself, particularly the ET 66 calculator by Dietrich Lubs and Dieter Rams. Its influence must be visible in precise typography, spacing, alignment and proportions; understated functional appearance; recessed information and input surfaces; subtly raised and depressed controls; carefully defined borders and control geometry. Shallow depth should communicate use and state. The result should feel like a beautifully engineered instrument without exaggerated skeuomorphism. Do not reduce this to “minimal”, “retro” or a lavender recolour, or turn every interface element into a calculator button.
+Limux is the desktop product and interaction model; Rhapsody is its first theme. Braun industrial design, especially the ET 66 by Dietrich Lubs and Dieter Rams, informs precise proportions, typography, alignment and purposeful colour. The approved direction is a contemporary, quiet workspace: clear hierarchy, stable geometry and restrained surfaces. Recesses or control depth are useful when they clarify interaction, not requirements to decorate every component. The desktop should not imitate a historical machine or turn every element into a calculator button.
 
 Rhapsody expresses that foundation through complementary historical influences:
 
-- Classic Macintosh Platinum: predominantly light system interfaces, precise chrome and borders, compact controls and information density, subtle depth, clear states and a cohesive operating-system experience.
+- Classic Macintosh Platinum: light system cohesion, compact information density and clear states.
 - Apple Rhapsody: the transition from classic Macintosh personality to a modern developer-oriented system; cool, restrained, slightly technical character.
-- NeXTSTEP: functional precision, developer-oriented utility, deliberate hierarchy and strong interface structure.
+- NeXTSTEP: developer utility and deliberate hierarchy.
 
 This is a contemporary reinterpretation, not a literal historical replica. Other themes may express different appearance while retaining Limux's functional precision and engineering principles.
 
@@ -31,7 +31,7 @@ The six initial Rhapsody foundation values remain documented baselines. The subs
 | Text | `#343442` | Graphite-family readable ink |
 | Dark developer surface | `#2F303B` | Graphite-family dark workbench |
 
-Material roles and relative relationships are established; exact reconciled production values remain open:
+The original concept explored the following material and signal roles. Its sample colours and yellow workspace remain historical reference, while the current token file and approved component states define today's implementation:
 
 | Material or signal | Established role | Approximate sample recorded in original specification; proposed comparison only |
 | --- | --- | --- |
@@ -39,32 +39,33 @@ Material roles and relative relationships are established; exact reconciled prod
 | Cool grey | Quiet backgrounds and chrome, barely lavender-tinted | `#DCDCE5` |
 | Metal | Secondary and recessed surfaces, borders, control treatments and structural separation | `#A8A8B4` |
 | Graphite | Dark surfaces, developer tools and technical depth | `#303039` |
-| Signal yellow | Purposeful active/selected states, specifically the original active workspace | `#E3BE47` |
+| Signal yellow | Original active workspace; current Rofi list edge, Foot cursor and ANSI yellow have separate roles | `#E3BE47` |
+| Workspace orange | Approved active Quiet Workspace Strip control only | `#D46A43` |
 | Signal green | Meaningful positive, connected, successful or functional status where justified | `#728858` |
 | Signal red | Destructive actions, errors and urgent states | No agreed hex |
 
-Lavender must be perceived within the neutral greys, not as an obvious purple scheme. Signals are sparse and meaningful, never scattered decoratively. Distinguish general interface emphasis, semantic signals and component-specific selected-state treatments. The yellow active workspace is established; it is not conditional on the legacy token name `accent`. Do not assume every focused border, selected row or menu border must share one accent. Specific mappings beyond the reference require review.
+Lavender is quiet within the neutral greys. Signals are sparse and tied to a state. The active orange workspace, yellow Rofi list edge, yellow Foot cursor, red urgency and terminal ANSI yellow serve different purposes; none defines a universal accent. Do not globally recolour these roles together.
 
-Future token refinement should separate neutral/material roles, general emphasis, selection and signals, including readable foregrounds on each. Token names and exact values are proposals until recorded as approved. Verify contrast for light and dark contexts, and retain non-colour cues for focus, selection and urgency. No foundation value or active-state meaning may be silently changed.
+The token file now names active workspace, list selection, terminal cursor and terminal search match separately. The old `selected` role is retained only for the recoverable boxed Mangobar renderer. Each mapping currently preserves approved output. Future colour changes need component previews and explicit approval. Verify contrast in light and dark contexts and retain non-colour cues where supported.
 
-## Concrete component references
+## Original concept and current components
 
 Study the complete image, including its rationale and palette, before visual work:
 
-- The system bar is light, restrained and precisely proportioned. Compact workspace controls have defined geometry and shallow physical character. One active workspace is distinctive yellow; inactive controls are neutral. The four illustrated workspaces do not prescribe the configured workspace count or behaviour.
-- The light application launcher has a restrained structural border, an understated uppercase “APPLICATIONS” label and quiet “RHAPSODY / 01” metadata. Its mid-grey application-search field is visibly recessed relative to its surrounding surface.
-- Compact application rows use clear alignment and hierarchy. The illustrated yellow row indicator conveys meaningful selection; neutral alternatives recede. The green connectivity indicator is functional rather than decorative. Exact status mappings remain to be refined.
+- The image's light bar and yellow boxed workspaces explain the original concept. The approved live Mangobar uses nine plain numbers on one uninterrupted porcelain surface, with one small inset orange active control and no visible layout indicator.
+- The approved Rofi launcher retains a recessed search field and compact rows. “RHAPSODY / 01” was rejected as decorative branding.
+- The current Rofi list uses a pale-grey selected row with a narrow yellow edge. This is an approved baseline, open to a separate future colour review. Limux Commands inherits it and adds small nonselectable section labels; its next design task is separate.
 - Controls, content and passive information are visibly different. Typography, boundaries and surface depth work together: porcelain foregrounds, cool neutral ground, metal-like recesses and graphite ink. Passive measurements should not become competing badges.
 
-These are references for a component system, not instructions to repeat the screenshot's layout everywhere. The user explicitly rejected a permanent “RHAPSODY / 01” launcher label: omit mockup branding unless it conveys useful information. Avoid floating pills, exaggerated rounding, ornamental bevels, glowing accents, blurred translucent panels and decorative gradients. Subtle raised/depressed treatments and recessed information fields remain part of the design even where an application's renderer requires a simpler approximation.
+The screenshot is source context, not a layout target. Avoid gratuitous boxes, stripes, bevels, oversized controls, blur and gradients. Use depth only when it helps show interaction or material relationship.
 
 ## Typography, geometry and states
 
-Typography must be precise, compact and readable, with aligned baselines and quieter technical metadata. IBM Plex Sans/Mono versus Inter is unresolved. Inter at 13 logical pixels is a bar experiment, not a final system-wide choice; IBM Plex Mono in the token file is also not evidence of final approval. Verify installed fonts and actual rendering; do not silently rely on fallback.
+Typography is compact, readable and aligned; technical metadata is quieter than primary actions. Inter is the approved current bar and Rofi baseline, not a system-wide font commitment. Foot currently uses DejaVu Sans Mono. IBM Plex remains an unapproved future comparison. Check installed fonts and native rendering before changing them.
 
-Delicate edges, compact proportions and restrained corners are established qualitatively. The earlier 1px edge, 4-unit rhythm, 8-unit internal spacing, 12–16-unit group spacing and 3-unit popup radius are exploratory sizing references, not approved universal dimensions. Exact sizes, spacing, radii, weights and component implementations require refinement.
+The live component geometries are approved individually; they are not universal spacing or radius rules. The original 1px edge and 4-unit rhythm are historical exploration. Preserve stable hover geometry, especially across all workspace states.
 
-Keep focused, selected, hovered, occupied, empty, inactive, disabled and urgent meanings distinct where exposed by a component. Empty workspaces are not disabled controls. Hover must not erase recognition of the active workspace. Borders define structure and affordances without boxing every passive status item.
+Keep focused, selected, hovered, occupied, empty, inactive, disabled and urgent meanings distinct where exposed. Empty workspaces are interactive, and hover must neither move controls nor erase the active state. Avoid boxing passive items.
 
 ## One coordinated light and dark system
 
@@ -72,9 +73,26 @@ Rhapsody is predominantly a light system environment with integrated dark develo
 
 | Light system components | Dark developer components |
 | --- | --- |
-| Mangobar, Rofi, Mako, GTK/Thunar, system controls and MangoWM window chrome | Foot, terminal-based Codex and appropriate developer-oriented tools |
+| Mangobar, Rofi and MangoWM chrome currently; Mako and GTK/Thunar are future targets | Foot, terminal-based Codex and appropriate developer-oriented tools |
 
-Both share typography, spacing, border logic, geometry, contrast discipline and semantic accents. Dark developer surfaces belong to the same porcelain-to-graphite hierarchy; do not design an unrelated dark theme. Existing live dark Rofi styling is a preserved operational state, not a revision of this light-system target.
+Light and dark components share hierarchy, alignment and contrast discipline. Dark developer surfaces belong to the porcelain-to-graphite system; the current Rofi launcher is light.
+
+## Semantic ownership and migration
+
+| Role | Current mapping | Owner and status |
+| --- | --- | --- |
+| Active workspace/navigation | `workspace_active` → `workspace_orange` (`#D46A43`) | Approved Quiet Workspace Strip only; inset geometry is component-specific |
+| Selected list row | `list_selected` → `signal_yellow` | Approved Rofi and Commands edge; visual reconsideration requires separate approval |
+| Terminal cursor | `terminal_cursor` → `signal_yellow` | Approved Foot baseline; not linked to workspace or list selection |
+| Terminal match/URL | `terminal_match` → `signal_yellow` | Existing Foot search/URL presentation; review with Foot separately |
+| Urgency/error and positive status | `urgent` → `signal_red`; `success` → `signal_green` | Red is used for supported urgent states; green is reserved where positive meaning is verified |
+| Neutral emphasis | `emphasis` → `accent` | General non-signal emphasis; MangoWM focus currently refers to the neutral accent |
+| Terminal ANSI | `[foot]` regular/bright and `[foot.colors]`/`[foot.blends]` | Terminal palette, including ANSI yellow; ANSI names do not dictate UI state colours |
+| Historical boxed workspace | `selected` → `signal_yellow` | Kept only for the old Mangobar renderer and rollback evidence; not a current universal selection role |
+
+The first migration step is complete: approved values are named by purpose, and active adapter output is byte identical. The old boxed renderer and its guarded recovery hash remain. Later, preview list selection, Commands and Foot independently on the real desktop, compare screenshots and interaction, then change only the approved role mappings and recovery pins. Do not alter the six foundation colours to accomplish these reviews. Retire the legacy `selected` name only when the old renderer and rollback path have a reviewed replacement.
+
+Approved repeated design constants belong in theme tokens: Commands picker width, visible row count and heading metrics now use `[limux_commands]`, while Rofi launcher metrics remain in `[rofi]` and the active bar geometry remains in `[mangobar_candidate]` for compatibility with its guarded activation. Native selector syntax, Rofi metadata, headings' nonselectability, search behaviour, shortcut parsing and clipboard actions belong in adapters. Literal application labels and text are content, not design tokens. Further tokenization should follow a real second use or an approved visual change.
 
 ## Architecture, review and approval boundaries
 
@@ -89,4 +107,4 @@ Before each future visual iteration:
 3. Generate supported styling from shared tokens, validate native formats and inspect real screenshots at native scale, including hover, focus, selected and urgent states. Check functional precision, subtle lavender, purposeful signals, depth, accessibility and light/dark cohesion.
 4. Preserve behaviour and hardware. Live activation requires explicit authorization and a validated rollback path; a generated preview is not proof of visual approval.
 
-The reconciliation at `f52bb7e` was documentation-only. The subsequently authorized Mangobar candidate implements proposed tokens and styling without permanent activation. The user has since approved candidate 2 as the initial Mangobar baseline and authorized reversible activation. Rofi at `e1f7538` is also approved as the initial baseline, with reversible activation authorized. MangoWM appearance at `fd645da` is approved as the initial baseline without changing its colours, 2px borders, 8px inner / 12px outer gaps or 6px radius. Foot’s palette at `5cf323e` is approved as its initial dark developer baseline, with reversible activation prepared and desktop functional checks pending. Component approval does not finalize the system-wide typography or other components; evidence and limitations are recorded in the [decision log](design-decisions.md).
+The Quiet Workspace Strip, Rofi launcher, MangoWM appearance, Foot palette and Limux Commands are the current activated baselines. The approved Strip supersedes the older boxed yellow Mangobar appearance without deleting its recovery path. Activation, interactive verification limits and pending design work are recorded in the [architecture](architecture.md) and [decision log](design-decisions.md).

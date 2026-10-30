@@ -17,7 +17,8 @@ def render(theme):
     font = theme['typography']['sans']
     if not isinstance(font, str) or not re.fullmatch(r'[\w .-]+', font):
         raise ValueError('invalid Rofi font')
-    selected, urgent, on_urgent = (c[s[k]] for k in ('selected', 'urgent', 'on_urgent'))
+    selected, selected_ink, urgent, on_urgent = (c[s[k]] for k in
+        ('list_selected', 'on_list_selected', 'urgent', 'on_urgent'))
     # Use primary ink for placeholder inside the darker recess: secondary ink
     # would have insufficient contrast there. Yellow is an indicator, not text.
     for fg, bg in ((c['text'], c['canvas']), (c['text_secondary'], c['surface']),
@@ -114,7 +115,7 @@ element normal.normal, element alternate.normal, element normal.active, element 
 element selected.normal, element selected.active {{
     background-color: {c['chrome']};
     border-color: {selected};
-    text-color: {c['text']};
+    text-color: {selected_ink};
 }}
 element normal.urgent, element alternate.urgent {{
     text-color: {urgent};

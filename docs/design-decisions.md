@@ -2,6 +2,8 @@
 
 Recorded 2026-10-28. The [design language](design-language.md) is the sole maintained design specification; this log records status, rationale and discrepancies. Evidence: [original source](references/original-design-reference.md), [original image](references/braun-interface-concept.png), [tokens](../themes/rhapsody.toml), [Mangobar adapter](../scripts/mangobar.py), and locally inspected generated `build/rhapsody/mangobar.css` (ignored, reproducible output).
 
+**Reading this log:** dated entries preserve what was proposed or pending at that time. The [current reconciliation](#current-rhapsody-reconciliation--2026-10-30) supersedes earlier yellow-workspace and pending-activation statements; it does not erase their historical rationale.
+
 ## Reconciliation decisions
 
 | Status | Decision | Rationale |
@@ -258,3 +260,15 @@ The user selected a quiet numbered strip with one compact, filled orange active 
 ## Quiet Workspace Strip engineering review — activation pending
 
 The user approved the visual direction at `ec2ba0f` and requested an engineering review before permanent activation. The retained 0.2.2 working tree contains a pre-existing Limux T2 metrics change. The build now pins the clean upstream `0.2.2` commit and applies that hardware patch separately from the 25-added/8-removed-line visual patch. A reversible activation script is prepared but has **not** run against the live bar. The original binary, approved CSS and canonical startup path remain available. Interactive workspace clicks, all-nine switching, status modules and tray behaviour still require a Foot-session check; native parser and file-transition tests cannot certify them. See [the engineering review](quiet-bar-engineering-review.md).
+
+## Current Rhapsody reconciliation — 2026-10-30
+
+The user approved and activated the Quiet Workspace Strip after the engineering review. The current live stylesheet's SHA-256 matches the generated Quiet Strip (`03c674d5acb12287503b9fd08b9adb6903e8c7feaaf083d11dc8f93db598ab7c`); the live MangoWM config has one `SUPER,k` Limux Commands binding, one `SUPER,space` Rofi launcher binding and one `limux-bar start` entry. This repository inspection cannot reach the graphical process namespace, so those on-disk checks do not certify every live interaction. The [architecture status table](architecture.md#current-implementation-and-approval-status--2026-10-30) is the maintained current-state summary.
+
+The orange active workspace at `#D46A43` is an approved component decision, superseding the original yellow boxed workspace as the live design. The six foundation colours remain. Foot's yellow cursor and Rofi/Commands' yellow list edge are approved *current baselines* and have not been reevaluated for the quieter direction. ANSI yellow is terminal content, not a navigation signal. Mako and GTK/Thunar have no approved Rhapsody adapter. The original Braun image, archived source, old boxed Mangobar renderer, pinned patches, prior binary/CSS and rollback state remain reference and recovery assets.
+
+Verified source distinctions: `render_quiet()` maps the active workspace to orange; the legacy `render()` uses `selected` yellow; Rofi uses yellow for the selected row edge; Foot uses yellow for its cursor, search match and ANSI yellow; MangoWM uses yellow for a split-placement indicator. Limux Commands previously held 700px width, 11 rows and heading metrics inside its Python theme override. These are different roles with different owners. The review's `xdg-open` observation is confirmed on this host (`command -v xdg-open` finds nothing; `xdg-utils` is not installed). Quicklink repair is a separate functional task and was not attempted here. The review's container-only test errors do not describe this host's test environment.
+
+This reconciliation adds explicit semantic references for active workspace, list selection, terminal cursor and terminal search match. The old `selected` mapping stays solely for the recoverable boxed bar renderer. Commands' approved geometry and heading metrics move to `[limux_commands]`; the native Rofi selectors and functional registry stay in the adapter. Pre/post hashes of the generated legacy bar, active Quiet Strip, Rofi, MangoWM, Foot and Commands theme override are identical. No activation script, live appearance file, shortcut, hardware setting or rollback manifest was changed.
+
+Separate decisions still needed: whether Rofi/Commands should keep a yellow list edge or use a neutral focus treatment; whether Foot's cursor and search cues should remain yellow or use other tested values; whether Commands should get a modern interface redesign; and later system-wide typography and Mako/GTK styling. Each needs on-device previews and explicit visual approval. The active bar orange and geometry are settled for this task and are not reopened.

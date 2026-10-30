@@ -9,6 +9,9 @@ def palette(theme):
     if set(colors) & set(f['colors']):
         raise ValueError('Foot colors must not replace shared tokens')
     colors.update(f['colors'])
+    colors.update({role: colors[name] for role, name in theme['semantics'].items()
+                   if role in ('terminal_cursor', 'on_terminal_cursor',
+                               'terminal_match', 'on_terminal_match')})
     for value in colors.values():
         if not isinstance(value, str) or not re.fullmatch(r'#[0-9A-Fa-f]{6}', value):
             raise ValueError('invalid Foot color')
@@ -47,11 +50,11 @@ def settings(theme):
         return f'{c[ink][1:]} {c[surface][1:]}'
     s = theme['semantics']
     native.update({
-        'jump-labels': pair(s['on_selected'], s['selected']),
-        'search-box-match': pair(s['on_selected'], s['selected']),
+        'jump-labels': pair(s['on_terminal_match'], s['terminal_match']),
+        'search-box-match': pair(s['on_terminal_match'], s['terminal_match']),
         'search-box-no-match': pair(s['on_urgent'], s['urgent']),
         'scrollback-indicator': pair(f['background'], f['secondary']),
-        'urls': c[s['selected']][1:], 'alpha': '1.0',
+        'urls': c[s['terminal_match']][1:], 'alpha': '1.0',
     })
     return {'main': {'font': f"{f['font']}:size={f['font_size']}",
                      'pad': f"{f['padding']}x{f['padding']}",

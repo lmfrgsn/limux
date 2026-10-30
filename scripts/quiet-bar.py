@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render and briefly preview the unapproved inset Quiet Workspace Strip."""
+"""Render the approved Quiet Workspace Strip; preview needs the old module list."""
 import argparse
 import json
 from pathlib import Path

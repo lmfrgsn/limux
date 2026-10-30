@@ -216,17 +216,22 @@ def preview_theme(tokens_path=TOKENS):
     tokens = tomllib.loads(tokens_path.read_text())
     font = tokens['typography']['sans']
     quiet = tokens['colors']['text_secondary']
+    metrics = tokens['limux_commands']
     if not font.replace(' ', '').isalpha() or not quiet.startswith('#') or len(quiet) != 7:
         raise ValueError('invalid Rhapsody heading tokens')
+    for name, value in metrics.items():
+        if type(value) is not int or not 0 < value <= (1600 if name == 'width' else 100):
+            raise ValueError(f'invalid Commands geometry: {name}')
     return ('textbox-heading {\n content: "COMMANDS";\n}\n'
             'entry {\n placeholder: "Search commands";\n}\n'
-            'window {\n width: 700px;\n}\n'
-            'listview {\n lines: 11;\n}\n'
+            f'window {{\n width: {metrics["width"]}px;\n}}\n'
+            f'listview {{\n lines: {metrics["list_lines"]};\n}}\n'
             'element normal.active, element alternate.active {\n'
-            ' margin: 8px 0px 0px 0px;\n padding: 2px 8px 1px 8px;\n'
+            f' margin: {metrics["heading_margin_top"]}px 0px 0px 0px;\n'
+            f' padding: {metrics["heading_padding_top"]}px {metrics["heading_padding_horizontal"]}px {metrics["heading_padding_bottom"]}px {metrics["heading_padding_horizontal"]}px;\n'
             f' text-color: {quiet};\n' ' }\n'
             'element-text normal.active, element-text alternate.active {\n'
-            f' font: "{font} 11";\n' ' }')
+            f' font: "{font} {metrics["heading_size"]}";\n' ' }')
 
 
 def picker_lock():

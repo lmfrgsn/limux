@@ -13,16 +13,26 @@ metal = "#A8A8B4"
 text_secondary = "#666573"
 text_quiet = "#686773"
 signal_yellow = "#E3BE47"
+workspace_orange = "#D46A43"
 signal_green = "#728858"
 signal_red = "#AD4038"
 signal_ink = "#141810"
 
-# References, not duplicated colour literals. Green is reserved until a module
-# exposes a reliable positive state; custom Wi-Fi text is not such a state.
+# Distinct purposes may currently share a colour. These mappings preserve the
+# approved outputs; future colour changes need separate visual review.
 [semantics]
 emphasis = "accent"
+# Historical boxed Mangobar baseline, retained for guarded rollback.
 selected = "signal_yellow"
 on_selected = "text"
+workspace_active = "workspace_orange"
+on_workspace_active = "signal_ink"
+list_selected = "signal_yellow"
+on_list_selected = "text"
+terminal_cursor = "signal_yellow"
+on_terminal_cursor = "text"
+terminal_match = "signal_yellow"
+on_terminal_match = "text"
 success = "signal_green"
 on_success = "signal_ink"
 urgent = "signal_red"
@@ -50,8 +60,8 @@ hover_radius = 0
 group_gap = 6
 
 [mangobar_candidate]
-# Revised single preview, pending visual approval. No global semantic change.
-active_orange = "#D46A43"
+# Approved and active Quiet Workspace Strip geometry; section name retained for
+# existing activation/rollback code. Its colour lives in semantics.workspace_active.
 bar_height = 30
 workspace_padding = 7
 workspace_gap = 1
@@ -73,6 +83,17 @@ selection_edge = 3
 font_size = 12
 heading_size = 10
 entry_size = 14
+
+[limux_commands]
+# Approved Commands-specific Rofi geometry. Search and command behaviour stay
+# in the native adapter; these values preserve the current theme override.
+width = 700
+list_lines = 11
+heading_size = 11
+heading_margin_top = 8
+heading_padding_top = 2
+heading_padding_horizontal = 8
+heading_padding_bottom = 1
 
 [mango]
 # Approved initial MangoWM baseline from fd645da; preserve these exact values.
@@ -107,8 +128,8 @@ background = "dark_terminal"
 secondary = "metal"
 selection_foreground = "surface"
 selection_background = "terminal_selection"
-cursor_foreground = "text"
-cursor_background = "signal_yellow"
+cursor_foreground = "on_terminal_cursor"
+cursor_background = "terminal_cursor"
 regular = ["text", "terminal_red", "terminal_green", "signal_yellow", "terminal_blue", "terminal_magenta", "terminal_cyan", "canvas"]
 bright = ["metal", "terminal_bright_red", "terminal_bright_green", "terminal_bright_yellow", "terminal_bright_blue", "terminal_bright_magenta", "terminal_bright_cyan", "surface"]
 

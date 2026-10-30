@@ -1,6 +1,6 @@
 # Quiet Workspace Strip — Mangobar engineering review
 
-**Status:** visual direction approved after `ec2ba0f`; permanent activation pending this engineering review and interactive checks. No live bar files or startup entries were changed during review.
+**Status:** visual direction approved after `ec2ba0f` and subsequently activated by the user. This document records the pre-activation engineering review; its pending language below is historical. The [architecture status table](architecture.md#current-implementation-and-approval-status--2026-10-30) records current ownership and rollback. The visual review itself changed no live files or startup entries.
 
 ## Upstream comparison
 

@@ -34,10 +34,12 @@ class QuietBarTest(unittest.TestCase):
         q = THEME['mangobar_candidate']
         self.assertEqual(q['bar_height'], 30)  # B geometry retained
         self.assertEqual(q['workspace_padding'], 7)
-        self.assertIn(f'background: {q["active_orange"]};', css)
+        accent = THEME['colors'][THEME['semantics']['workspace_active']]
+        self.assertIn(f'background: {accent};', css)
         self.assertIn(f'background-inset: {q["active_inset"]}px;', css)
         self.assertIn(f'border-radius: {q["active_radius"]}px;', css)
-        self.assertGreaterEqual(contrast(q['active_orange'], THEME['colors']['signal_ink']), 4.5)
+        ink = THEME['colors'][THEME['semantics']['on_workspace_active']]
+        self.assertGreaterEqual(contrast(accent, ink), 4.5)
         for state in ('empty', 'inactive', 'occupied', 'urgent'):
             self.assertIn(f'#tags.{state} {{', css)
             self.assertIn('background: none;', css.split(f'#tags.{state} {{', 1)[1].split('}', 1)[0])
@@ -47,7 +49,13 @@ class QuietBarTest(unittest.TestCase):
 
     def test_preview_config_preserves_functional_modules(self):
         original = json.loads(quiet.LIVE.read_text())
-        candidate = quiet.candidate_config(THEME)
+        # This preview transformer expects the pre-activation module list.
+        # The live bar now already uses the approved list without Layout T.
+        original['modules-left'] = ['workspaces', 'layout', 'window']
+        with tempfile.TemporaryDirectory() as d:
+            source = Path(d) / 'baseline.jsonc'
+            source.write_text(json.dumps(original))
+            candidate = quiet.candidate_config(THEME, source)
         expected = json.loads(json.dumps(original))
         expected['modules-left'] = ['workspaces', 'window']
         expected['height'] = 30

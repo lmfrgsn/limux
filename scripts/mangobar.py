@@ -69,14 +69,16 @@ menuitem:hover {{ color: {c['text']}; background-color: {c['canvas']}; }}
 
 
 def render_quiet(theme):
-    """One unapproved inset preview for the isolated Mangobar 0.2.2 build."""
+    """Approved inset Quiet Workspace Strip for the isolated Mangobar 0.2.2 build."""
     render(theme)  # Reuse complete token and contrast validation.
     c = theme['colors']
     q = theme['mangobar_candidate']
-    accent = q['active_orange']
+    semantics = theme['semantics']
+    accent = c[semantics['workspace_active']]
+    active_ink = c[semantics['on_workspace_active']]
     if not re.fullmatch(r'#[0-9a-fA-F]{6}', accent):
         raise ValueError('invalid Quiet Workspace Strip accent')
-    if contrast(accent, c['signal_ink']) < 4.5:
+    if contrast(accent, active_ink) < 4.5:
         raise ValueError('insufficient active workspace contrast')
     for key in ('workspace_padding', 'workspace_gap', 'active_radius', 'active_inset'):
         value = q[key]
@@ -98,7 +100,7 @@ def render_quiet(theme):
 #tags.empty {{ color: {c['text_quiet']}; background: none; }}
 #tags.inactive {{ color: {c['text_quiet']}; background: none; }}
 #tags.occupied {{ color: {c['text_secondary']}; background: none; }}
-#tags.active {{ color: {c['signal_ink']}; background: {accent}; border-radius: {q['active_radius']}px; background-inset: {q['active_inset']}px; }}
+#tags.active {{ color: {active_ink}; background: {accent}; border-radius: {q['active_radius']}px; background-inset: {q['active_inset']}px; }}
 #tags.urgent {{ color: {c['signal_red']}; background: none; }}
 #title {{ color: {c['text_quiet']}; background: {c['surface']}; margin-left: 12px; }}
 #clock {{ color: {c['text']}; background: {c['surface']}; }}

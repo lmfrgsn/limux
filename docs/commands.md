@@ -1,6 +1,6 @@
-# Limux Commands — preview candidate
+# Limux Commands — approved current picker and preview history
 
-Limux Commands uses Rofi's approved Rhapsody theme, with only the heading and search placeholder changed for this picker. It is a new Limux utility, not a second application launcher. Command+Space and the existing Rofi configuration remain unchanged. The candidate is not activated on Command+K.
+Limux Commands uses Rofi's approved Rhapsody theme and is activated on Command+K. Command+Space remains the application launcher. Approved picker width, visible row count and small heading metrics are in `[limux_commands]` tokens; the script retains native Rofi syntax and behaviour. The early preview notes below document how this design evolved. The [live activation status](#live-activation-status--2026-10-30) is authoritative.
 
 The Python registry reads the actual MangoWM config each launch. It lists recognized live keyboard, workspace, mouse and gesture bindings; unsupported actions are omitted rather than guessed. Foot's explicit clipboard shortcuts are read from its live config. Categories and descriptions are maintained in one action map in `scripts/limux-commands.py`; no second binding file is generated. Editing MangoWM or Foot is reflected on the next launch. Rofi provides fuzzy search and Escape dismissal. Shortcut rows are reference only; Enter on one does nothing.
 
@@ -16,7 +16,7 @@ Search `workspace`, `swipe`, `⌘Space`, `Foot`, `Lorem`, or `Limux`. Use arrows
 
 To add personal snippets, create `~/.config/limux/commands.toml` from `examples/commands.toml`, replace the dummy values, and run `chmod 600 ~/.config/limux/commands.toml`. Edit or delete entries in its `[snippets]` table; the next picker launch reads the changes. The file stays outside Git. Values are not displayed in Rofi, but copied text remains in the Wayland clipboard until replaced. Do not put passwords or secrets in snippets. The picker refuses a config readable by other users.
 
-Command+K was checked against the actual MangoWM config and is free. After visual and interaction review, activation would add exactly one `bind=SUPER,k,spawn,...` entry to the existing `~/.config/mango/config.conf`, validate the complete file with MangoWM's native parser, then reload. Rollback removes that one entry and reloads. No activation script or permanent binding has been installed yet; review the preview first.
+Command+K was checked for conflicts and later activated with the user's approval. The guarded controller owns exactly one `SUPER,k` binding; rollback removes only that binding. Firefox's Command+K conflict was explicitly accepted.
 
 Automatic `;email` expansion is deferred. Espanso has a Wayland build, but compatibility with MangoWM and this keyboard/input setup has not been tested. A global expander observes keystrokes across applications and can access replacement text. Installing it would introduce an always-on service and potentially special input-device access; that needs a separate review before use. This picker only reads snippets when launched and uses the existing `wl-copy` clipboard tool.
 
