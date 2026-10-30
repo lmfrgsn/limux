@@ -6,7 +6,7 @@ Read-only snapshot: 30 October 2026, updated after the user's Waybar and library
 
 | Question | Finding |
 | --- | --- |
-| Installed packages | 526 pacman packages: 55 explicitly installed, one foreign package (`apple-bcm-firmware`), and two current orphans (`libsigc++`, `upower`). The user removed `cairomm`, `glibmm` and `fmt`, then installed `adw-gtk-theme`, `xdg-utils`, `gvfs` and `tumbler`. The foreign package is hardware firmware and must remain. |
+| Installed packages | 525 pacman packages: 55 explicitly installed, one foreign package (`apple-bcm-firmware`), and one orphan (`upower`, kept). The user removed `cairomm`, `glibmm`, `fmt` and `libsigc++`, then installed `adw-gtk-theme`, `xdg-utils`, `gvfs` and `tumbler`. The foreign package is hardware firmware and must remain. |
 | Desktop shell | MangoWM 0.18.3, configured for the internal display at 1.5 scale. One `exec_once` path starts `limux-bar`; two more start Mako through a wrapper and initialize keyboard backlight. |
 | Bar | The **activated** Quiet Workspace Strip CSS/config hashes match the approved candidate. `limux-bar` points to a versioned custom Mangobar 0.2.2; the previous user-installed binary and exact rollback bytes remain available. The user reports one managed process; the sandbox cannot independently inspect it. |
 | Rhapsody | MangoWM, Mangobar, the Limux picker (launcher and Command menu), Foot, Thunar and Mako use approved Rhapsody outputs. Firefox follows the GTK theme. |
@@ -15,7 +15,7 @@ Read-only snapshot: 30 October 2026, updated after the user's Waybar and library
 
 ## Installed software
 
-The 55 explicitly installed packages are grouped here; the other 471 packages are libraries and transitive dependencies. Package installation does not prove a daemon is running or an application is used.
+The 55 explicitly installed packages are grouped here; the other 470 packages are libraries and transitive dependencies. Package installation does not prove a daemon is running or an application is used.
 
 | Area | Explicit packages and purpose | Current Limux use |
 | --- | --- | --- |
@@ -26,7 +26,7 @@ The 55 explicitly installed packages are grouped here; the other 471 packages ar
 | Wayland utilities | `grim`, `slurp`, `wl-clipboard`, `wlr-randr`, `wlsunset` | Screenshot and clipboard tools are used. `wlr-randr` is installed for display control, while the observed 1.5 scale is in MangoWM config. `wlsunset` is installed but has no observed autostart. Waybar has been removed. |
 | Development and maintenance | `base-devel`, `git`, `meson`, `ninja`, `rust`, `tllist`, `nano`, `less`, `libxslt` | Build and maintenance tools. Meson/Ninja and `tllist` support rebuilding custom Mangobar. Git supports Limux recovery. Do not remove build tools while a patched bar is maintained. |
 
-`pacman -Qdtq` still returns exactly `libsigc++` and `upower`; installing the file-manager packages added no orphans. The user removed Waybar and its unused dependency chain, then `cairomm`, `glibmm` and `fmt`; `playerctl` is now explicitly installed because Limux's T2 media-key helper uses it. `jack` and `sndio` remain shared dependencies. No recursive package removal is proposed.
+`pacman -Qdtq` now returns only `upower`, which is kept; installing the file-manager packages added no orphans and the user removed `libsigc++`. The user removed Waybar and its unused dependency chain, then `cairomm`, `glibmm` and `fmt`; `playerctl` is now explicitly installed because Limux's T2 media-key helper uses it. `jack` and `sndio` remain shared dependencies. No recursive package removal is proposed.
 
 The system also has a standalone Codex executable under the user's `.codex` installation and several user-maintained scripts in `~/.local/bin`; pacman does not own those files. The two Mangobar binaries are locally built, not Arch package files.
 
@@ -34,7 +34,7 @@ The system also has a standalone Codex executable under the user's `.codex` inst
 
 | Package | Evidence and Limux relationship | Assessment before approval |
 | --- | --- | --- |
-| `libsigc++` 2.12.2 | C++ callback library; was a dependency of the removed C++ wrappers. No pacman required/optional user, and neither Mangobar binary nor MangoWM, Foot, Rofi, Mako, Thunar, tiny-dfr or `wlsunset` links it. | **Approved for removal** (`sudo pacman -R libsigc++`); not yet run. |
+| `libsigc++` 2.12.2 | C++ callback library; was a dependency of the removed C++ wrappers. No pacman required/optional user, and neither Mangobar binary nor MangoWM, Foot, Rofi, Mako, Thunar, tiny-dfr or `wlsunset` links it. | **Removed** by the user with `sudo pacman -R libsigc++`. |
 | `upower` 1.91.5 | Power-information daemon/library; no pacman required/optional user or Limux config/script call. Mangobar gets battery readings from sysfs; the T2 helpers do not call UPower. It remains D-Bus-activatable, and this sandbox cannot inspect live D-Bus clients. | **Keep.** A Foot-session check found `upower.service` active through D-Bus activation shortly after the accessibility bus, consistent with Firefox reading battery state. Removing it would silently break that. |
 
 The earlier ELF and reference checks found no use of the removed libraries or UPower in the custom Mangobar binaries, MangoWM, tiny-dfr, Foot, Rofi, Mako, Thunar, `wlsunset`, user scripts or Limux configuration. This cannot prove that no on-demand application will use UPower over D-Bus. No package was removed by Limux tooling; the user performed the removals.
@@ -107,7 +107,7 @@ systemctl --no-pager --plain status tiny-dfr limux-touchbar-recover t2fanrd Netw
 | **Consolidate** | Old local migration instructions (`~/.local/share/limux/docs/mangobar.md`) | Repository docs are reconciled. Retire or update the local guide separately. Do not create a second live config or startup path. |
 | **Completed by user** | Waybar and unused dependency chain | Package, user/package configuration and old launcher are absent. One managed Mangobar is user-confirmed. No further Waybar package action is needed. |
 | **Completed by user** | `cairomm`, `glibmm`, `fmt` | Removed. |
-| **Remove (approved)** | `libsigc++` | Remaining orphan with no observed client. Package-only command: `sudo pacman -R libsigc++`. No `-Rs`/`-Rns`. Not yet run. |
+| **Completed by user** | `libsigc++` | Removed with `sudo pacman -R libsigc++` (package only). |
 | **Keep** | `upower` | Started on demand for Firefox's battery status; not a removal candidate. |
 | **Completed** | `~/.config/Thunar/accels.scm.before-command-keys` | No longer present. |
 | **Completed** | `~/.local/bin/cleanup-limux-waybar` | No longer present. Its reference in the old local guide remains to be corrected. |
@@ -118,4 +118,4 @@ systemctl --no-pager --plain status tiny-dfr limux-touchbar-recover t2fanrd Netw
 | **Investigate** | `wlsunset` startup, GTK/Thunar theme, Firefox appearance, absent XDG portal | Night-light behaviour may be manual. GTK and Firefox styling are independent. Portal packages are absent; determine actual screen-sharing/file-picker needs before proposing installs. |
 | **Completed** | Limux Commands quicklinks; Thunar Trash and thumbnails | The user installed `xdg-utils`, `gvfs` and `tumbler`. Verified: `xdg-open` resolves folders to Thunar and https to Firefox; `trash:///` is served by gvfs; tumbler created a PNG thumbnail on request. |
 
-Recommended order: (1) run the approved `libsigc++` removal; (2) keep UPower; (3) approve the two reproducible preview build directories for deletion; (4) correct the stale local Waybar guide; (5) decide whether to retain the unique Waybar recovery archive and old installer; (6) resolve night-light ownership. Quicklinks, Rhapsody Mako and GTK/Thunar are done. No file cleanup command in this update has been run.
+Recommended order: (1) keep UPower; (2) approve the two reproducible preview build directories for deletion; (3) correct the stale local Waybar guide; (4) decide whether to retain the unique Waybar recovery archive and old installer; (5) resolve night-light ownership. Quicklinks, Rhapsody Mako and GTK/Thunar are done. No file cleanup command in this update has been run.
