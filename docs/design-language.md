@@ -62,7 +62,7 @@ The screenshot is source context, not a layout target. Avoid gratuitous boxes, s
 
 ## Typography, geometry and states
 
-Typography is compact, readable and aligned; technical metadata is quieter than primary actions. Inter is the approved current bar, Rofi and Thunar-window baseline, not a system-wide font commitment. Foot currently uses DejaVu Sans Mono. IBM Plex remains an unapproved future comparison. Check installed fonts and native rendering before changing them.
+Typography is compact, readable and aligned; technical metadata is quieter than primary actions. Inter is the approved system interface face: the bar, Rofi, Thunar and the GTK interface font (Inter 10, `typography.ui_size`), which Firefox's interface and GTK dialogs also use. Foot currently uses DejaVu Sans Mono. IBM Plex remains an unapproved future comparison. Check installed fonts and native rendering before changing them.
 
 The live component geometries are approved individually; they are not universal spacing or radius rules. The original 1px edge and 4-unit rhythm are historical exploration. Preserve stable hover geometry, especially across all workspace states.
 

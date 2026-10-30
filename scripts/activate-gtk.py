@@ -178,7 +178,7 @@ def activate(live, manifest, css, files, links):
             if state[f'xfconf:{name}'] == 'original':
                 live.set_prop(name, kind, value)
                 done.append(f'xfconf:{name}')
-        for key in ('icon-theme', 'gtk-theme'):
+        for key in manifest['gsettings']:  # gtk-theme is listed last
             if state[f'gsettings:{key}'] == 'original':
                 live.set_setting(key, manifest['gsettings'][key])
                 done.append(f'gsettings:{key}')
@@ -196,7 +196,7 @@ def rollback(live, manifest):
     """Theme switch first, then settings, stylesheet and icons. Values the user
     has since changed are left alone and reported."""
     state = classify(live, manifest)
-    order = ([f'gsettings:{k}' for k in ('gtk-theme', 'icon-theme')] +
+    order = ([f'gsettings:{k}' for k in reversed(manifest['gsettings'])] +
              [f'xfconf:{n}' for n in manifest['xfconf']] + ['css', 'icons'])
     for item in order:
         if state[item] == 'active':

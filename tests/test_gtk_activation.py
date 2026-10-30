@@ -18,7 +18,8 @@ class FakeLive:
     def __init__(self, folder):
         self.css = folder/'config/gtk-3.0/gtk.css'
         self.icons = folder/'data/icons'
-        self.settings = {'gtk-theme': 'Adwaita', 'icon-theme': 'Adwaita'}
+        self.defaults = {'font-name': 'Adwaita Sans 11', 'gtk-theme': 'Adwaita', 'icon-theme': 'Adwaita'}
+        self.settings = dict(self.defaults)
         self.props = {}
         self.fail_on = None
 
@@ -31,7 +32,7 @@ class FakeLive:
         self.settings[key] = value
 
     def reset_setting(self, key):
-        self.settings[key] = 'Adwaita'
+        self.settings[key] = self.defaults[key]
 
     def get_prop(self, name):
         return self.props.get(name)
@@ -95,7 +96,7 @@ class GtkActivationTests(unittest.TestCase):
         self.assertEqual(kept, ['xfconf:last-location-bar'])
         self.assertEqual(self.live.props, {'last-location-bar': 'ThunarLocationEntry'})
         self.assertFalse(self.live.css.exists())
-        self.assertEqual(self.live.settings, {'gtk-theme': 'Adwaita', 'icon-theme': 'Adwaita'})
+        self.assertEqual(self.live.settings, self.live.defaults)
 
     def test_rollback_does_not_depend_on_current_tokens(self):
         a.activate(self.live, self.manifest, *self.candidate)

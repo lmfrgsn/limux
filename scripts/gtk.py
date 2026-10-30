@@ -23,7 +23,7 @@ def palette(theme):
     t, colors = theme['thunar'], theme['colors']
     c = {}
     for role, name in t.items():
-        if role in ('gtk_theme', 'icon_theme', 'font_size', 'hairline_alpha'):
+        if role in ('gtk_theme', 'icon_theme', 'hairline_alpha'):
             continue
         value = colors[name]
         if not re.fullmatch(r'#[0-9A-Fa-f]{6}', value):
@@ -41,12 +41,17 @@ def _rgb(value):
     return ', '.join(str(int(value[i:i + 2], 16)) for i in (1, 3, 5))
 
 
+def interface_font(theme):
+    t = theme['typography']
+    if not re.fullmatch(r'[\w .-]+', t['sans']) or type(t['ui_size']) is not int or not 8 <= t['ui_size'] <= 16:
+        raise ValueError('invalid interface typography')
+    return t['sans'], t['ui_size']
+
+
 def render_css(theme):
     t, c = theme['thunar'], palette(theme)
-    font = theme['typography']['sans']
+    font, size = interface_font(theme)
     alpha = t['hairline_alpha']
-    if not re.fullmatch(r'[\w .-]+', font) or type(t['font_size']) is not int or not 8 <= t['font_size'] <= 16:
-        raise ValueError('invalid Thunar typography')
     if type(alpha) not in (int, float) or not 0 < alpha < 0.5:
         raise ValueError('invalid Thunar hairline alpha')
     hair = f'rgba({_rgb(c["text"])}, {alpha})'
@@ -64,7 +69,7 @@ def render_css(theme):
              ' * apps; layout rules are scoped to Thunar windows. */', '']
     lines += [f'@define-color {name} {c[role]};' for name, role in defines.items()]
     lines += [f'@define-color sidebar_border_color {hair};', f'@define-color sidebar_shade_color {hair};', '']
-    lines.append(f'''window.thunar {{ font-family: "{font}"; font-size: {t["font_size"]}pt; }}
+    lines.append(f'''window.thunar {{ font-family: "{font}"; font-size: {size}pt; }}
 
 .thunar menubar {{ background: {c["surface"]}; box-shadow: none; border: none; padding: 0 7px; min-height: 30px; }}
 .thunar menubar > menuitem {{ color: {c["secondary"]}; padding: 0 9px; min-height: 30px; }}
@@ -98,7 +103,7 @@ def render_css(theme):
 /* Column headings are quiet labels, not buttons. */
 .thunar .standard-view treeview header button {{ background: {c["surface"]}; border: none;
   border-bottom: 1px solid {hair}; box-shadow: none; color: {c["quiet"]};
-  font-size: {t["font_size"] - 1}pt; font-weight: 500; padding: 6px 12px; }}
+  font-size: {size - 1}pt; font-weight: 500; padding: 6px 12px; }}
 .thunar .standard-view treeview.view:hover {{ background: {c["hover"]}; }}
 
 /* Selection: graphite in the active window, metal when inactive. */
@@ -115,7 +120,7 @@ def render_css(theme):
 
 /* Measurements are quiet text at the edge. */
 .thunar statusbar {{ background: {c["surface"]}; border-top: 1px solid {hair}; color: {c["quiet"]};
-  font-size: {t["font_size"] - 1}pt; padding: 0 10px; min-height: 26px; }}
+  font-size: {size - 1}pt; padding: 0 10px; min-height: 26px; }}
 
 /* Frequent interactions respond instantly. */
 .thunar button, .thunar .view, .thunar menuitem {{ transition: none; }}
@@ -181,7 +186,8 @@ def gsettings(theme):
     for key in ('gtk_theme', 'icon_theme'):
         if not re.fullmatch(r'[\w.-]+', t[key]):
             raise ValueError(f'invalid Thunar {key}')
-    return {'gtk-theme': t['gtk_theme'], 'icon-theme': t['icon_theme']}
+    font, size = interface_font(theme)
+    return {'font-name': f'{font} {size}', 'icon-theme': t['icon_theme'], 'gtk-theme': t['gtk_theme']}
 
 
 def render(theme):

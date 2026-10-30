@@ -47,8 +47,10 @@ urgent = "signal_red"
 on_urgent = "surface"
 
 [typography]
-# Inter approved for initial Mangobar baseline; system-wide typography remains open.
+# Inter is the approved system interface face (bar, Rofi, Thunar and the GTK
+# interface font). ui_size is the GTK interface font size in points.
 sans = "Inter"
+ui_size = 10
 mono = "IBM Plex Mono"
 size = 13
 weight = 500
@@ -142,11 +144,10 @@ overlay_color = "text_secondary"
 [thunar]
 # Limux Files on Thunar 4.20 over the adw-gtk3 GTK 3 theme. Approved design
 # target 2026-10-30: one porcelain surface, type-led path, quiet labels,
-# graphite selection (metal when inactive), outline icons. Font applies to
-# Thunar windows only; system-wide typography remains open.
+# graphite selection (metal when inactive), outline icons. The GTK interface
+# font is typography.sans at typography.ui_size.
 gtk_theme = "adw-gtk3"
 icon_theme = "Limux-Rhapsody"
-font_size = 10
 surface = "surface"
 hover = "chrome"
 location = "chrome"

@@ -55,7 +55,9 @@ class GtkAdapterTests(unittest.TestCase):
     def test_thunar_settings_are_presentation_only(self):
         names = set(thunar_settings(self.theme))
         self.assertFalse({n for n in names if 'accel' in n or 'shortcut-' in n or 'misc-single-click' in n})
-        self.assertEqual(gsettings(self.theme), {'gtk-theme': 'adw-gtk3', 'icon-theme': 'Limux-Rhapsody'})
+        self.assertEqual(gsettings(self.theme), {'font-name': 'Inter 10', 'icon-theme': 'Limux-Rhapsody',
+                                                 'gtk-theme': 'adw-gtk3'})
+        self.assertEqual(list(gsettings(self.theme))[-1], 'gtk-theme')
 
     def test_generated_output_matches_approval_pin(self):
         manifest = json.loads((ROOT/'themes/recovery/gtk.json').read_text())
