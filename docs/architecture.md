@@ -7,7 +7,7 @@ The [canonical design language](design-language.md), [original visual reference]
 | Component | Current approved state | Appearance owner | Recovery |
 | --- | --- | --- | --- |
 | MangoWM | Rhapsody border/gap baseline; live config retains functional bindings and T2 settings | `[mango]` tokens, `scripts/mango.py` | `scripts/mango-appearance.py rollback` |
-| Mangobar | Quiet Workspace Strip active on pinned patched 0.2.2; white-text/inset/charging refinement approved, activation pending Foot session | `workspace_active` / `on_workspace_active` semantics, `[mangobar_candidate]` geometry, `render_quiet()` | After refinement, `restore-prior` reverts it; `rollback` restores the pre-Strip baseline |
+| Mangobar | Refined Quiet Workspace Strip active on pinned patched 0.2.2; white active number, 8px left inset and charging text | `workspace_active` / `on_workspace_active` semantics, `[mangobar_candidate]` geometry, `render_quiet()` | `restore-prior` reverts this refinement; `rollback` restores the pre-Strip baseline |
 | Rofi application launcher | Activated light Rhapsody launcher on Command+Space; yellow list edge | `[rofi]` tokens, `scripts/rofi.py` | `scripts/activate-rofi.py rollback` |
 | Limux Commands | Activated Command+K picker; small nonselectable headings and private snippets | Base Rofi plus `[limux_commands]` override | `scripts/activate-commands.py rollback` removes binding |
 | Foot | Approved graphite palette with orange block cursor and hollow unfocused state | `[foot]` tokens, `scripts/foot.py` | `scripts/activate-foot.py rollback` restores previous yellow cursor; `restore-original` restores pre-Rhapsody config |
@@ -78,7 +78,7 @@ python3 scripts/activate-quiet-bar.py restore-prior
 python3 scripts/activate-quiet-bar.py rollback
 ```
 
-The refinement updates only generated candidate config/CSS and preserves the current launcher bytes; the pinned 0.2.2 binary, patches, MangoWM startup and hardware configuration remain untouched. The controller snapshots the previous active candidate in its existing private state while retaining the original pre-Strip rollback bytes. `restore-prior` reverts only the latest refinement; `rollback` still restores the original pre-Strip configuration and upstream binary. The Codex sandbox could not write its runtime activation lock or reach the managed bar process, so the refinement remains pending and must be run from the live Foot session.
+The refinement updates only generated candidate config/CSS and preserves the current launcher bytes; the pinned 0.2.2 binary, patches, MangoWM startup and hardware configuration remain untouched. The controller snapshots the previous active candidate in its existing private state while retaining the original pre-Strip rollback bytes. `restore-prior` reverts only the latest refinement; `rollback` still restores the original pre-Strip configuration and upstream binary. The user activated and visually confirmed this refinement from Foot. Live config and CSS hashes match the new candidate and the private manifest retains the prior candidate. The Codex process namespace cannot independently inspect the graphical bar process count.
 
 
 ## Rofi approved baseline — adapter and preview
