@@ -348,3 +348,7 @@ The user asked for the remaining follow-ups to be done. Thunar now has Mac-style
 
 **Icon-view selection fix.** After `gvfs` was installed, Thunar enabled file highlighting, which fills the whole selected grid item with the theme selection colour (graphite) instead of tinting the icon. The earlier workaround (metal label, graphite text, kept to stop the icon tint) then drew graphite text on graphite, and selected names became unreadable. The workaround was removed: grid selection now matches the approved target, a graphite tile with a porcelain label and the icon left untouched, and metal with graphite text in an inactive window. Verified in isolated previews in both views, then activated as an in-place stylesheet upgrade. If `gvfs` is removed, highlighting turns off and the old icon tint returns, so `gvfs` is now part of Limux Files.
 
+## Night light — wlsunset — 2026-10-30
+
+The user chose location-based night light over fixed times. MangoWM supports the wlroots gamma-control protocol, so `wlsunset` (already installed) now starts from one `exec_once` line in the MangoWM config, after the notifications entry, with the coordinates of the system timezone's city rather than a personal location. Defaults are kept (4000K at night, 6500K by day). The Quiet Strip activation pins the whole MangoWM config by hash, so its pin was updated in the same change; its `check` passed before and after. This is a display behaviour, not a Rhapsody token output.
+
