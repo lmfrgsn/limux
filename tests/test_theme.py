@@ -58,15 +58,23 @@ class ThemeTests(unittest.TestCase):
         colors, roles = theme['colors'], theme['semantics']
         self.assertEqual(colors[roles['workspace_active']], '#D46A43')
         self.assertEqual(colors[roles['list_selected']], '#E3BE47')
-        self.assertEqual(colors[roles['terminal_cursor']], '#E3BE47')
+        self.assertEqual(colors[roles['terminal_cursor']], '#D46A43')
+        self.assertEqual(roles['terminal_cursor'], 'workspace_orange')
+        self.assertEqual(roles['workspace_active'], 'workspace_orange')
+        self.assertEqual(colors[roles['on_terminal_cursor']], '#141810')
         self.assertIn('background: #D46A43;', render_quiet(theme))
         self.assertIn('border-color: #E3BE47;', render_rofi(theme))
-        self.assertIn('cursor=343442 E3BE47', render_foot(theme))
+        self.assertIn('cursor=141810 D46A43', render_foot(theme))
         changed = copy.deepcopy(theme)
         changed['colors']['workspace_orange'] = '#CC693F'
         self.assertNotEqual(render_quiet(changed), render_quiet(theme))
         self.assertEqual(render_rofi(changed), render_rofi(theme))
-        self.assertEqual(render_foot(changed), render_foot(theme))
+        self.assertNotEqual(render_foot(changed), render_foot(theme))
+        cursor_only = copy.deepcopy(theme)
+        cursor_only['semantics']['terminal_cursor'] = 'signal_yellow'
+        self.assertEqual(render_quiet(cursor_only), render_quiet(theme))
+        self.assertNotEqual(render_foot(cursor_only), render_foot(theme))
+        self.assertIn('cursor=141810 E3BE47', render_foot(cursor_only))
 
     def test_hover_cannot_override_state_colours(self):
         css = render(self.theme)

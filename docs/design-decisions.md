@@ -279,6 +279,12 @@ One Commands-only preview proposes a quieter hierarchy within the existing Rofi 
 
 The new `candidate` picker mode uses the same registry, rows, lock, Rofi invocation, selection handling and clipboard/open actions as `preview`; only its `-theme-str` value differs. The installed Rofi 2.0 parser resolves the neutral fill, zero row-border width, compact search and nonselectable section styling. The sandbox could not create a Wayland display for `grim`, so native screenshot and on-device interaction review remain pending. This candidate has no activation path; Command+K continues to use the approved theme until a later explicit decision.
 
+## Foot cursor approved orange — 2026-10-30
+
+The user reviewed and approved the orange Foot block cursor. `terminal_cursor` independently maps to the shared `workspace_orange` swatch (`#D46A43`), and `on_terminal_cursor` maps to `signal_ink` (`#141810`) at 5.09:1 contrast. `workspace_active` retains its separate semantic mapping to that same swatch. Changing the shared swatch updates both components; changing either role reference affects only its owning component. The block style and hollow unfocused cursor remain. Graphite background, typography, padding, ANSI palette, selection, search/no-match colours and keyboard behavior are unchanged.
+
+Foot's text contrast validation remains at 4.5:1 for cursor and selection pairs. The previous approved yellow-cursor fragment is preserved verbatim as `themes/recovery/foot-yellow-cursor.ini` and pinned separately. `activate-foot.py activate` now targets the orange fragment; `rollback` restores the exact yellow-cursor fragment, and `restore-original` returns to the pre-Rhapsody Foot configuration. Live activation still requires the existing Wayland, native parser, version and configuration ownership checks. Existing Foot windows are not restarted.
+
 ## Limux Commands neutral refinement — pending visual review
 
 The user approved the overall `73ac56c` layout and asked for quieter, truly noninteractive section headings plus a lighter selected row. The proposed `list_selected_neutral` now maps to the Commands-only `#C7C7D2` cool grey; it changes no shared surface or other component. All three Rofi heading states, including `selected.active` reached by pointer hover, resolve to transparent backgrounds, muted text, identical spacing and a default cursor. The actionable selected row alone receives the neutral fill. Native Rofi 2.0 theme resolution verifies the selectors; only an on-device screenshot can settle the visual weight at 1.5 scaling.

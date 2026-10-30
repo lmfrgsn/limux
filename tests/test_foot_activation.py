@@ -34,6 +34,7 @@ class FootActivationTests(unittest.TestCase):
         self.config.write_bytes(self.original)
         self.config.chmod(0o640)
         self.data = a.candidate(self.manifest)
+        self.previous = a.previous(self.manifest)
         self.active = self.original.replace(self.manifest['original_font_line'].encode(), a.include_line(self.style))
 
     def apply(self, data, verify=None):
@@ -50,7 +51,7 @@ class FootActivationTests(unittest.TestCase):
         inode = self.config.stat().st_ino
         self.apply(self.data)
         self.assertEqual(self.config.stat().st_ino, inode)
-        self.apply(None)
+        self.apply(self.previous)
         self.apply(None)
         self.assertEqual(self.config.read_bytes(), self.original)
         self.assertFalse(self.style.exists())
@@ -102,6 +103,14 @@ class FootActivationTests(unittest.TestCase):
         with patch.object(a, 'render', side_effect=RuntimeError('future adapter broken')):
             self.apply(None, lambda _: None)
         self.assertEqual(self.config.read_bytes(), self.original)
+
+    def test_previous_yellow_cursor_is_pinned_and_restorable(self):
+        self.assertEqual(a.digest(self.previous), self.manifest['previous_sha256'])
+        self.apply(self.data, lambda _: None)
+        self.apply(self.previous, lambda _: None)
+        self.assertEqual(self.style.read_bytes(), self.previous)
+        self.assertEqual(self.config.read_bytes(), self.active)
+        self.assertIn(b'cursor=343442 E3BE47', self.style.read_bytes())
 
     def test_real_cli_stops_before_writes_without_wayland(self):
         # Use fixture's hash to exercise main while all writes are intercepted.

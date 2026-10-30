@@ -90,7 +90,8 @@ def versions(config, style, manifest):
         raise RuntimeError('Expected one original font definition')
     active = original.replace(line, include, 1)
     existing = regular(style) if style.exists() or style.is_symlink() else None
-    if existing is not None and digest(existing) != manifest['baseline_sha256']:
+    valid_styles = {manifest['baseline_sha256'], manifest['previous_sha256']}
+    if existing is not None and digest(existing) not in valid_styles:
         raise RuntimeError('Unknown appearance file; refusing to overwrite/remove it')
     if before == active and existing is None:
         # Rollback can still repair a missing include; activation can reinstall it.
@@ -101,7 +102,15 @@ def versions(config, style, manifest):
 def candidate(manifest):
     data = render(tomllib.loads((ROOT/'themes/rhapsody.toml').read_text())).encode()
     if digest(data) != manifest['baseline_sha256']:
-        raise RuntimeError('Generated Foot appearance differs from approved 5cf323e')
+        raise RuntimeError('Generated Foot appearance differs from the pinned approved version')
+    return data
+
+
+def previous(manifest):
+    path = ROOT/'themes/recovery'/manifest['previous_file']
+    data = regular(path)
+    if digest(data) != manifest['previous_sha256']:
+        raise RuntimeError('Previous Foot appearance recovery file failed integrity check')
     return data
 
 
@@ -148,7 +157,7 @@ def transition(config, style, original, active, desired_style, verify):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['check', 'activate', 'rollback', 'verify'])
+    parser.add_argument('action', choices=['check', 'activate', 'rollback', 'restore-original', 'verify'])
     args = parser.parse_args()
     directory = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home()/'.config')))/'foot'
     config, style = directory/'foot.ini', directory/'rhapsody.ini'
@@ -157,17 +166,27 @@ def main():
     if f"foot version: {manifest['foot_version']} " not in version:
         raise RuntimeError('Foot version changed; review defaults and recovery compatibility')
     before, old_style, original, active = versions(config, style, manifest)
-    # Rollback deliberately does not read or render current theme tokens.
-    desired = None if args.action == 'rollback' else candidate(manifest)
+    # Previous-style rollback does not read current tokens; original restore is explicit.
+    if args.action == 'rollback':
+        desired = previous(manifest)
+    elif args.action == 'restore-original':
+        desired = None
+    else:
+        desired = candidate(manifest)
     stage_validate(original, None, manifest)
     if desired is not None:
         stage_validate(original, desired, manifest)
+    if args.action != 'restore-original':
+        stage_validate(original, previous(manifest), manifest)
     if args.action in ('check', 'verify'):
         if args.action == 'verify':
             if before != active or old_style != desired:
                 raise RuntimeError('Approved Rhapsody Foot is not active on disk')
             native(config)
-        state = 'Rhapsody' if before == active and old_style else 'previous styling (or recoverable incomplete activation)'
+        state = ('Rhapsody orange cursor' if before == active and old_style and
+                 digest(old_style) == manifest['baseline_sha256'] else
+                 'Rhapsody yellow cursor' if before == active and old_style else
+                 'previous styling (or recoverable incomplete activation)')
         print(f'Native syntax and approval/recovery checks passed. On disk: {state}.')
         print('New Foot processes read this config; existing windows/servers keep their current appearance.')
         return
@@ -190,7 +209,10 @@ def main():
                 raise RuntimeError('Live appearance differs from approved bytes')
             native(config)
         transition(config, style, original, active, desired, verify)
-    print('Restored previous Foot styling.' if args.action == 'rollback' else 'Activated approved Rhapsody Foot styling.')
+    message = {'rollback': 'Restored the approved yellow-cursor Foot styling.',
+               'restore-original': 'Restored the original pre-Rhapsody Foot configuration.',
+               'activate': 'Activated approved orange-cursor Rhapsody Foot styling.'}[args.action]
+    print(message)
     print('Open a NEW normal Foot window to use it. No running terminal or server was restarted.')
 
 

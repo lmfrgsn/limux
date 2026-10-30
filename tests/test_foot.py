@@ -47,6 +47,10 @@ class FootTests(unittest.TestCase):
         t['foot']['selection_foreground'] = 'terminal_selection'
         with self.assertRaisesRegex(ValueError, 'contrast'):
             render(t)
+        cursor = settings(self.theme)['colors-dark']['cursor'].split()
+        from mangobar import contrast
+        self.assertGreaterEqual(contrast('#' + cursor[0], '#' + cursor[1]), 4.5)
+        self.assertEqual(cursor, ['141810', 'D46A43'])
 
     def test_reject_invalid_tokens(self):
         for key, value in [('font', 'bad\n[key-bindings]'), ('font_size', 0), ('padding', -1), ('regular', [])]:

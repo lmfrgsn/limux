@@ -39,12 +39,12 @@ The original concept explored the following material and signal roles. Its sampl
 | Cool grey | Quiet backgrounds and chrome, barely lavender-tinted | `#DCDCE5` |
 | Metal | Secondary and recessed surfaces, borders, control treatments and structural separation | `#A8A8B4` |
 | Graphite | Dark surfaces, developer tools and technical depth | `#303039` |
-| Signal yellow | Original active workspace; current Rofi list edge, Foot cursor and ANSI yellow have separate roles | `#E3BE47` |
+| Signal yellow | Original active workspace; current Rofi list edge and ANSI yellow have separate roles | `#E3BE47` |
 | Workspace orange | Approved active Quiet Workspace Strip control only | `#D46A43` |
 | Signal green | Meaningful positive, connected, successful or functional status where justified | `#728858` |
 | Signal red | Destructive actions, errors and urgent states | No agreed hex |
 
-Lavender is quiet within the neutral greys. Signals are sparse and tied to a state. The active orange workspace, yellow Rofi list edge, yellow Foot cursor, red urgency and terminal ANSI yellow serve different purposes; none defines a universal accent. Do not globally recolour these roles together.
+Lavender is quiet within the neutral greys. Signals are sparse and tied to a state. The active orange workspace and Foot cursor deliberately share the orange swatch through independent semantic mappings; the yellow Rofi list edge, red urgency and terminal ANSI yellow serve separate purposes. Do not globally recolour these roles together.
 
 The token file now names active workspace, list selection, terminal cursor and terminal search match separately. The old `selected` role is retained only for the recoverable boxed Mangobar renderer. Each mapping currently preserves approved output. Future colour changes need component previews and explicit approval. Verify contrast in light and dark contexts and retain non-colour cues where supported.
 
@@ -83,14 +83,14 @@ Light and dark components share hierarchy, alignment and contrast discipline. Da
 | --- | --- | --- |
 | Active workspace/navigation | `workspace_active` → `workspace_orange` (`#D46A43`) | Approved Quiet Workspace Strip only; inset geometry is component-specific |
 | Selected list row | `list_selected` → `signal_yellow` | Approved Rofi and Commands edge; visual reconsideration requires separate approval |
-| Terminal cursor | `terminal_cursor` → `signal_yellow` | Approved Foot baseline; not linked to workspace or list selection |
+| Terminal cursor | `terminal_cursor` → `workspace_orange`; `on_terminal_cursor` → `signal_ink` | Approved Foot block cursor; semantic role is independent of workspace-active |
 | Terminal match/URL | `terminal_match` → `signal_yellow` | Existing Foot search/URL presentation; review with Foot separately |
 | Urgency/error and positive status | `urgent` → `signal_red`; `success` → `signal_green` | Red is used for supported urgent states; green is reserved where positive meaning is verified |
 | Neutral emphasis | `emphasis` → `accent` | General non-signal emphasis; MangoWM focus currently refers to the neutral accent |
 | Terminal ANSI | `[foot]` regular/bright and `[foot.colors]`/`[foot.blends]` | Terminal palette, including ANSI yellow; ANSI names do not dictate UI state colours |
 | Historical boxed workspace | `selected` → `signal_yellow` | Kept only for the old Mangobar renderer and rollback evidence; not a current universal selection role |
 
-The first migration step is complete: approved values are named by purpose, and active adapter output is byte identical. The old boxed renderer and its guarded recovery hash remain. Later, preview list selection, Commands and Foot independently on the real desktop, compare screenshots and interaction, then change only the approved role mappings and recovery pins. Do not alter the six foundation colours to accomplish these reviews. Retire the legacy `selected` name only when the old renderer and rollback path have a reviewed replacement.
+The first migration step is complete: approved values are named by purpose, and active adapter output is byte identical. Workspace and cursor roles may point to the same canonical colour while retaining independent mappings. The old boxed renderer and its guarded recovery hash remain. Later visual changes should alter only the relevant role mapping and recovery pins. Do not alter the six foundation colours to accomplish these reviews. Retire the legacy `selected` name only when the old renderer and rollback path have a reviewed replacement.
 
 Approved repeated design constants belong in theme tokens: Commands picker width, visible row count and heading metrics now use `[limux_commands]`, while Rofi launcher metrics remain in `[rofi]` and the active bar geometry remains in `[mangobar_candidate]` for compatibility with its guarded activation. Native selector syntax, Rofi metadata, headings' nonselectability, search behaviour, shortcut parsing and clipboard actions belong in adapters. Literal application labels and text are content, not design tokens. Further tokenization should follow a real second use or an approved visual change.
 

@@ -34,8 +34,9 @@ on_list_selected = "text"
 # Preview-only neutral list treatment for Limux Commands; not activated.
 list_selected_neutral = "commands_selection_cool"
 on_list_selected_neutral = "text"
-terminal_cursor = "signal_yellow"
-on_terminal_cursor = "text"
+# Separate terminal/workspace roles intentionally share the approved orange swatch.
+terminal_cursor = "workspace_orange"
+on_terminal_cursor = "signal_ink"
 terminal_match = "signal_yellow"
 on_terminal_match = "text"
 success = "signal_green"
