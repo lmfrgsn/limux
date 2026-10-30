@@ -19,13 +19,15 @@ SOURCE = Path('/home/liam/.local/state/limux/bar-migration/sources/mangobar')
 
 class QuietBarTest(unittest.TestCase):
     def test_variants_and_contrast(self):
-        warm = render_quiet(THEME, 'vermillion')
-        neutral = render_quiet(THEME, 'neutral')
-        self.assertIn('#AD492F', warm)
-        self.assertNotIn('#AD492F', neutral)
-        self.assertIn('#tags.active { color: #343442; background: #EAE9F0; }', neutral)
-        self.assertGreaterEqual(contrast('#AD492F', THEME['colors']['surface']), 4.5)
-        for css in (warm, neutral):
+        specs = THEME['mangobar_candidate']
+        css_by_variant = {name: render_quiet(THEME, name) for name in ('A', 'B', 'C')}
+        self.assertIn('background: #AD492F; border-radius: 2px', css_by_variant['A'])
+        self.assertIn('background: #AD492F; border-radius: 3px', css_by_variant['B'])
+        self.assertIn('background: #A55A43; border-radius: 3px', css_by_variant['C'])
+        for name, css in css_by_variant.items():
+            accent = specs[specs[name]['active_color']]
+            self.assertGreaterEqual(contrast(accent, THEME['colors']['surface']), 4.5)
+            self.assertIn(f'#tags.active {{ color: {THEME["colors"]["surface"]}; background: {accent}', css)
             self.assertNotIn('min-width', css)
             self.assertNotIn('#tags:hover', css)
             self.assertNotIn('gradient', css)
@@ -33,14 +35,16 @@ class QuietBarTest(unittest.TestCase):
             self.assertIn('#tags.urgent', css)
             self.assertNotIn('#layout {', css)
 
-    def test_preview_config_changes_only_left_modules_and_title_limit(self):
+    def test_preview_config_changes_only_left_modules_height_and_title_limit(self):
         original = json.loads(quiet.LIVE.read_text())
-        candidate = quiet.candidate_config()
-        self.assertEqual(candidate['modules-left'], ['workspaces', 'window'])
-        self.assertEqual(candidate['window']['max-length'], 240)
-        original['modules-left'] = ['workspaces', 'window']
-        original['window']['max-length'] = 240
-        self.assertEqual(candidate, original)
+        for name in ('A', 'B', 'C'):
+            with self.subTest(name=name):
+                candidate = quiet.candidate_config(name, THEME)
+                expected = json.loads(json.dumps(original))
+                expected['modules-left'] = ['workspaces', 'window']
+                expected['height'] = THEME['mangobar_candidate'][name]['bar_height']
+                expected['window']['max-length'] = 240
+                self.assertEqual(candidate, expected)
 
     def test_native_hover_keeps_geometry(self):
         if not SOURCE.exists():
@@ -48,12 +52,15 @@ class QuietBarTest(unittest.TestCase):
         harness = r'''
 #include "style.h"
 #include <assert.h>
+#include <stdlib.h>
 int main(int argc, char **argv) {
   StyleSheet ss;
   style_sheet_init(&ss);
   assert(style_sheet_load(&ss, argv[1]) == 0);
   Style base = style_resolve(&ss, "tags", "active");
   Style hover = style_resolve(&ss, "tags", "hover");
+  assert(base.background_set && base.color_set);
+  assert(base.radius_set && base.radius == atoi(argv[2]));
   assert(!hover.min_width_set);
   assert(!hover.color_set && !hover.background_set);
   assert(base.padding_left == hover.padding_left);
@@ -62,6 +69,15 @@ int main(int argc, char **argv) {
   assert(base.margin_right == hover.margin_right);
   Style combined = style_overlay(&base, &hover);
   assert(combined.color == base.color && combined.background == base.background);
+  const char *states[] = {"empty", "inactive", "occupied", "active", "urgent"};
+  for (int i = 0; i < 5; ++i) {
+    Style state = style_resolve(&ss, "tags", states[i]);
+    assert(!state.min_width_set);
+    assert(state.padding_left == base.padding_left);
+    assert(state.padding_right == base.padding_right);
+    assert(state.margin_left == base.margin_left);
+    assert(state.margin_right == base.margin_right);
+  }
   return 0;
 }
 '''
@@ -70,7 +86,8 @@ int main(int argc, char **argv) {
             (path / 'check.c').write_text(harness)
             subprocess.run(['cc', '-I', str(SOURCE), str(path / 'check.c'),
                             str(SOURCE / 'style.c'), '-o', str(path / 'check')], check=True)
-            for variant in ('vermillion', 'neutral'):
+            for variant in ('A', 'B', 'C'):
                 css = path / f'{variant}.css'
                 css.write_text(render_quiet(THEME, variant))
-                subprocess.run([str(path / 'check'), str(css)], check=True)
+                subprocess.run([str(path / 'check'), str(css),
+                                str(THEME['mangobar_candidate'][variant]['active_radius'])], check=True)

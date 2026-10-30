@@ -52,9 +52,27 @@ group_gap = 6
 [mangobar_candidate]
 # Option A exploration only. Does not change the approved live bar or semantics.
 signal_vermilion = "#AD492F"
-workspace_padding = 6
+signal_vermilion_soft = "#A55A43"
 workspace_gap = 1
 title_max_width = 240
+
+[mangobar_candidate.A]
+bar_height = 26
+workspace_padding = 4
+active_radius = 2
+active_color = "signal_vermilion"
+
+[mangobar_candidate.B]
+bar_height = 30
+workspace_padding = 7
+active_radius = 3
+active_color = "signal_vermilion"
+
+[mangobar_candidate.C]
+bar_height = 30
+workspace_padding = 7
+active_radius = 3
+active_color = "signal_vermilion_soft"
 
 [rofi]
 # Approved initial Rofi baseline at e1f7538; future refinements require review.

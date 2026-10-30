@@ -14,25 +14,32 @@ BAR = Path.home() / '.local/bin/mangobar'
 OUT = ROOT / 'build/quiet-workspace-strip'
 
 
-def candidate_config(path=LIVE):
+def candidate_config(variant, theme, path=LIVE):
     # Current live JSONC is strict JSON. Refuse unfamiliar syntax rather than
     # risk dropping a commented setting while generating an isolated preview.
     data = json.loads(path.read_text())
     left = data['modules-left']
     if left != ['workspaces', 'layout', 'window']:
         raise ValueError('unexpected left modules; inspect before changing the preview')
+    if variant not in ('A', 'B', 'C'):
+        raise ValueError('unknown Quiet Workspace Strip variant')
+    candidate = theme['mangobar_candidate']
     data['modules-left'] = ['workspaces', 'window']
-    data['window']['max-length'] = 240
+    data['height'] = candidate[variant]['bar_height']
+    data['window']['max-length'] = candidate['title_max_width']
     return data
 
 
 def render(output=OUT):
     theme = tomllib.loads((ROOT / 'themes/rhapsody.toml').read_text())
-    config = candidate_config()
     output.mkdir(parents=True, exist_ok=True)
-    (output / 'config.jsonc').write_text(json.dumps(config, indent=2) + '\n')
-    for variant in ('vermillion', 'neutral'):
+    for variant in ('A', 'B', 'C'):
+        config = candidate_config(variant, theme)
+        (output / f'{variant}.jsonc').write_text(json.dumps(config, indent=2) + '\n')
         (output / f'{variant}.css').write_text(render_quiet(theme, variant))
+    # Superseded generated artifacts from the earlier text-accent exploration.
+    for stale in ('config.jsonc', 'vermillion.css', 'neutral.css'):
+        (output / stale).unlink(missing_ok=True)
     return output
 
 
@@ -42,7 +49,7 @@ def preview(variant, output=OUT):
     after = output / f'{variant}-candidate.png'
     hover = output / f'{variant}-hover.png'
     subprocess.run(['grim', str(before)], check=True)
-    bar = subprocess.Popen([str(BAR), '-c', str(output / 'config.jsonc'),
+    bar = subprocess.Popen([str(BAR), '-c', str(output / f'{variant}.jsonc'),
                             '-s', str(output / f'{variant}.css')])
     try:
         time.sleep(3)
@@ -67,7 +74,7 @@ def preview(variant, output=OUT):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('action', choices=['render', 'preview'])
-    parser.add_argument('--variant', choices=['vermillion', 'neutral'], default='vermillion')
+    parser.add_argument('--variant', choices=['A', 'B', 'C'], default='B')
     args = parser.parse_args()
     try:
         if args.action == 'render':

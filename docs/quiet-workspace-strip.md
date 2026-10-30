@@ -1,30 +1,29 @@
-# Quiet Workspace Strip — unapproved Mangobar Option A
+# Quiet Workspace Strip — filled active workspace, preview only
 
-This is a Mangobar-only visual candidate. The approved live CSS and JSONC remain unchanged. The existing Rhapsody theme, MangoWM bindings and gestures, Foot, Rofi, Limux Commands and T2 hardware are untouched.
+These are three refinements of the selected Limux direction for **Mangobar 0.2.2**. The nine workspaces remain plain numbers; only the active number has a compact orange fill. The porcelain background, quiet title, centered clock and status area are shared. The preview config removes the visible layout module, while MangoWM's `SUPER,n` layout switching remains intact. It retains the live workspace, tray, network, battery and volume configuration. No candidate is activated.
 
-The live Mangobar 0.2.2 configuration has nine persistent workspaces, `layout`, a window title, a centered clock, and tray/Wi-Fi/battery/volume on the right. This candidate keeps the nine tags and all status modules, removes only `layout` from the preview config, and limits the subdued window title to 240 pixels. Layout switching remains in MangoWM (`SUPER,n`); there is no bar layout control to preserve. All other config values and commands are copied from the live config into an ignored build artifact. The generator refuses unexpected left-module order rather than guessing at a changed machine.
+| Candidate | Bar height | Workspace padding | Active radius | Active fill | Contrast with porcelain text |
+| --- | ---: | ---: | ---: | --- | ---: |
+| A — Compact | 26px | 4px | 2px | `#AD492F` | 5.25:1 |
+| B — Balanced | 30px | 7px | 3px | `#AD492F` | 5.25:1 |
+| C — Softer | 30px | 7px | 3px | `#A55A43` | 4.78:1 |
 
-Both candidates use the same token-driven porcelain background and typography. In the warm candidate, the active number is vermillion `#AD492F` on `#F8F8FA` (measured 5.25:1). Occupied numbers use secondary graphite, empty/inactive use quiet graphite, and urgency uses red text. The neutral comparison makes the active number graphite on a single subtle chrome surface. No inactive number gets a box or border. These colour mappings are **proposals**, not a change to the approved Rhapsody selection semantic or live bar.
+The values are candidate-only tokens in `themes/rhapsody.toml`. The approved global yellow selection semantic and live CSS do not change. Mangobar paints a workspace background at the full bar height; its CSS subset does not provide a reliable vertical inset. The filled active shape therefore uses the bar height, with a small corner radius rather than a pill. The original Braun reference supports the restrained fill as a purposeful state marker, while the running bar's boxed workspaces and `Layout T` compete with the information in the strip. B is the provisional recommendation: it keeps the current 30px status-bar height and makes the active number easier to scan without changing the status hierarchy. A is tighter; C has the same geometry as B with a quieter signal. This recommendation needs the on-device screenshots below before approval.
 
-The observed hover-width bug has a concrete cause in the installed C implementation: after loading CSS, Mangobar forces each workspace state's minimum width to the bar height plus margins. It builds the hover CSS separately and reapplies the CSS `#tags` minimum width on pointer entry. The old CSS specified `min-width: 26px`; the live bar height is 30px, so hover could overwrite the computed 32px width with 26px. The candidate omits `min-width` from tag CSS entirely. Mangobar's own 30px minimum remains for every state, giving each number a stable 32px slot with the one-pixel margins. Hover has no colour, padding, margin or width override, so it does not animate or move neighbours.
+## Stable hover geometry
 
-The design review follows [Jakub Krehel's interface](https://github.com/jakubkrehel/skills), [layout](https://raw.githubusercontent.com/jakubkrehel/skills/main/skills/better-layout/SKILL.md), [typography](https://raw.githubusercontent.com/jakubkrehel/skills/main/skills/better-typography/SKILL.md) and [colour](https://raw.githubusercontent.com/jakubkrehel/skills/main/skills/better-colors/SKILL.md) guidance: group by spacing rather than decoration, retain readable compact Inter, and measure the accent on its rendered surface. [Emil Kowalski's interaction review](https://emilkowal.ski/ui/train-your-judgement) informed the choice to keep hover geometrically still and avoid motion on this frequently used strip. No external skill was installed and no runtime dependency was added. Limux's canonical design language remains the governing identity.
+The previous shifting came from the native implementation: after CSS loading, Mangobar sets every workspace state's minimum width from bar height and margins, but a CSS `min-width` can be reapplied by the hover overlay. These candidate rules omit `min-width` and do not define a hover selector. Every workspace state has identical padding and margins, and only the active state changes colour and radius. Native parser tests cover empty, inactive, occupied, active and urgent states, plus hover overlays. Visual pointer checks are still required.
 
-Render both variants without touching the desktop:
+## Native previews
+
+From Foot in the MangoWM session, run each command separately:
 
 ```sh
-cd ~/limux
-python3 scripts/quiet-bar.py render
+cd ~/limux && python3 scripts/quiet-bar.py preview --variant A
+cd ~/limux && python3 scripts/quiet-bar.py preview --variant B
+cd ~/limux && python3 scripts/quiet-bar.py preview --variant C
 ```
 
-From Foot in the MangoWM session, capture and try each temporary native Mangobar preview:
+Each invocation renders token-derived CSS and a temporary JSONC config under ignored `build/quiet-workspace-strip/`, captures the current desktop, starts a second native Mangobar for 25 seconds, captures the candidate and a hover frame, then stops only that preview process. Put the pointer over a workspace number before the hover capture at about 10 seconds. While the preview is visible, move across all nine numbers, switch between occupied and empty workspaces, and check that no slot or neighbour moves. Compare the active shape, number spacing, title and status alignment, contrast, and balance against the light desktop and graphite Foot at 1.5 display scaling. The second bar may overlap the live one during capture; Ctrl+C closes it early. Repeating a command regenerates the same candidate files.
 
-```sh
-cd ~/limux
-python3 scripts/quiet-bar.py preview --variant vermillion
-python3 scripts/quiet-bar.py preview --variant neutral
-```
-
-Each command checks screenshot access before starting a second bar, captures before/candidate/hover screenshots under ignored `build/quiet-workspace-strip/`, keeps the preview for 25 seconds and closes only its own process. The hover capture occurs 10 seconds after the initial candidate capture; place the pointer over a workspace number then. The second bar may appear under or overlap the live bar. Move the pointer across numbers 1–9 and switch workspaces while it is up. Inspect the screenshots at native scale for hierarchy, density, title truncation, status legibility, alignment, active/occupied/urgent distinction, and the relationship to the light desktop and graphite Foot. Check that the workspace hit areas and neighbours do not shift. Ctrl+C closes a preview early. The Codex sandbox cannot access Wayland, so no new real screenshot or interactive hover observation was possible here; no visual approval is claimed.
-
-The parser and native style tests cover valid CSS, measured contrast, unchanged approved output, and invariant tag geometry through hover. They cannot replace the on-device screenshot review. Activation will need separate visual approval and a guarded apply/rollback mechanism; this candidate does not install one.
+The Codex sandbox cannot access the Wayland session, so it cannot capture or judge these new real frames. Native CSS parsing and tests pass; final visual approval remains with the user after running these previews. Rollback of a preview is automatic when its command exits. No live files are replaced.

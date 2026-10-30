@@ -68,22 +68,26 @@ menuitem:hover {{ color: {c['text']}; background-color: {c['canvas']}; }}
 '''
 
 
-def render_quiet(theme, variant='vermillion'):
-    """Unapproved Option A preview; preserve render() and its approved output."""
+def render_quiet(theme, variant='B'):
+    """Unapproved filled-active previews; preserve render() and its approved output."""
     render(theme)  # Reuse complete token and contrast validation.
-    if variant not in ('vermillion', 'neutral'):
+    if variant not in ('A', 'B', 'C'):
         raise ValueError('unknown Quiet Workspace Strip variant')
     c = theme['colors']
     q = theme['mangobar_candidate']
-    accent = q['signal_vermilion'] if variant == 'vermillion' else c['text']
-    active_surface = c['surface'] if variant == 'vermillion' else c['chrome']
+    spec = q[variant]
+    accent = q[spec['active_color']]
     if not re.fullmatch(r'#[0-9a-fA-F]{6}', accent):
         raise ValueError('invalid Quiet Workspace Strip accent')
     if contrast(accent, c['surface']) < 4.5:
         raise ValueError('insufficient active workspace contrast')
-    for key in ('workspace_padding', 'workspace_gap'):
-        if type(q[key]) is not int or not 0 <= q[key] <= 20:
+    for key, value in (('workspace_padding', spec['workspace_padding']),
+                       ('active_radius', spec['active_radius']),
+                       ('workspace_gap', q['workspace_gap'])):
+        if type(value) is not int or not 0 <= value <= 20:
             raise ValueError(f'invalid {key}')
+    if type(spec['bar_height']) is not int or not 20 <= spec['bar_height'] <= 40:
+        raise ValueError('invalid candidate bar height')
     font, size, weight = (theme['typography'][k] for k in ('sans', 'size', 'weight'))
     # The native bar forces workspace minimum width to bar height after loading
     # CSS. A #tags min-width would then be reapplied from the hover overlay and
@@ -92,11 +96,11 @@ def render_quiet(theme, variant='vermillion'):
 * {{ font-family: "{font}"; font-size: {size}px; font-weight: {weight}; padding: 0px 8px; margin: 0px; border-radius: 0px; }}
 #bar {{ background: {c['surface']}; padding: 0px; margin: 0px; }}
 #bar.sel {{ background: {c['surface']}; }}
-#tags {{ padding: 0px {q['workspace_padding']}px; margin: 0px {q['workspace_gap']}px; }}
+#tags {{ padding: 0px {spec['workspace_padding']}px; margin: 0px {q['workspace_gap']}px; }}
 #tags.empty {{ color: {c['text_quiet']}; background: {c['surface']}; }}
 #tags.inactive {{ color: {c['text_quiet']}; background: {c['surface']}; }}
 #tags.occupied {{ color: {c['text_secondary']}; background: {c['surface']}; }}
-#tags.active {{ color: {accent}; background: {active_surface}; }}
+#tags.active {{ color: {c['surface']}; background: {accent}; border-radius: {spec['active_radius']}px; }}
 #tags.urgent {{ color: {c['signal_red']}; background: {c['surface']}; }}
 #title {{ color: {c['text_quiet']}; background: {c['surface']}; margin-left: 12px; }}
 #clock {{ color: {c['text']}; background: {c['surface']}; }}
