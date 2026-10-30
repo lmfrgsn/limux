@@ -164,10 +164,24 @@ class NeutralCandidateTest(unittest.TestCase):
         self.assertIn('"box-search","listview","message"', blocks['mainbox'].replace(' ', ''))
         self.assertIn('border:           0px', blocks['element'])
         selected = blocks['element selected.normal']
-        self.assertIn('168, 168, 180', selected)
+        self.assertIn('199, 199, 210', selected)
         self.assertNotIn('227, 190, 71', selected)
-        self.assertIn('6px 0px 0px', blocks['element normal.active'])
+        for state in ('element normal.active', 'element alternate.active', 'element selected.active'):
+            self.assertIn('background-color: transparent', blocks[state])
+            self.assertIn('6px 0px 0px', blocks[state])
+            self.assertIn('cursor:           default', blocks[state])
+            self.assertIn('104, 103, 115', blocks[state])
+        self.assertIn('font: "Inter 10"', blocks['element-text selected.active'])
         self.assertIn('8px', blocks['inputbar'])
+
+    def test_activated_marker_selects_candidate_only_for_command_k_mode(self):
+        with patch.dict(commands.os.environ, {'WAYLAND_DISPLAY': 'wayland-1'}), \
+             patch.object(commands, 'appearance_active', return_value=True), \
+             patch.object(commands.subprocess, 'run', return_value=MagicMock(returncode=1)) as run, \
+             patch.object(commands.sys, 'argv', ['limux-commands', 'preview']):
+            commands.main()
+        args = run.call_args.args[0]
+        self.assertEqual(args[args.index('-theme-str') + 1], commands.preview_theme(candidate=True))
 
 class PersonalQuicklinksTest(unittest.TestCase):
     def test_private_links_and_empty_groups(self):

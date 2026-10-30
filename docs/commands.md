@@ -73,9 +73,9 @@ The sole live MangoWM config now contains one `SUPER,k` binding to Limux Command
 
 The Codex sandbox can inspect the live config but cannot connect to the Wayland compositor. Its tests validate binding parsing, single-instance locking, section metadata, search terms, selection mapping, cancellation and clipboard invocation; actual keypresses and visual interactions must be checked in Foot: Command+K opens Commands; a second Command+K does not open another copy; arrows skip headings; typing `workspace`, `screenshot`, `lorem` or `email` filters; Escape closes; Enter on Lorem or a snippet copies text; Command+Space still opens the normal application launcher. To remove the binding, run `python3 ~/limux/scripts/activate-commands.py rollback` from Foot. Activation can be repeated with `activate`.
 
-## Neutral Commands candidate — preview only
+## Neutral Commands refinement — preview pending approval
 
-This candidate keeps the current single-line shortcut text, group order, fuzzy search, nonselectable headings and all actions. It changes only the Commands Rofi override: the selected row uses neutral `metal` with graphite text and no yellow edge; section headings use 10px muted neutral text; the search padding, row padding and outer spacing are slightly tighter. The existing 700px width stays because shorter widths previously truncated complete shortcuts. The decorative top `COMMANDS` heading is omitted; the search placeholder identifies the picker. The application launcher and Command+K binding remain on the approved live styling. Selected text measures 5.2:1 against `metal`; the selected fill differs 2.22:1 from the porcelain window, so actual focus visibility still needs screenshot review.
+The user reviewed the first neutral candidate at `73ac56c` and requested two focused refinements. The selected row now uses a lighter cool-grey `commands_selection_cool` token (`#C7C7D2`) with graphite text and no yellow edge. Text contrast is 7.3:1; the fill differs 1.58:1 from the porcelain window, so focus visibility still needs screenshot review. EVERYDAY, SNIPPETS and other section headings use the same transparent background, quiet colour, 10px type and fixed spacing in normal, alternate and selected states. Rofi marks them nonselectable; hovering cannot give them the actionable row fill. The previously approved compact search, spacing, 700px width and complete single-line shortcut labels stay intact. The normal Command+Space launcher and current Command+K appearance remain unchanged.
 
 Review it from Foot without changing a live file:
 
@@ -93,3 +93,15 @@ python3 scripts/limux-commands.py candidate
 ```
 
 Check the selected row, header hierarchy and full shortcut labels at the desktop's actual scale. Search `workspace`, `screenshot`, `lorem` and `email`; verify arrow navigation, nonselectable headings, Enter on Lorem or a nonprivate test snippet, and Escape. The candidate theme passes the installed Rofi 2.0 parser, but parser success does not prove pixels or keyboard interaction. The known missing `xdg-open` dependency affects quicklink launching in both the approved and candidate pickers; fixing it is separate functional work.
+
+After visual approval, the prepared appearance controller can switch Command+K to the reviewed candidate without changing MangoWM bindings or the shared Rofi launcher theme:
+
+```sh
+cd ~/limux
+python3 scripts/activate-commands-appearance.py check
+python3 scripts/activate-commands-appearance.py activate
+# Restore the current approved Commands appearance:
+python3 scripts/activate-commands-appearance.py rollback
+```
+
+The controller writes only `~/.local/state/limux/commands-appearance`, an exact, private marker containing the reviewed candidate hash. It refuses unknown markers, a changed candidate, changed base Rofi styling, a different Command+K binding or an open Commands picker. The picker rejects a marker whose hash no longer matches its generated theme. Rollback removes the known marker even if source tokens later drift. No live theme file is copied and no application launcher, shortcut or hardware setting is changed. **Do not run `activate` until this refinement has been visually approved.**

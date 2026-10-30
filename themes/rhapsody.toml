@@ -10,6 +10,8 @@ text = "#343442"
 dark_terminal = "#2F303B"
 # Approved initial Mangobar baseline; not necessarily the final design.
 metal = "#A8A8B4"
+# Commands-only preview between metal and canvas; not an approved global surface.
+commands_selection_cool = "#C7C7D2"
 text_secondary = "#666573"
 text_quiet = "#686773"
 signal_yellow = "#E3BE47"
@@ -30,7 +32,7 @@ on_workspace_active = "signal_ink"
 list_selected = "signal_yellow"
 on_list_selected = "text"
 # Preview-only neutral list treatment for Limux Commands; not activated.
-list_selected_neutral = "metal"
+list_selected_neutral = "commands_selection_cool"
 on_list_selected_neutral = "text"
 terminal_cursor = "signal_yellow"
 on_terminal_cursor = "text"

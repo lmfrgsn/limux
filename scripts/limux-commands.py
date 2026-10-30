@@ -4,6 +4,7 @@ import argparse
 import configparser
 import datetime
 import fcntl
+import hashlib
 import os
 from pathlib import Path
 import subprocess
@@ -19,6 +20,7 @@ THEME = HOME / '.config/rofi/charcoal.rasi'
 PROJECT = Path(__file__).resolve().parents[1]
 EXAMPLE = PROJECT / 'examples/commands.toml'
 TOKENS = PROJECT / 'themes/rhapsody.toml'
+APPEARANCE_STATE = HOME / '.local/state/limux/commands-appearance'
 MOD = {'super': '⌘', 'alt': '⌥', 'ctrl': '⌃', 'control': '⌃', 'shift': '⇧', 'none': ''}
 ACTION = {
     'reload_config': ('System', 'Reload MangoWM configuration'),
@@ -226,15 +228,19 @@ def preview_theme(tokens_path=TOKENS, candidate=False):
         minimum = 1 if name in ('width', 'list_lines', 'heading_size') else 0
         if type(value) is not int or not minimum <= value <= (1600 if name == 'width' else 100):
             raise ValueError(f'invalid Commands geometry: {name}')
+    heading_states = ('element normal.active, element alternate.active, element selected.active'
+                      if candidate else 'element normal.active, element alternate.active')
+    heading_text_states = ('element-text normal.active, element-text alternate.active, element-text selected.active'
+                           if candidate else 'element-text normal.active, element-text alternate.active')
     base = ('textbox-heading {\n content: "COMMANDS";\n}\n'
             'entry {\n placeholder: "Search commands";\n}\n'
             f'window {{\n width: {metrics["width"]}px;\n}}\n'
             f'listview {{\n lines: {metrics["list_lines"]};\n}}\n'
-            'element normal.active, element alternate.active {\n'
+            f'{heading_states} {{\n'
             f' margin: {metrics["heading_margin_top"]}px 0px 0px 0px;\n'
             f' padding: {metrics["heading_padding_top"]}px {metrics["heading_padding_horizontal"]}px {metrics["heading_padding_bottom"]}px {metrics["heading_padding_horizontal"]}px;\n'
             f' text-color: {quiet};\n' ' }\n'
-            'element-text normal.active, element-text alternate.active {\n'
+            f'{heading_text_states} {{\n'
             f' font: "{font} {metrics["heading_size"]}";\n' ' }')
     if not candidate:
         return base
@@ -249,9 +255,26 @@ def preview_theme(tokens_path=TOKENS, candidate=False):
             f'window {{\n padding: {metrics["window_padding"]}px;\n}}\n'
             f'inputbar {{\n padding: {metrics["search_padding"]}px;\n}}\n'
             f'element {{\n padding: {metrics["row_padding"]}px;\n border: 0px;\n}}\n'
-            'element selected.normal, element selected.active {\n'
+            'element selected.normal {\n'
             f' background-color: {selection};\n border-color: {selection};\n'
-            f' text-color: {selected_ink};\n}}\n')
+            f' text-color: {selected_ink};\n}}\n'
+            'element normal.active, element alternate.active, element selected.active {\n'
+            f' background-color: transparent;\n border-color: transparent;\n'
+            f' text-color: {quiet};\n cursor: default;\n}}\n')
+
+
+def appearance_active(path=APPEARANCE_STATE):
+    """Read the single activation marker; reject unreviewed appearance drift."""
+    if not path.exists() and not path.is_symlink():
+        return False
+    if path.is_symlink() or not path.is_file() or path.stat().st_uid != os.getuid():
+        raise RuntimeError('Commands appearance marker is not an owned regular file')
+    if path.stat().st_mode & 0o077:
+        raise RuntimeError('Commands appearance marker must have mode 600')
+    expected = 'neutral-v1 ' + hashlib.sha256(preview_theme(candidate=True).encode()).hexdigest() + '\n'
+    if path.read_text() != expected:
+        raise RuntimeError('Commands appearance marker does not match the reviewed candidate')
+    return True
 
 
 def picker_lock():
@@ -292,7 +315,8 @@ def main():
     lock_fd = picker_lock()
     if lock_fd is None:
         return
-    theme_override = preview_theme(candidate=args.mode == 'candidate')
+    theme_override = preview_theme(candidate=args.mode == 'candidate' or
+                                   (args.mode == 'preview' and appearance_active()))
     try:
         result = subprocess.run(['rofi', '-dmenu', '-i', '-no-custom', '-no-sort', '-matching', 'fuzzy',
                                  '-format', 'i', '-theme', str(THEME),
