@@ -17,7 +17,7 @@ The visual patch does not change tag hit-test geometry, workspace switching, tex
 
 Stock 0.2.2 parses `margin-top` but does not apply it to tag background painting. `paint_module()` draws every tag fill from `bar_top` through `bar_h`. Setting `background: none` on inactive workspaces exposes transparent gaps because the stock renderer fills the bar background only between the left and right module groups. CSS alone can provide either separate full-height coloured slots or a text-only active state; neither matches the approved inset button and uninterrupted surface. The visual patch supplies the missing renderer behaviours explicitly. A package-free configuration-only fallback would compromise the approved design, so none is proposed for activation.
 
-The new property affects **tag background paint only**. It does not shrink clickable slots. In the approved candidate, the 30px bar uses B's spacing, and the active fill has a 4px vertical inset and 4px radius. The `#D46A43` fill uses dark signal ink at 5.09:1 contrast. The global selection token and all other styling remain unchanged.
+The new property affects **tag background paint only**. It does not shrink clickable slots. In the approved candidate, the 30px bar uses B's spacing, and the active fill has a 4px vertical inset and 4px radius. The `#D46A43` fill used dark signal ink at 5.09:1 contrast at review time; the current approved label is pure white (see the [finishing changes](design-decisions.md#quiet-workspace-strip-finishing-changes--2026-10-30)). The global selection token and all other styling remain unchanged.
 
 ## Prepared activation and rollback
 

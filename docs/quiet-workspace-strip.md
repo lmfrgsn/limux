@@ -2,7 +2,7 @@
 
 **Current status:** the user approved and activated this exact inset orange design. The preview procedure below documents the pre-activation comparison and expects the former module list; it is not a current activation command. The [architecture status table](architecture.md#current-implementation-and-approval-status--2026-10-30) and [engineering review](quiet-bar-engineering-review.md) describe current ownership and rollback.
 
-The user preferred candidate B's workspace spacing but rejected its segmented surface and full-height active fill. The approved design keeps B's 30px bar and 7px workspace padding. Eight inactive workspace numbers sit on one uninterrupted porcelain surface; only the active number has a 30×22px orange fill, inset 4px above and below, with a 4px radius. `workspace_active` maps to approved `#D46A43`, with dark `signal_ink` text at 5.09:1 contrast.
+The user preferred candidate B's workspace spacing but rejected its segmented surface and full-height active fill. The approved design keeps B's 30px bar and 7px workspace padding. Eight inactive workspace numbers sit on one uninterrupted porcelain surface; only the active number has a 30×22px orange fill, inset 4px above and below, with a 4px radius. `workspace_active` maps to approved `#D46A43`. It was activated with dark `signal_ink` text (5.09:1); the later approved refinement uses pure white text (~3.53:1, a user-approved exception for this label) and adds an 8px left inset. See the [finishing changes](design-decisions.md#quiet-workspace-strip-finishing-changes--2026-10-30).
 
 ## Renderer finding
 

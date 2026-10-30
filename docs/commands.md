@@ -1,6 +1,8 @@
-# Limux Commands — approved current picker and preview history
+# Limux Commands — functional picker and design history
 
-Limux Commands uses Rofi's approved Rhapsody theme and is activated on Command+K. Command+Space remains the application launcher. Approved picker width, visible row count and small heading metrics are in `[limux_commands]` tokens; the script retains native Rofi syntax and behaviour. The early preview notes below document how this design evolved. The [live activation status](#live-activation-status--2026-10-30) is authoritative.
+**Current status (2026-10-30):** Limux Commands is functional and bound to Command+K. Command+Space remains the application launcher. The user is not satisfied with its visual design: the redesign is **parked, not approved**. The private appearance marker `~/.local/state/limux/commands-appearance` is present and matches the neutral-v1 candidate hash, so Command+K currently renders the `[limux_commands_candidate]` styling. That styling is not a design decision. `python3 scripts/activate-commands-appearance.py rollback` removes only the marker and returns to the `[limux_commands]` styling; whether to do so is a separate choice.
+
+The script retains native Rofi syntax and behaviour. The preview and approval notes below are history; earlier "approved" wording describes the state at that time.
 
 The Python registry reads the actual MangoWM config each launch. It lists recognized live keyboard, workspace, mouse and gesture bindings; unsupported actions are omitted rather than guessed. Foot's explicit clipboard shortcuts are read from its live config. Categories and descriptions are maintained in one action map in `scripts/limux-commands.py`; no second binding file is generated. Editing MangoWM or Foot is reflected on the next launch. Rofi provides fuzzy search and Escape dismissal. Shortcut rows are reference only; Enter on one does nothing.
 
@@ -73,7 +75,9 @@ The sole live MangoWM config now contains one `SUPER,k` binding to Limux Command
 
 The Codex sandbox can inspect the live config but cannot connect to the Wayland compositor. Its tests validate binding parsing, single-instance locking, section metadata, search terms, selection mapping, cancellation and clipboard invocation; actual keypresses and visual interactions must be checked in Foot: Command+K opens Commands; a second Command+K does not open another copy; arrows skip headings; typing `workspace`, `screenshot`, `lorem` or `email` filters; Escape closes; Enter on Lorem or a snippet copies text; Command+Space still opens the normal application launcher. To remove the binding, run `python3 ~/limux/scripts/activate-commands.py rollback` from Foot. Activation can be repeated with `activate`.
 
-## Neutral Commands refinement — preview pending approval
+## Neutral Commands refinement — candidate, not approved
+
+Historical record of the neutral-v1 candidate. Its marker has since been written, but the candidate was not approved and the redesign is parked; see the current status at the top of this page.
 
 The user reviewed the first neutral candidate at `73ac56c` and requested two focused refinements. The selected row now uses a lighter cool-grey `commands_selection_cool` token (`#C7C7D2`) with graphite text and no yellow edge. Text contrast is 7.3:1; the fill differs 1.58:1 from the porcelain window, so focus visibility still needs screenshot review. EVERYDAY, SNIPPETS and other section headings use the same transparent background, quiet colour, 10px type and fixed spacing in normal, alternate and selected states. Rofi marks them nonselectable; hovering cannot give them the actionable row fill. The previously approved compact search, spacing, 700px width and complete single-line shortcut labels stay intact. The normal Command+Space launcher and current Command+K appearance remain unchanged.
 

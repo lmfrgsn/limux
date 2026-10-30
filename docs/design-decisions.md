@@ -2,7 +2,7 @@
 
 Recorded 2026-10-28; entries preserve the state at the time recorded. The [design language](design-language.md) is the sole maintained design specification; this log records status, rationale and discrepancies. Later dated approvals supersede earlier pending or proposed states. Evidence: [original source](references/original-design-reference.md), [original image](references/braun-interface-concept.png), [tokens](../themes/rhapsody.toml), [Mangobar adapter](../scripts/mangobar.py), and locally inspected generated `build/rhapsody/mangobar.css` (ignored, reproducible output).
 
-**Reading this log:** dated entries preserve what was proposed or pending at that time. The [current reconciliation](#current-rhapsody-reconciliation--2026-10-30) supersedes earlier yellow-workspace and pending-activation statements; it does not erase their historical rationale.
+**Reading this log:** dated entries preserve what was proposed or pending at that time. The [current reconciliation](#current-rhapsody-reconciliation--2026-10-30) supersedes earlier yellow-workspace and pending-activation statements; it does not erase their historical rationale. The [verified current state](#verified-current-state--2026-10-30) supersedes earlier Limux Commands approval statements.
 
 ## Reconciliation decisions
 
@@ -301,3 +301,13 @@ Mangobar 0.2.2 already reads the kernel battery status and selects its charging 
 The token-driven CSS keeps the orange fill, active inset, radius, workspace padding/gap, bar height and other module styles unchanged; only the group left margin is added. The guarded `activate-quiet-bar.py refine` operation snapshots the prior live candidate inside its existing private activation state. `restore-prior` returns that candidate, while the existing `rollback` retains its pre-Strip recovery behavior. The version-pinned binary, source patches, MangoWM startup, T2 support and unrelated desktop components are unchanged.
 
 The user subsequently activated the refinement from Foot and confirmed that the result looks correct. Live config/CSS hashes match the guarded candidate, and the activation state retains the previous active candidate for exact `restore-prior` recovery.
+
+## Verified current state — 2026-10-30
+
+The user confirmed three points; read-only inspection supports them. No live styling, software or package changed during this documentation update.
+
+- **Intentional decisions:** the Mangobar orange `#D46A43` active workspace with pure white text, and Foot's orange block cursor with `signal_ink` foreground, are deliberate. Live Mangobar CSS/config match `render_quiet()` output and the private activation manifest. The live Foot fragment matches its pinned hash (`activate-foot.py verify` passes).
+- **Limux Commands:** functional on Command+K, but the user is not satisfied with its visual design. Its redesign is **parked, not approved**. This supersedes the earlier "approved for activation" description of the fifth-preview appearance. The neutral-v1 appearance marker is present (written 2026-10-30, mode 600) and matches the current candidate hash, so Command+K currently uses the `[limux_commands_candidate]` styling. That contradicts the earlier "not activated" entry for the neutral refinement. It is recorded here as observed state, not as approval. Rollback of the marker remains available and has not been run.
+- **Package cleanup:** Waybar cleanup is complete. `cairomm`, `glibmm` and `fmt` have been removed. `pacman -Qdtq` now returns `libsigc++` and `upower`.
+
+Other live components also match their pins: Rofi `charcoal.rasi`, the 16 MangoWM appearance values, and the single `limux-bar`, `SUPER,space` and `SUPER,k` entries.

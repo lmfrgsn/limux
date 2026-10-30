@@ -54,7 +54,7 @@ Study the complete image, including its rationale and palette, before visual wor
 
 - The image's light bar and yellow boxed workspaces explain the original concept. The approved live Mangobar uses nine plain numbers on one uninterrupted porcelain surface, with one small inset orange active control and no visible layout indicator.
 - The approved Rofi launcher retains a recessed search field and compact rows. “RHAPSODY / 01” was rejected as decorative branding.
-- The current Rofi list uses a pale-grey selected row with a narrow yellow edge. This is an approved baseline, open to a separate future colour review. Limux Commands inherits it and adds small nonselectable section labels; its next design task is separate.
+- The current Rofi list uses a pale-grey selected row with a narrow yellow edge. This is an approved baseline, open to a separate future colour review. Limux Commands is built on the same Rofi theme and is functional, but it has no approved visual design: its redesign is parked, and its candidate neutral styling is not a decision.
 - Controls, content and passive information are visibly different. Typography, boundaries and surface depth work together: porcelain foregrounds, cool neutral ground, metal-like recesses and graphite ink. Passive measurements should not become competing badges.
 
 The screenshot is source context, not a layout target. Avoid gratuitous boxes, stripes, bevels, oversized controls, blur and gradients. Use depth only when it helps show interaction or material relationship.
@@ -107,4 +107,4 @@ Before each future visual iteration:
 3. Generate supported styling from shared tokens, validate native formats and inspect real screenshots at native scale, including hover, focus, selected and urgent states. Check functional precision, subtle lavender, purposeful signals, depth, accessibility and light/dark cohesion.
 4. Preserve behaviour and hardware. Live activation requires explicit authorization and a validated rollback path; a generated preview is not proof of visual approval.
 
-The Quiet Workspace Strip, Rofi launcher, MangoWM appearance, Foot palette and Limux Commands are the current activated baselines. The approved Strip supersedes the older boxed yellow Mangobar appearance without deleting its recovery path. Activation, interactive verification limits and pending design work are recorded in the [architecture](architecture.md) and [decision log](design-decisions.md).
+The Quiet Workspace Strip, Rofi launcher, MangoWM appearance and Foot palette are the current approved, activated baselines. Limux Commands is active and functional, but its appearance is not an approved baseline; its redesign is parked. The approved Strip supersedes the older boxed yellow Mangobar appearance without deleting its recovery path. Activation, interactive verification limits and pending design work are recorded in the [architecture](architecture.md) and [decision log](design-decisions.md).
