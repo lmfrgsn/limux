@@ -216,8 +216,6 @@ def refine():
     if not STATE.exists():
         raise RuntimeError('Quiet Workspace Strip is not active; use the normal activation workflow')
     manifest, _ = backup()
-    if 'previous_refinement' in manifest:
-        raise RuntimeError('a refinement is already pending; use restore-prior before another update')
     startup_entry()
     require_session()
     checked_file(PATCHED, manifest['binary'])
@@ -235,6 +233,8 @@ def refine():
     if target_hashes == manifest['candidate']:
         print('Approved refinement already active; one managed bar verified.')
         return
+    if 'previous_refinement' in manifest:
+        raise RuntimeError('a previous refinement is retained; use restore-prior before applying a different update')
 
     refinement_snapshot(manifest, files)
     manifest['previous_refinement'] = {

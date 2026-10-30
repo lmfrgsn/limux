@@ -117,6 +117,8 @@ class QuietActivationTest(unittest.TestCase):
                 self.assertEqual(launcher.read_bytes(), previous['launcher'])
                 self.assertEqual((state / 'config').read_bytes(), original['config'])
                 self.assertTrue((state / 'previous-refinement').is_dir())
+                activation.refine()  # Repeated activation is idempotent; retain recovery snapshot.
+                self.assertTrue((state / 'previous-refinement').is_dir())
                 activation.restore_prior()
                 self.assertEqual(config.read_bytes(), previous['config'])
                 self.assertEqual(css.read_bytes(), previous['css'])
