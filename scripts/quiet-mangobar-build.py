@@ -12,11 +12,9 @@ UPSTREAM_COMMIT = '84f25a77706c31b49b865d08bc5429ca61115971'  # 0.2.2
 PATCHES = (ROOT / 'patches/mangobar/01-limux-t2-metrics.patch',
            ROOT / 'patches/mangobar/02-quiet-workspace-strip.patch')
 OUT = ROOT / 'build/quiet-workspace-strip'
-COPY = OUT / 'mangobar-source'
-BUILD = OUT / 'mangobar-build'
 
 
-def prepare_source(destination):
+def prepare_source(destination, patches=PATCHES):
     if subprocess.run(['git', '-C', str(SOURCE), 'rev-parse', 'HEAD'],
                       check=True, capture_output=True, text=True).stdout.strip() != UPSTREAM_COMMIT:
         raise ValueError('retained Mangobar checkout is not pinned 0.2.2 commit')
@@ -27,7 +25,7 @@ def prepare_source(destination):
                         f'--output={archive}', UPSTREAM_COMMIT], check=True)
         with tarfile.open(archive) as tar:
             tar.extractall(destination, filter='data')
-    for patch in PATCHES:
+    for patch in patches:
         subprocess.run(['patch', '-p1', '--batch', '--fuzz=0', '-i', str(patch)],
                        cwd=destination, check=True, capture_output=True, text=True)
     return destination
@@ -40,15 +38,18 @@ def patched_sources():
                 for name in ('style.h', 'style.c', 'mangobar.c', 'rtconfig.h', 'rtconfig.c')}
 
 
-def build():
-    if COPY.exists():
-        shutil.rmtree(COPY)
-    OUT.mkdir(parents=True, exist_ok=True)
-    prepare_source(COPY)
-    if not BUILD.exists():
-        subprocess.run(['meson', 'setup', str(BUILD), str(COPY)], check=True)
-    subprocess.run(['ninja', '-C', str(BUILD)], check=True)
-    return BUILD / 'mangobar'
+def build(patches=PATCHES, out=OUT):
+    """Build from the pinned checkout plus `patches` in fixed paths under `out`,
+    so the same inputs give the same binary for hash pinning."""
+    copy, build_dir = out / 'mangobar-source', out / 'mangobar-build'
+    if copy.exists():
+        shutil.rmtree(copy)
+    out.mkdir(parents=True, exist_ok=True)
+    prepare_source(copy, patches)
+    if not build_dir.exists():
+        subprocess.run(['meson', 'setup', str(build_dir), str(copy)], check=True)
+    subprocess.run(['ninja', '-C', str(build_dir)], check=True)
+    return build_dir / 'mangobar'
 
 
 if __name__ == '__main__':
