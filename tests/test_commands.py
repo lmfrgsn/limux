@@ -142,3 +142,19 @@ class PersonalQuicklinksTest(unittest.TestCase):
                 commands.quicklinks(path)
         groups = commands.registry()
         self.assertTrue(all(items for _, items in groups))
+
+
+class SingleInstanceTest(unittest.TestCase):
+    def test_second_picker_cannot_open_until_first_closes(self):
+        import os
+
+        with tempfile.TemporaryDirectory() as folder, patch.object(commands, 'HOME', Path(folder)):
+            first = commands.picker_lock()
+            self.assertIsNotNone(first)
+            try:
+                self.assertIsNone(commands.picker_lock())
+            finally:
+                os.close(first)
+            second = commands.picker_lock()
+            self.assertIsNotNone(second)
+            os.close(second)

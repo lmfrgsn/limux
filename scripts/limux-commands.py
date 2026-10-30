@@ -3,6 +3,7 @@
 import argparse
 import configparser
 import datetime
+import fcntl
 import os
 from pathlib import Path
 import subprocess
@@ -228,6 +229,20 @@ def preview_theme(tokens_path=TOKENS):
             f' font: "{font} 11";\n' ' }')
 
 
+def picker_lock():
+    """Keep one Commands picker open even if Command+K is pressed repeatedly."""
+    lock_dir = HOME / '.cache'
+    lock_dir.mkdir(mode=0o700, exist_ok=True)
+    lock_path = lock_dir / 'limux-commands-picker.lock'
+    fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o600)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        os.close(fd)
+        return None
+    return fd
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('mode', choices=['preview', 'list', 'check', 'init-snippets'])
@@ -242,18 +257,24 @@ def main():
     groups = registry()
     labels, actions = display_rows(groups)
     if args.mode == 'check':
-        print(f'{sum(len(items) for _, items in groups)} commands valid; Command+K remains unassigned')
+        print(f'{sum(len(items) for _, items in groups)} commands valid')
         return
     if args.mode == 'list':
         print('\n'.join(labels))
         return
     if not os.environ.get('WAYLAND_DISPLAY'):
         raise RuntimeError('Run preview from Foot in the MangoWM session')
+    lock_fd = picker_lock()
+    if lock_fd is None:
+        return
     theme_override = preview_theme()
-    result = subprocess.run(['rofi', '-dmenu', '-i', '-no-custom', '-no-sort', '-matching', 'fuzzy',
-                             '-format', 'i', '-theme', str(THEME),
-                             '-theme-str', theme_override, '-p', ''],
-                            input='\n'.join(labels) + '\n', text=True, capture_output=True)
+    try:
+        result = subprocess.run(['rofi', '-dmenu', '-i', '-no-custom', '-no-sort', '-matching', 'fuzzy',
+                                 '-format', 'i', '-theme', str(THEME),
+                                 '-theme-str', theme_override, '-p', ''],
+                                input='\n'.join(labels) + '\n', text=True, capture_output=True)
+    finally:
+        os.close(lock_fd)
     if result.returncode == 1:
         return  # Escape
     if result.returncode != 0:

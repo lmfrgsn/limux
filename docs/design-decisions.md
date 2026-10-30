@@ -246,3 +246,7 @@ The user approved the single-line command rows and asked only for quieter sectio
 ## Limux Commands approved for activation
 
 The user approved the fifth preview's exact appearance and accepted the global Command+K conflict with Firefox's Super accelerator. No appearance tokens or selector values change. A guarded binding controller adds/removes only `bind=SUPER,k` in the sole live MangoWM config, validating through MangoWM and requiring IPC before mutation. User snippets and quicklinks remain in a private config outside Git. Live activation stopped at inaccessible compositor IPC in the sandbox before any config write; the documented Foot workflow completes it.
+
+## Limux Commands live activation verified on disk
+
+The user approved permanent Command+K activation. The sole MangoWM config now has exactly one `SUPER,k` Commands binding and retains exactly one `SUPER,space` Rofi launcher binding. The live file passes MangoWM parsing. A nonblocking picker lock prevents duplicate Commands instances. No Rhapsody visual selectors or tokens changed. The sandbox cannot reach compositor IPC, so interactive keypress, clipboard and visual verification remains for the user's Foot session. Rollback removes only the Commands binding.
