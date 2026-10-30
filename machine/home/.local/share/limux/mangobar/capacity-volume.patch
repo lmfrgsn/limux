@@ -1,0 +1,39 @@
+--- a/mangobar.c
++++ b/mangobar.c
+@@ -4214,9 +4214,10 @@
+   if (!i)
+     return;
+   pa_volume_t avg = pa_cvolume_avg(&i->volume);
+-  int pct = (int)((avg * 100) / PA_VOLUME_NORM);
++  int pct = (int)(((uint64_t)avg * 100 + PA_VOLUME_NORM / 2) / PA_VOLUME_NORM);
+   atomic_store(&pa_pct, pct < 0 ? 0 : (pct > 100 ? 100 : pct));
+   atomic_store(&pa_muted, i->mute ? 1 : 0);
++  if (getenv("MANGOBAR_LOG_METRICS")) fprintf(stderr, "[volume] sink=%s percent=%d muted=%d\n", i->name, pct, i->mute);
+   int bt = 0;
+   const char *api = i->proplist ? pa_proplist_gets(i->proplist, "device.api")
+                                 : NULL;
+@@ -4407,6 +4408,24 @@
+           cap = -1;
+         fclose(f);
+       }
++
++      // Limux: normalize against learned full capacity, never design capacity.
++      // Some T2 firmware capacity values disagree with charge_now/charge_full.
++      const char *units[] = {"energy", "charge"};
++      for (int u = 0; u < 2; u++) {
++        long long remaining = -1, full = 0;
++        snprintf(p, sizeof(p), "/sys/class/power_supply/%s/%s_now", e->d_name, units[u]);
++        f = fopen(p, "r");
++        if (f) { if (fscanf(f, "%lld", &remaining) != 1) remaining = -1; fclose(f); }
++        snprintf(p, sizeof(p), "/sys/class/power_supply/%s/%s_full", e->d_name, units[u]);
++        f = fopen(p, "r");
++        if (f) { if (fscanf(f, "%lld", &full) != 1) full = 0; fclose(f); }
++        if (remaining >= 0 && full > 0) {
++          cap = (int)(100.0 * remaining / full + 0.5);
++          break;
++        }
++      }
++      if (getenv("MANGOBAR_LOG_METRICS")) fprintf(stderr, "[battery] %s normalized=%d\n", e->d_name, cap);
+ 
+       // Keep devices sorted so the default "battery" is always the first one
+       // (e.g. BAT0) regardless of readdir order.

@@ -1,0 +1,156 @@
+#!/usr/bin/env bash
+# Run in Foot as liam (not sudo). Privileged commands are individually scoped.
+set -euo pipefail
+[[ $EUID -ne 0 ]] || { echo 'Run as your desktop user, not root.' >&2; exit 1; }
+[[ "$(cat /sys/class/dmi/id/product_name)" == MacBookPro15,1 ]] || exit 1
+state="${XDG_STATE_HOME:-$HOME/.local/state}/t2-hardware-setup"
+if [[ -e "$state/speakers-enabled" ]]; then
+    exec "$HOME/.local/bin/verify-t2-hardware"
+fi
+resources="$HOME/.local/share/t2-hardware-setup"
+mkdir -p "$state"
+exec 9>"$state/setup.lock"
+flock -n 9 || { echo 'Setup already running.' >&2; exit 1; }
+exec > >(tee -a "$state/setup.log") 2>&1
+backup="$state/backup-$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$backup/user" "$backup/system"
+ln -sfn "$backup" "$state/current-backup"
+for path in .config/mango .config/pipewire .config/wireplumber .config/systemd/user .lv2; do
+    if [[ -e "$HOME/$path" ]]; then cp -a --parents "$HOME/$path" "$backup/user/"; fi
+done
+sudo -v
+for path in /etc/pipewire /etc/wireplumber /etc/tiny-dfr /etc/alsa /etc/udev/rules.d/90-t2-backlight-access.rules /usr/share/t2linux-audio/15_1; do
+    if sudo test -e "$path"; then sudo cp -a --parents "$path" "$backup/system/"; fi
+done
+pacman -Q > "$backup/packages-before.txt"
+systemctl --user list-unit-files > "$backup/user-units-before.txt"
+touch "$state/speakers-locked"
+# Prevent speaker-node creation before starting any newly installed audio stack.
+mkdir -p "$HOME/.config/wireplumber/wireplumber.conf.d"
+guard="$HOME/.config/wireplumber/wireplumber.conf.d/99-t2-speakers-locked.conf"
+on_exit() {
+    local rc=$?
+    if ((rc != 0)); then
+        cp "$resources/speaker-quarantine.conf" "$guard"
+        systemctl --user try-restart wireplumber.service || true
+        echo "Setup needs follow-up (exit $rc); speaker quarantine retained. See $state/setup.log" >&2
+    fi
+}
+trap on_exit EXIT
+cat > "$guard" <<'CONF'
+# Temporary speaker quarantine; retained if DSP installation fails.
+monitor.alsa.rules = [
+ { matches = [ { node.name = "~alsa_output.*.HiFi__Speaker__sink" }
+               { node.name = "alsa_output.platform-sound.RawSpeakers" } ]
+   actions = { update-props = { node.disabled = true } } }
+]
+CONF
+# Stop existing output before changing the audio stack. No unmute or gain raises.
+wpctl set-mute @DEFAULT_AUDIO_SINK@ 1 || true
+audio_units=(wireplumber.service pipewire.service pipewire.socket)
+if systemctl --user cat pipewire-pulse.socket >/dev/null 2>&1; then
+    audio_units+=(pipewire-pulse.service pipewire-pulse.socket)
+fi
+# Stop dependents and sockets together so pipewire-pulse cannot reactivate PW
+# halfway through a separate stop transaction.
+systemctl --user stop "${audio_units[@]}"
+# No -Sy/-Syu: preserve the kernel/drivers and use the already-synced repositories.
+# Abort rather than accepting package conflicts or broad dependency upgrades.
+packages=(pipewire pipewire-audio pipewire-alsa pipewire-pulse wireplumber rtkit
+          alsa-utils brightnessctl playerctl tiny-dfr lsp-plugins-lv2 lilv lilv-tools
+          rust gcc make pkgconf lv2 libxslt fftw git)
+pacman -S --needed --print-format '%n' "${packages[@]}" > "$state/package-plan.txt"
+if grep -Ex 'linux.*|.*-dkms|.*firmware.*|grub|systemd|glibc|t2bce.*' "$state/package-plan.txt" | grep -v '^linux-api-headers$'; then
+    echo 'Transaction includes a protected system package; aborting for review.' >&2
+    exit 1
+fi
+sudo pacman -S --needed "${packages[@]}"
+# An older standalone audio daemon or left-over test player can reserve T2.
+# Inspect the speaker PCM; stop only liam's known daemons/test players.
+sudo fuser -v /dev/snd/pcmC0D0p || true
+for pid in $(sudo fuser /dev/snd/pcmC0D0p 2>/dev/null || true); do
+    owner="$(ps -p "$pid" -o uid= | tr -d ' ')"
+    comm="$(ps -p "$pid" -o comm= | xargs)"
+    if [[ "$owner" == "$(id -u)" && "$comm" =~ ^(pipewire|pulseaudio|speaker-test|aplay)$ ]]; then
+        echo "Stopping stale speaker owner: PID $pid ($comm)"
+        kill -TERM "$pid"
+    else
+        echo "Speaker device owner needs review: PID $pid ($comm), UID $owner"
+    fi
+done
+# Fallback permissions are restricted to liam and these two brightness files.
+cat > "$state/90-t2-backlight-access.rules" <<'RULES'
+ACTION=="add", SUBSYSTEM=="leds", KERNEL=="apple::kbd_backlight", RUN+="/usr/bin/chown liam /sys/class/leds/%k/brightness"
+ACTION=="add", SUBSYSTEM=="backlight", KERNEL=="gmux_backlight", RUN+="/usr/bin/chown liam /sys/class/backlight/%k/brightness"
+RULES
+# brightnessctl normally uses logind. Test it before adding a permission override.
+if ! brightnessctl --device=apple::kbd_backlight set 50% || [[ ! -w /sys/class/backlight/gmux_backlight/brightness ]]; then
+    echo 'Using narrowly scoped backlight permission rules.'
+    sudo install -m644 "$state/90-t2-backlight-access.rules" /etc/udev/rules.d/90-t2-backlight-access.rules
+    sudo udevadm control --reload-rules
+    sudo chown liam /sys/class/leds/apple::kbd_backlight/brightness /sys/class/backlight/gmux_backlight/brightness
+    brightnessctl --device=apple::kbd_backlight set 50%
+fi
+# tiny-dfr overrides only its media-layer default, retaining the vendor key layout.
+sudo install -d -m755 /etc/tiny-dfr
+if ! sudo test -f /etc/tiny-dfr/config.toml; then
+    sudo cp /usr/share/tiny-dfr/config.toml /etc/tiny-dfr/config.toml
+fi
+sudo python3 - <<'PY'
+from pathlib import Path
+import re, tomllib
+p=Path('/etc/tiny-dfr/config.toml');s=p.read_text()
+s,n=re.subn(r'(?m)^\s*MediaLayerDefault\s*=\s*(true|false)\s*$', 'MediaLayerDefault = true', s)
+if not n: s='MediaLayerDefault = true\n'+s
+tomllib.loads(s)
+p.write_text(s)
+PY
+sudo udevadm control --reload-rules
+# Refresh packaged aliases on existing backlights without changing brightness.
+sudo udevadm trigger --action=change --subsystem-match=backlight
+# Apply the packaged mode rule only to the Touch Bar USB display. No controller,
+# keyboard, trackpad, or other USB device is reset.
+for device in /sys/bus/usb/devices/*; do
+    if [[ -f "$device/idVendor" && -f "$device/idProduct" ]] && \
+       [[ "$(cat "$device/idVendor")" == 05ac && "$(cat "$device/idProduct")" == 8302 ]] && \
+       [[ "$(cat "$device/bConfigurationValue")" == 1 ]]; then
+        sudo udevadm trigger --action=add "$device"
+    fi
+done
+sudo udevadm settle --timeout=10 || true
+# Static units are activated by the package's device rules; do not force-enable.
+if [[ "$(systemctl is-enabled tiny-dfr.service 2>/dev/null || true)" == disabled ]]; then
+    sudo systemctl enable tiny-dfr.service
+fi
+sudo systemctl start --no-block tiny-dfr.service
+sudo systemctl start rtkit-daemon.service
+dsp_ready=false
+if bash "$resources/build-speaker-dsp.sh" && \
+   python3 "$resources/configure-dsp.py" "$state/sources/t2-apple-audio-dsp" "$state/staged"; then
+    sudo install -d -m755 /usr/share/t2linux-audio/15_1
+    sudo install -m644 "$state/staged/15_1/"* /usr/share/t2linux-audio/15_1/
+    install -m644 "$state/staged/51-t2-151-speaker-dsp.conf" "$HOME/.config/wireplumber/wireplumber.conf.d/"
+    # The raw speaker node and DSP input now start at zero, muted, volume-locked.
+    rm -- "$guard"
+    dsp_ready=true
+else
+    echo 'DSP setup incomplete; speaker quarantine remains in place.' >&2
+fi
+systemctl --user daemon-reload
+systemctl --user enable --now pipewire.socket pipewire-pulse.socket pipewire.service pipewire-pulse.service wireplumber.service
+sleep 3
+# Select only the model-specific processed sink, never the unprocessed speakers.
+if [[ "$dsp_ready" == true ]]; then
+    if pactl list short sinks | grep -q 'audio_effect.t2-151-speakers'; then
+        "$HOME/.local/bin/t2-hardware-control" ensure-speaker-muted
+        pactl set-default-sink audio_effect.t2-151-speakers
+        systemctl --user enable --now t2-speaker-mute.service
+    else
+        echo 'DSP sink did not appear; restoring speaker quarantine.' >&2
+        cp "$resources/speaker-quarantine.conf" "$guard"
+        systemctl --user restart wireplumber.service
+    fi
+fi
+mmsg dispatch reload_config || echo 'Mango reload unavailable; press Super+r.'
+"$HOME/.local/bin/verify-t2-hardware"
+printf '\nSetup finished without audible tests. Speakers remain locked. Log: %s\n' "$state/verification.log"

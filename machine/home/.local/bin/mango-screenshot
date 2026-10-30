@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+    full)
+        pictures="$HOME/Pictures"
+        mkdir -p "$pictures/Screenshots"
+        grim "$pictures/Screenshots/Screenshot-$(date +%Y-%m-%d_%H-%M-%S-%N).png"
+        ;;
+    area)
+        geometry="$(slurp)" || exit 0
+        [[ -n "$geometry" ]] || exit 0
+        capture="$(mktemp --suffix=.png)"
+        trap 'rm -f -- "$capture"' EXIT
+        grim -g "$geometry" "$capture"
+        wl-copy --type image/png < "$capture"
+        ;;
+    *)
+        echo 'Usage: mango-screenshot full|area' >&2
+        exit 2
+        ;;
+esac

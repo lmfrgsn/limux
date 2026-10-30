@@ -1,0 +1,205 @@
+#!/usr/bin/env bash
+# Authorized brief low-volume test, through the model-specific DSP only.
+set -euo pipefail
+[[ "$(cat /sys/class/dmi/id/product_name)" == MacBookPro15,1 ]] || exit 1
+state="${XDG_STATE_HOME:-$HOME/.local/state}/t2-hardware-setup"
+wpconf="$HOME/.config/wireplumber/wireplumber.conf.d/51-t2-151-speaker-dsp.conf"
+mkdir -p "$state"
+exec 9>"$state/setup.lock"
+flock -n 9 || { echo 'Another setup or test is running.' >&2; exit 1; }
+# Check session access before changing any file.
+systemctl --user is-active --quiet wireplumber.service
+pactl info >/dev/null
+exec > >(tee "$state/speaker-test.log") 2>&1
+backup="$state/speaker-test-backup-$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$backup"
+cp -a "$wpconf" "$backup/wireplumber.conf"
+if [[ -e "$state/speakers-enabled" ]]; then
+    production_graph="$HOME/.config/pipewire/t2-151-speakers.json"
+else
+    production_graph="$HOME/.config/pipewire/t2-151-speakers-locked.json"
+fi
+cp -a "$production_graph" "$backup/production-graph.json"
+testdir="$(mktemp -d "${XDG_RUNTIME_DIR:?Desktop session required}/t2-speaker-test.XXXXXX")"
+changed=false
+cleanup() {
+    local rc=$?
+    trap - EXIT INT TERM
+    # Muting and restoring the silent production graph always precede exit.
+    pactl set-sink-mute audio_effect.t2-151-speakers 1 || true
+    pactl set-sink-volume audio_effect.t2-151-speakers 0% || true
+    pactl set-sink-mute alsa_output.platform-sound.RawSpeakers 1 2>/dev/null || true
+    pactl set-sink-volume alsa_output.platform-sound.RawSpeakers 0% 2>/dev/null || true
+    if [[ -n "${test_pid:-}" ]]; then kill -TERM "$test_pid" 2>/dev/null || true; fi
+    if [[ -n "${monitor_pid:-}" ]]; then kill -TERM "$monitor_pid" 2>/dev/null || true; fi
+    if [[ "$changed" == true ]]; then
+        cp "$backup/wireplumber.conf" "$wpconf"
+        if systemctl --user restart wireplumber.service; then
+            for ((i=0;i<50;i++)); do
+                systemctl --user is-active --quiet t2-speaker-mute.service && break
+                sleep 0.2
+            done
+            if ! "$HOME/.local/bin/verify-t2-hardware" > "$state/post-test-verification.log" 2>&1; then
+                echo "Post-test verification needs review: $state/post-test-verification.log" >&2
+                rc=1
+            fi
+        else
+            rc=1
+        fi
+    fi
+    # Restore only the per-stream mute states changed by this test, after the
+    # production sink is silent again. Applications themselves stay running.
+    if [[ -f "$testdir/stream-mutes.json" ]]; then
+        python3 "$HOME/.local/share/t2-hardware-setup/test-stream-mutes.py" restore "$testdir/stream-mutes.json" || rc=1
+    fi
+    rm -rf -- "$testdir"
+    echo "Test finished (status $rc); production configuration restored and speakers muted."
+    exit "$rc"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+python3 "$HOME/.local/share/t2-hardware-setup/test-stream-mutes.py" mute "$testdir/stream-mutes.json"
+python3 - "$testdir" "$wpconf" "$production_graph" <<'PY'
+from pathlib import Path
+import json, hashlib, subprocess, sys, wave
+home=Path.home();testdir=Path(sys.argv[1]);wpconf=Path(sys.argv[2])
+source=home/'.local/state/t2-hardware-setup/sources/t2-apple-audio-dsp'
+assert subprocess.check_output(['git','-C',str(source),'rev-parse','HEAD'],text=True).strip()=='1895a70350e9444a78c63be20830b4813c5eb0f6'
+original=json.loads((source/'configs/15_1/graph.json').read_text())
+locked_path=Path(sys.argv[3])
+g=json.loads(locked_path.read_text())
+conv=[n for n in g['filter.graph']['nodes'] if n.get('label')=='convolver']
+assert len(conv)==4
+if locked_path.name.endswith('-locked.json'):
+    assert all(n['config']['gain']==0 for n in conv)
+# Restore only the temporary silence gates to their upstream model values.
+for n in conv:
+    orig=next(x for x in original['filter.graph']['nodes'] if x['name']==n['name'])
+    n['config']['gain']=orig['config']['gain']
+assert g['filter.graph']==original['filter.graph'], 'DSP graph differs from the reviewed model profile'
+for f in (source/'configs/15_1').glob('*.wav'):
+    assert hashlib.sha256(f.read_bytes()).digest()==hashlib.sha256((Path('/usr/share/t2linux-audio/15_1')/f.name).read_bytes()).digest()
+assert g['capture.props']['node.name']=='audio_effect.t2-151-speakers'
+assert g['playback.props']['target.object']=='alsa_output.platform-sound.RawSpeakers'
+assert 'channelmix.lock-volumes' not in g['capture.props']
+(testdir/'graph.json').write_text(json.dumps(g,indent=2)+'\n')
+s=wpconf.read_text()
+assert str(locked_path) in s
+# For the test only, expose the hardware adapter for inspection and remove its
+# extra software mute/volume lock. The DSP stays muted until its links are checked.
+s=s.replace(str(locked_path),str(testdir/'graph.json'))
+s=s.replace('      node.param.Props = "{ mute = true, volume = 0.0 }"\n','')
+s=s.replace('      channelmix.lock-volumes = true\n','')
+s=s.replace('hide-parent = true','hide-parent = false')
+(testdir/'wireplumber.conf').write_text(s)
+for name,side in [('Front_Left',0),('Front_Right',1)]:
+    with wave.open('/usr/share/sounds/alsa/'+name+'.wav','rb') as w:
+        assert w.getnchannels()==1 and w.getsampwidth()==2
+        rate=w.getframerate();frames=w.readframes(w.getnframes())
+    silence=b'\0\0'
+    stereo=b''.join((frames[i:i+2]+silence if side==0 else silence+frames[i:i+2]) for i in range(0,len(frames),2))
+    with wave.open(str(testdir/(name+'.wav')),'wb') as w:
+        w.setparams((2,2,rate,0,'NONE','not compressed'));w.writeframes(stereo)
+PY
+changed=true
+systemctl --user stop wireplumber.service
+cp "$testdir/wireplumber.conf" "$wpconf"
+systemctl --user start wireplumber.service
+ready=false
+for ((i=0;i<50;i++)); do
+    if pactl list short sinks | grep -F 'audio_effect.t2-151-speakers' >/dev/null && \
+       systemctl --user is-active --quiet t2-speaker-mute.service; then
+        ready=true; break
+    fi
+    sleep 0.2
+done
+[[ "$ready" == true ]]
+python3 "$HOME/.local/share/t2-hardware-setup/test-stream-mutes.py" mute "$testdir/stream-mutes.json"
+pactl set-default-sink audio_effect.t2-151-speakers
+"$HOME/.local/bin/t2-hardware-control" ensure-speaker-muted
+pw-dump > "$state/speaker-test-graph.json"
+python3 - "$state/speaker-test-graph.json" <<'PY'
+import json,sys
+g=json.load(open(sys.argv[1]));nodes={o['id']:o for o in g if o['type'].endswith(':Node')}
+names={o['info']['props'].get('node.name'):i for i,o in nodes.items()}
+out=names['effect_output.t2-151-speakers']
+assert sum(o['info']['output-node-id']==out for o in g if o['type'].endswith(':Link'))==4
+p=nodes[names['audio_effect.t2-151-speakers']]['info']['params']['Props']
+assert any(x.get('mute') is True for x in p)
+PY
+pw-dump > "$state/speaker-test-before-hardware.json"
+# Set the hardware adapter to its nominal unity gain only while its sole input
+# is the verified, still-muted DSP. This is not direct hardware playback.
+python3 - <<'PY'
+import json,subprocess
+sinks=json.loads(subprocess.check_output(['pactl','-f','json','list','sinks']))
+raw=next(s['index'] for s in sinks if s['name']=='alsa_output.platform-sound.RawSpeakers')
+for s in json.loads(subprocess.check_output(['pactl','-f','json','list','sink-inputs'])):
+    if s['sink']==raw:
+        assert s.get('properties',{}).get('node.name')=='effect_output.t2-151-speakers', 'Unexpected direct hardware stream; refusing to unmute adapter'
+PY
+pactl set-sink-volume alsa_output.platform-sound.RawSpeakers 100%
+pactl set-sink-mute alsa_output.platform-sound.RawSpeakers 0
+# Record only the digital speaker-sink monitor, never a microphone. No fallback.
+timeout 6s pw-record --target=alsa_output.platform-sound.RawSpeakers \
+    --properties='{ stream.capture.sink = true node.dont-fallback = true }' \
+    --rate=48000 --channels=4 --channel-map=FL,FR,RL,RR --format=f32 \
+    --sample-count=192000 "$state/speaker-test-monitor.wav" >"$state/speaker-test-monitor.log" 2>&1 &
+monitor_pid=$!
+sleep 0.25
+echo 'Playing two short spoken channel labels through MacBookPro15,1 DSP at 25%. Ctrl+C stops immediately.'
+# PulseAudio volume changes control channelVolumes, not the independent master
+# volume. The previous quarantine initializer left that master at zero.
+python3 - <<'PY'
+import json,subprocess
+g=json.loads(subprocess.check_output(['pw-dump']))
+nodes=[o for o in g if o['type'].endswith(':Node') and o.get('info',{}).get('props',{}).get('node.name')=='audio_effect.t2-151-speakers']
+assert len(nodes)==1
+subprocess.run(['pw-cli','set-param',str(nodes[0]['id']),'Props','{ volume = 1.0 }'],check=True,stdout=subprocess.DEVNULL)
+PY
+pactl set-sink-volume audio_effect.t2-151-speakers 25%
+pactl set-sink-mute audio_effect.t2-151-speakers 0
+pw-dump > "$state/speaker-test-unmuted.json"
+python3 - "$state/speaker-test-unmuted.json" <<'PY'
+import json,sys
+g=json.load(open(sys.argv[1]))
+n=next(o for o in g if o['type'].endswith(':Node') and o.get('info',{}).get('props',{}).get('node.name')=='audio_effect.t2-151-speakers')
+params=n['info']['params']['Props']
+p=next(p for p in params if 'channelVolumes' in p)
+assert p['mute'] is False and p['volume']==1.0
+assert all(0<x<=0.016 for x in p['channelVolumes']), 'Unexpected DSP gain; aborting'
+controls={}
+for p in params:
+ a=p.get('params',[]);controls.update({a[i]:a[i+1] for i in range(0,len(a)-1,2)})
+from pathlib import Path
+profile=json.loads((Path.home()/'.config/pipewire/t2-151-speakers-locked.json').read_text())
+mapped={}
+for i,rule in enumerate(profile['filter.graph']['capture.volumes']):
+ v=next(p for p in params if 'channelVolumes' in p)['channelVolumes'][i]
+ if rule.get('scale')=='cubic':v=v**(1/3)
+ target=rule['min']+v*(rule['max']-rule['min'])
+ assert -65 < target <= -48, 'Unexpected mapped test gain'
+ mapped[rule['control']]=target
+# Set precisely the values dictated by the upstream profile's slider mapping.
+# This also updates the filter control notification, which may otherwise lag.
+payload='{ params = [ '+ ' '.join(json.dumps(k)+' '+str(v) for k,v in mapped.items())+' ] }'
+subprocess_args=['pw-cli','set-param',str(n['id']),'Props',payload]
+import subprocess
+subprocess.run(subprocess_args,check=True,stdout=subprocess.DEVNULL)
+print('Applied profile-mapped DSP test gains:',mapped)
+PY
+timeout 4s pw-play --target=audio_effect.t2-151-speakers "$testdir/Front_Left.wav" &
+test_pid=$!
+sleep 0.25
+pw-dump > "$state/speaker-test-playing.json"
+wait "$test_pid"
+test_pid=''
+timeout 4s pw-play --target=audio_effect.t2-151-speakers "$testdir/Front_Right.wav"
+pactl set-sink-mute audio_effect.t2-151-speakers 1
+pactl set-sink-volume audio_effect.t2-151-speakers 0%
+wait "$monitor_pid" || true
+# pw-record may need timeout to close even after reaching its sample limit.
+python3 "$HOME/.local/share/t2-hardware-setup/measure-test-output.py" "$state/speaker-test-monitor.wav"
+monitor_pid=''
+echo 'Playback commands succeeded. Listening assessment still requires your report.'

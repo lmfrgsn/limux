@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+state="${XDG_STATE_HOME:-$HOME/.local/state}/limux/bar-migration"
+source_dir="$state/sources/mangobar"
+mkdir -p "$state/sources"
+exec > >(tee "$state/install.log") 2>&1
+# The other libraries in the official Arch dependency list are already installed.
+sudo pacman -S --needed meson ninja tllist
+pkg-config --exists wayland-client fcft pixman-1 cairo pango pangocairo libpulse libsystemd libudev gdk-pixbuf-2.0
+if [[ ! -d "$source_dir/.git" ]]; then
+    git clone --depth 1 --branch 0.2.2 https://github.com/mangowm/mangobar.git "$source_dir"
+fi
+[[ "$(git -C "$source_dir" rev-parse HEAD)" == 84f25a77706c31b49b865d08bc5429ca61115971 ]] || {
+    echo 'Unexpected Mangobar revision; stopping for review.' >&2; exit 1;
+}
+patch_file="$HOME/.local/share/limux/mangobar/capacity-volume.patch"
+if git -C "$source_dir" apply --check "$patch_file" 2>/dev/null; then
+    git -C "$source_dir" apply "$patch_file"
+else
+    git -C "$source_dir" apply --reverse --check "$patch_file"
+fi
+if [[ ! -f "$source_dir/build/build.ninja" ]]; then
+    meson setup "$source_dir/build" "$source_dir" --prefix="$HOME/.local" --buildtype=release
+fi
+meson compile -C "$source_dir/build"
+meson install -C "$source_dir/build"
+"$HOME/.local/bin/mangobar" -v
+echo 'Installed patched Mangobar under ~/.local.'
+exec "$HOME/.local/bin/limux-bar" refresh

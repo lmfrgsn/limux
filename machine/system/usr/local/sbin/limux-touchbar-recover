@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Recover only a Touch Bar whose display driver failed to bind at boot.
+for candidate in /sys/bus/usb/devices/*; do
+    [[ -f "$candidate/idVendor" && -f "$candidate/idProduct" ]] || continue
+    [[ "$(<"$candidate/idVendor")" == 05ac && "$(<"$candidate/idProduct")" == 8302 ]] || continue
+    display="$candidate"
+    break
+done
+
+if [[ -z "${display:-}" ]]; then
+    echo 'Touch Bar Display USB device not found' >&2
+    exit 1
+fi
+
+for interface in "$display":*; do
+    [[ -L "$interface/driver" ]] || continue
+    if [[ "$(basename "$(readlink -f "$interface/driver")")" == appletbdrm ]]; then
+        echo 'Touch Bar display already working'
+        exit 0
+    fi
+done
+
+echo "Retrying Touch Bar display at $display"
+printf '0\n' > "$display/bConfigurationValue"
+sleep 2
+printf '2\n' > "$display/bConfigurationValue"
+udevadm settle --timeout=15
+
+for attempt in {1..10}; do
+    for interface in "$display":*; do
+        [[ -L "$interface/driver" ]] || continue
+        if [[ "$(basename "$(readlink -f "$interface/driver")")" == appletbdrm ]]; then
+            systemctl restart tiny-dfr.service
+            echo 'Touch Bar display and tiny-dfr started'
+            exit 0
+        fi
+    done
+    sleep 1
+done
+
+echo 'Touch Bar display driver did not bind after retry' >&2
+exit 1

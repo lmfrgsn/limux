@@ -1,0 +1,7 @@
+anchor=top-right
+default-timeout=5000
+max-visible=3
+include=/home/liam/.config/mako/rhapsody
+
+[urgency=critical]
+default-timeout=0

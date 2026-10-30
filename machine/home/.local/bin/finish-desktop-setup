@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# Use existing repository databases; do not perform a partial database refresh.
+sudo pacman -S --needed thunar mako libnotify
+for tool in grim slurp wl-copy rofi thunar mako notify-send; do
+    command -v "$tool" >/dev/null || { echo "Missing: $tool" >&2; exit 1; }
+done
+state="${XDG_STATE_HOME:-$HOME/.local/state}/desktop-setup"
+mkdir -p "$state"
+# Preserve an already running notification server.
+if ! gdbus call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/DBus --method org.freedesktop.DBus.NameHasOwner org.freedesktop.Notifications | grep -q true; then
+    nohup "$HOME/.local/bin/mango-notifications" >"$state/notifications.log" 2>&1 </dev/null &
+    sleep 1
+fi
+mmsg dispatch reload_config
+notify-send 'Desktop ready' 'Command+Space: apps · Command+E: files · Command+Shift+3/4: screenshots'
+printf 'Installed tools and reloaded MangoWM. Notification server: '
+gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.GetServerInformation

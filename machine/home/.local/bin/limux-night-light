@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Night light from a private location file, kept out of Git like the Commands snippets.
+# ~/.config/limux/location holds one line: "<latitude> <longitude>" (rounded to a city).
+set -euo pipefail
+location="${XDG_CONFIG_HOME:-$HOME/.config}/limux/location"
+read -r latitude longitude < "$location" || { echo "Missing $location" >&2; exit 1; }
+exec wlsunset -l "$latitude" -L "$longitude"

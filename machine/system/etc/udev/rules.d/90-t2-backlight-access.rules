@@ -1,0 +1,2 @@
+ACTION=="add", SUBSYSTEM=="leds", KERNEL=="apple::kbd_backlight", RUN+="/usr/bin/chown liam /sys/class/leds/%k/brightness"
+ACTION=="add", SUBSYSTEM=="backlight", KERNEL=="gmux_backlight", RUN+="/usr/bin/chown liam /sys/class/backlight/%k/brightness"

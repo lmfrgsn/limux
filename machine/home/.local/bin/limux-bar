@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+"""Limux Mangobar launcher: start, refresh, status. No migration side effects."""
+import fcntl, json, os, signal, subprocess as sp, sys, time
+from pathlib import Path
+HOME = Path.home()
+STATE = Path(os.environ.get('XDG_STATE_HOME', str(HOME / '.local/state'))) / 'limux/bar-migration'
+CONFIG = HOME / '.config/mangobar/config.jsonc'
+CSS = HOME / '.config/mangobar/style.css'
+BINARY = HOME / '.local/libexec/limux/mangobar-0.2.2-quiet/mangobar'
+STATE.mkdir(parents=True, exist_ok=True)
+def run(args, *, check=True):
+    p = sp.run(args, text=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    if check and p.returncode:
+        raise RuntimeError(f'{args[0]} failed: {p.stderr.strip() or p.stdout.strip()}')
+    return p
+
+def pids(name):
+    return [int(x) for x in run(['pgrep', '-u', str(os.getuid()), '-x', name], check=False).stdout.split()]
+
+def managed_pid(filename, comm):
+    try:
+        pid = int((STATE / filename).read_text())
+        if Path(f'/proc/{pid}/comm').read_text().strip() == comm:
+            return pid
+    except (FileNotFoundError, ValueError, ProcessLookupError):
+        pass
+    return None
+
+def stop_managed(filename, comm):
+    pid = managed_pid(filename, comm)
+    if pid:
+        os.kill(pid, signal.SIGTERM)
+        for _ in range(40):
+            if not managed_pid(filename, comm):
+                break
+            time.sleep(.1)
+        else:
+            raise RuntimeError(f'{comm} did not stop; no duplicate will be started')
+
+def start():
+    runtime = Path(os.environ['XDG_RUNTIME_DIR'])
+    lock = (runtime / 'limux-mangobar.lock').open('w')
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        print('Limux Mangobar is already running.')
+        return
+    os.set_inheritable(lock.fileno(), True)
+    if pids('mangobar'):
+        raise RuntimeError('An unmanaged Mangobar is already running; refusing a duplicate')
+    (STATE / 'mangobar.pid').write_text(str(os.getpid()))
+    log = (STATE / 'mangobar.log').open('w')
+    os.dup2(log.fileno(), 1)
+    os.dup2(log.fileno(), 2)
+    os.execv(str(BINARY), [str(BINARY), '-c', str(CONFIG), '-s', str(CSS)])
+def main():
+    action = sys.argv[1] if len(sys.argv)>1 else 'status'
+    if action == 'start':
+        start()
+    elif action == 'refresh':
+        with (STATE/'control.lock').open('w') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            if pids('mangobar') and not managed_pid('mangobar.pid','mangobar'):
+                raise RuntimeError('Unmanaged Mangobar; refusing a duplicate')
+            stop_managed('mangobar.pid','mangobar')
+            with (STATE/'launch.log').open('w') as log:
+                sp.Popen([str(HOME/'.local/bin/limux-bar'),'start'],stdout=log,stderr=sp.STDOUT,start_new_session=True)
+            time.sleep(3)
+            if len(pids('mangobar'))!=1 or not managed_pid('mangobar.pid','mangobar'):
+                raise RuntimeError('Mangobar failed to restart; see mangobar.log')
+            print('One Mangobar running.')
+    elif action == 'status':
+        print(json.dumps({'mangobar':pids('mangobar'),'managed_pid':managed_pid('mangobar.pid','mangobar')},indent=2))
+    else:
+        raise RuntimeError('Usage: limux-bar start|refresh|status')
+if __name__=='__main__':
+    try: main()
+    except (OSError,RuntimeError,ValueError) as e:
+        print(f'Limux bar: {e}',file=sys.stderr)
+        sys.exit(1)

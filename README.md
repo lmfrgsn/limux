@@ -19,3 +19,5 @@ Limux Files restyles Thunar from the `[thunar]` tokens: one porcelain surface, t
 Notifications use the Rhapsody Mako design from the `[mako]` tokens. From Foot, `python3 scripts/activate-mako.py activate` applies it and `rollback` restores the previous config. See [Mako activation and recovery](docs/architecture.md#mako-notifications--activation-and-recovery).
 
 Thunar uses Mac-style Command shortcuts from `scripts/thunar-shortcuts.py`; `rollback` restores Thunar's defaults. See [Thunar Command shortcuts](docs/architecture.md#thunar-command-shortcuts).
+
+The hand-maintained machine files (MangoWM config, T2 audio, Touch Bar and backlight helpers, kernel parameters and package list) are tracked under `machine/` by `scripts/machine.py`; `status` reports drift and `capture` updates the repository. See [machine files](docs/machine.md) for restoring onto a fresh install.

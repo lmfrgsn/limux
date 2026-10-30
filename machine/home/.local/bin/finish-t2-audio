@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Complete the existing installation without reinstalling or touching drivers.
+set -euo pipefail
+state="${XDG_STATE_HOME:-$HOME/.local/state}/t2-hardware-setup"
+if [[ -e "$state/speakers-enabled" ]]; then
+    exec "$HOME/.local/bin/verify-t2-hardware"
+fi
+resources="$HOME/.local/share/t2-hardware-setup"
+guard="$HOME/.config/wireplumber/wireplumber.conf.d/99-t2-speakers-locked.conf"
+mkdir -p "$state"
+exec 9>"$state/setup.lock"
+flock -n 9 || { echo 'Another setup is running.' >&2; exit 1; }
+exec > >(tee "$state/finish-audio.log") 2>&1
+backup="$state/audio-repair-backup-$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$backup"
+for directory in wireplumber pipewire systemd; do
+    if [[ -d "$HOME/.config/$directory" ]]; then cp -a "$HOME/.config/$directory" "$backup/"; fi
+done
+touch "$state/speakers-locked"
+on_exit() {
+    local rc=$?
+    if ((rc)); then
+        cp "$resources/speaker-quarantine.conf" "$guard"
+        systemctl --user restart wireplumber.service || true
+        echo 'Speaker quarantine restored. Diagnostics saved in finish-audio.log and attempt-graph.json.' >&2
+    fi
+}
+trap on_exit EXIT
+# Confirm the deployed physical and DSP endpoints are both locked silent.
+python3 - <<'PY'
+import json
+from pathlib import Path
+g=json.loads((Path.home()/'.config/pipewire/t2-151-speakers-locked.json').read_text())
+p=g['capture.props']
+assert not p.get('channelmix.lock-volumes', False)
+assert p['node.param.Props'] == '{ mute = true }'
+convolvers=[n for n in g['filter.graph']['nodes'] if n.get('label')=='convolver']
+assert len(convolvers)==4 and all(n['config']['gain']==0 for n in convolvers)
+s=(Path.home()/'.config/wireplumber/wireplumber.conf.d/51-t2-151-speaker-dsp.conf').read_text()
+assert 'alsa.card_name = "Apple T2 Audio"' in s
+assert 'channelmix.lock-volumes = true' in s
+assert 'node.param.Props = "{ mute = true, volume = 0.0 }"' in s
+PY
+systemctl --user stop wireplumber.service
+rm -f -- "$guard"
+systemctl --user start wireplumber.service
+found=false
+for ((i=0;i<50;i++)); do
+    if pactl list short sinks | grep -F 'audio_effect.t2-151-speakers' >/dev/null; then
+        found=true
+        break
+    fi
+    sleep 0.2
+done
+pw-dump > "$state/attempt-graph.json"
+journalctl --user -u wireplumber -b -n 70 --no-pager > "$state/attempt-wireplumber.log"
+[[ "$found" == true ]] || { cat "$state/attempt-wireplumber.log"; exit 1; }
+"$HOME/.local/bin/t2-hardware-control" ensure-speaker-muted
+pactl set-default-sink audio_effect.t2-151-speakers
+systemctl --user daemon-reload
+systemctl --user enable --now t2-speaker-mute.service
+"$HOME/.local/bin/verify-t2-hardware"
+echo 'Processed speaker sink selected and muted. No audio was played or increased.'

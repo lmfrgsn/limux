@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# Enable the tested DSP for daily use, starting at 25% and muted.
+set -euo pipefail
+state="${XDG_STATE_HOME:-$HOME/.local/state}/t2-hardware-setup"
+resources="$HOME/.local/share/t2-hardware-setup"
+wpconf="$HOME/.config/wireplumber/wireplumber.conf.d/51-t2-151-speaker-dsp.conf"
+unit="$HOME/.config/systemd/user/t2-speaker-mute.service"
+graph="$HOME/.config/pipewire/t2-151-speakers.json"
+systemctl --user is-active --quiet wireplumber.service
+exec 9>"$state/setup.lock"
+flock -n 9 || exit 1
+exec > >(tee "$state/enable-speakers.log") 2>&1
+backup="$state/enable-backup-$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$backup"
+cp -a "$wpconf" "$backup/wireplumber.conf"
+cp -a "$unit" "$backup/mute.service"
+if [[ -e "$graph" ]]; then cp -a "$graph" "$backup/prior-graph.json"; fi
+changed=false
+cleanup() {
+    local rc=$?
+    trap - EXIT INT TERM
+    if ((rc)) && [[ "$changed" == true ]]; then
+        touch "$state/speakers-locked"
+        rm -f "$state/speakers-enabled"
+        cp "$backup/wireplumber.conf" "$wpconf"
+        cp "$backup/mute.service" "$unit"
+        systemctl --user daemon-reload
+        systemctl --user restart wireplumber.service || true
+        echo 'Activation failed; restored the silent production configuration.' >&2
+    fi
+    if [[ -f "$backup/stream-mutes.json" ]]; then
+        python3 "$resources/test-stream-mutes.py" restore "$backup/stream-mutes.json" || true
+    fi
+    exit "$rc"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+python3 "$resources/test-stream-mutes.py" mute "$backup/stream-mutes.json"
+python3 - "$backup" <<'PY'
+from pathlib import Path
+import json,sys
+home=Path.home();backup=Path(sys.argv[1])
+src=home/'.local/state/t2-hardware-setup/sources/t2-apple-audio-dsp/configs/15_1/graph.json'
+g=json.loads(src.read_text())
+assert g['capture.props']['node.name']=='audio_effect.t2-151-speakers'
+limiter=next(n for n in g['filter.graph']['nodes'] if n['name']=='limiter')
+assert limiter['control']=={'ingain':0,'limit':-1,'release':0.8}
+g['capture.props'].update({'state.default-volume':0.0,'state.restore-props':False,
+                         'node.param.Props':'{ mute = true }'})
+(backup/'graph.json').write_text(json.dumps(g,indent=2)+'\n')
+s=(backup/'wireplumber.conf').read_text()
+s=s.replace('/home/liam/.config/pipewire/t2-151-speakers-locked.json',
+            '/home/liam/.config/pipewire/t2-151-speakers.json')
+s=s.replace('# Managed T2 MacBookPro15,1 speaker DSP; audio remains locked silent.',
+            '# MacBookPro15,1 DSP; hidden hardware adapter, muted at session startup.')
+s=s.replace('Raw T2 speakers (locked; do not use)','Raw T2 speakers (DSP hardware stage; do not select)')
+s=s.replace('      node.param.Props = "{ mute = true, volume = 0.0 }"\n','')
+s=s.replace('      channelmix.lock-volumes = true\n','')
+assert 'hide-parent = true' in s
+(backup/'new-wireplumber.conf').write_text(s)
+PY
+changed=true
+systemctl --user stop wireplumber.service
+install -m644 "$backup/graph.json" "$graph"
+install -m644 "$backup/new-wireplumber.conf" "$wpconf"
+sed -e 's/Keep T2 DSP speakers muted pending review and permission/Initialize T2 DSP speakers at low volume, muted/' \
+    -e 's@/home/liam/.local/bin/t2-hardware-control ensure-speaker-muted@/usr/bin/python3 /home/liam/.local/share/t2-hardware-setup/initialize-speakers.py@' \
+    "$backup/mute.service" > "$unit"
+systemctl --user daemon-reload
+systemctl --user start wireplumber.service
+systemctl --user restart t2-speaker-mute.service
+pw-dump > "$state/enabled-graph.json"
+python3 - "$state/enabled-graph.json" <<'PY'
+import json,sys
+g=json.load(open(sys.argv[1]))
+node=next(o for o in g if o['type'].endswith(':Node') and
+          o.get('info',{}).get('props',{}).get('node.name')=='audio_effect.t2-151-speakers')
+p=next(p for p in node['info']['params']['Props'] if 'channelVolumes' in p)
+assert p['mute'] is True and all(abs(v-0.015625)<0.0001 for v in p['channelVolumes'])
+device=next(o for o in g if o['type'].endswith(':Device') and
+            o.get('info',{}).get('props',{}).get('alsa.card_name')=='Apple T2 Audio')
+r=next(r for r in device['info']['params']['Route'] if r.get('name')=='[Out] Speaker')
+assert r['props']['mute'] is False and all(abs(v-1)<0.001 for v in r['props']['channelVolumes'])
+print('Verified: processed sink muted at 25%; hidden hardware route at nominal unity.')
+PY
+touch "$state/speakers-enabled"
+rm -f "$state/speakers-locked"
+wpctl get-volume @DEFAULT_AUDIO_SINK@
+systemctl --user is-active pipewire wireplumber pipewire-pulse t2-speaker-mute
+echo 'Daily audio enabled. Press Touch Bar mute once when ready to listen. Startup remains muted.'

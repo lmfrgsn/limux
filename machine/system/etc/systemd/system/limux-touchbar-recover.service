@@ -1,0 +1,12 @@
+[Unit]
+Description=Recover T2 Touch Bar display after boot if its driver timed out
+After=systemd-udev-settle.service
+
+[Service]
+Type=oneshot
+ExecStartPre=/usr/bin/sleep 10
+ExecStart=/usr/local/sbin/limux-touchbar-recover
+TimeoutStartSec=45
+
+[Install]
+WantedBy=multi-user.target

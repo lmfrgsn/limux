@@ -1,0 +1,13 @@
+[Unit]
+Description=Initialize T2 DSP speakers at low volume, muted
+After=wireplumber.service pipewire-pulse.service
+Requires=pipewire-pulse.service
+BindsTo=wireplumber.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /home/liam/.local/share/t2-hardware-setup/initialize-speakers.py
+RemainAfterExit=yes
+
+[Install]
+WantedBy=wireplumber.service

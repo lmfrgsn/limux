@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+state="${XDG_STATE_HOME:-$HOME/.local/state}/t2-hardware-setup"
+log_result() {
+    local rc=$?
+    mkdir -p "$state"
+    printf '%(%FT%T%z)T %s exit=%d\n' -1 "${1:-unknown}" "$rc" >> "$state/control-events.log" || true
+}
+trap 'log_result "${1:-unknown}"' EXIT
+case "${1:-}" in
+    ensure-speaker-muted)
+        for ((i=0;i<50;i++)); do
+            if pactl list short sinks | grep -F 'audio_effect.t2-151-speakers' >/dev/null; then
+                pactl set-sink-volume audio_effect.t2-151-speakers 0%
+                pactl set-sink-mute audio_effect.t2-151-speakers 1
+                exit 0
+            fi
+            sleep 0.2
+        done
+        echo 'DSP sink unavailable; keeping zero-gain gate/quarantine.' >&2
+        exit 1
+        ;;
+    volume-up|mute)
+        # No unmute/increase until the speaker setup has been reviewed with Liam.
+        if [[ -e "$state/speakers-locked" ]]; then
+            wpctl set-mute @DEFAULT_AUDIO_SINK@ 1
+            exit 0
+        fi
+        if [[ "$1" == mute ]]; then
+            wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+        else
+            wpctl set-volume --limit 1.0 @DEFAULT_AUDIO_SINK@ 5%+
+        fi
+        ;;
+    volume-down) wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- ;;
+    mic-mute) wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle ;;
+    screen-up) brightnessctl --device=gmux_backlight set +5% ;;
+    screen-down) brightnessctl --device=gmux_backlight --min-value=1 set 5%- ;;
+    keyboard-up) brightnessctl --device=apple::kbd_backlight set +10% ;;
+    keyboard-down) brightnessctl --device=apple::kbd_backlight set 10%- ;;
+    keyboard-init) brightnessctl --device=apple::kbd_backlight set 50% ;;
+    play-pause) playerctl play-pause ;;
+    next) playerctl next ;;
+    previous) playerctl previous ;;
+    stop) playerctl stop ;;
+    *) echo 'Unknown T2 hardware control' >&2; exit 2 ;;
+esac

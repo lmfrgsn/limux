@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+command -v mako >/dev/null || exit 0
+# Serialize session launches and retain the lock for the daemon lifetime.
+exec flock -n "${XDG_RUNTIME_DIR:?Desktop session required}/mango-notifications.lock" mako

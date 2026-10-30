@@ -1,0 +1,18 @@
+# mkinitcpio preset file for the 'linux-t2' package
+
+#ALL_config="/etc/mkinitcpio.conf"
+ALL_kver="/boot/vmlinuz-linux-t2"
+#ALL_kerneldest="/boot/vmlinuz-linux-t2"
+
+PRESETS=('default')
+#PRESETS=('default' 'fallback')
+
+#default_config="/etc/mkinitcpio.conf"
+default_image="/boot/initramfs-linux-t2.img"
+default_uki="/boot/efi/EFI/Linux/arch-linux-t2.efi"
+#default_options="--splash /usr/share/systemd/bootctl/splash-arch.bmp"
+
+#fallback_config="/etc/mkinitcpio.conf"
+#fallback_image="/boot/initramfs-linux-t2-fallback.img"
+#fallback_uki="/efi/EFI/Linux/arch-linux-t2-fallback.efi"
+#fallback_options="-S autodetect"

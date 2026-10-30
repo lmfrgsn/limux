@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# Silent checks only. Never plays, unmutes, increases volume or adjusts brightness.
+set -uo pipefail
+failed=0
+state="${XDG_STATE_HOME:-$HOME/.local/state}/t2-hardware-setup"
+mkdir -p "$state"
+exec > >(tee "$state/verification.log") 2>&1
+echo "Verification: $(date --iso-8601=seconds)"
+cat /sys/class/dmi/id/product_name
+uname -r
+pacman -Q pipewire pipewire-audio pipewire-alsa pipewire-pulse wireplumber rtkit brightnessctl tiny-dfr playerctl apple-t2-audio-config || failed=1
+systemctl --user is-active pipewire.service wireplumber.service pipewire-pulse.service pipewire.socket pipewire-pulse.socket || failed=1
+systemctl --user is-enabled pipewire.service wireplumber.service pipewire-pulse.service pipewire.socket pipewire-pulse.socket || failed=1
+systemctl --user is-active t2-speaker-mute.service || failed=1
+systemctl --user is-enabled t2-speaker-mute.service || failed=1
+systemctl is-active rtkit-daemon.service tiny-dfr.service || failed=1
+systemctl status tiny-dfr.service --no-pager -l
+wpctl status -n
+wpctl get-volume @DEFAULT_AUDIO_SINK@ || failed=1
+wpctl inspect @DEFAULT_AUDIO_SINK@
+pactl list short sinks
+aplay -l
+alsaucm listcards
+sudo -n fuser -v /dev/snd/pcmC0D0p || true
+ps -eo pid,user,comm,args | grep -E '[p]ipewire|[w]ireplumber|[p]ulseaudio|[s]peaker-test|[a]play|[t]iny-dfr'
+pw-link -l
+brightnessctl --device=apple::kbd_backlight info || failed=1
+brightnessctl --device=gmux_backlight info
+playerctl -l || echo 'No MPRIS player is running; playback-key testing is pending.'
+pacman -Qkk apple-t2-audio-config
+pw-dump > "$state/pipewire-graph.json"
+python3 - "$state/pipewire-graph.json" <<'PY'
+import json, sys
+objects = json.load(open(sys.argv[1]))
+nodes = {o['id']: o.get('info', {}).get('props', {}) for o in objects if o['type'].endswith(':Node')}
+speakers = [(i,p) for i,p in nodes.items() if p.get('node.name') == 'audio_effect.t2-151-speakers']
+assert len(speakers) == 1, 'Model-specific DSP speaker sink is missing or duplicated. Keep speakers locked.'
+assert any(p.get('node.name') == 'effect_output.t2-151-speakers' for p in nodes.values()), 'DSP output missing'
+from pathlib import Path
+enabled=(Path.home()/'.local/state/t2-hardware-setup/speakers-enabled').exists()
+for i,p in speakers:
+    obj = next(o for o in objects if o['id'] == i)
+    props = obj.get('info', {}).get('params', {}).get('Props', [])
+    if not enabled:
+        assert any(v.get('mute') is True for v in props), 'DSP speaker mute is not verified'
+        assert any(v.get('channelVolumes') and all(x==0 for x in v['channelVolumes']) for v in props), 'DSP zero-volume state not verified'
+filename='t2-151-speakers.json' if enabled else 't2-151-speakers-locked.json'
+g=json.loads((Path.home()/'.config/pipewire'/filename).read_text())
+convolvers=[n for n in g['filter.graph']['nodes'] if n.get('label')=='convolver']
+if enabled:
+    source=Path.home()/'.local/state/t2-hardware-setup/sources/t2-apple-audio-dsp/configs/15_1/graph.json'
+    assert g['filter.graph']==json.loads(source.read_text())['filter.graph']
+    print('Daily-use DSP enabled; original model-specific filters, compressor and limiter intact. Startup mute service enabled; audible quality was user-tested at 25%.')
+else:
+    assert len(convolvers)==4 and all(n['config']['gain']==0 for n in convolvers)
+    print('Model-specific DSP found; sink reports muted at zero volume; four zero-gain output gates configured. Acoustic protection is not independently certified.')
+PY
+if [[ $? -ne 0 ]]; then failed=1; fi
+journalctl --user -b -u pipewire -u pipewire-pulse -u wireplumber --no-pager -n 100
+journalctl -b -u rtkit-daemon -u tiny-dfr --no-pager -n 80
+if [[ -e "$state/speakers-enabled" ]]; then
+    echo 'Daily-use speaker configuration enabled. This verification played no audio.'
+else
+    echo 'Speakers remain locked; this verification played no audio.'
+fi
+exit "$failed"

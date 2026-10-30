@@ -352,3 +352,5 @@ The user asked for the remaining follow-ups to be done. Thunar now has Mac-style
 
 The user chose location-based night light over fixed times. MangoWM supports the wlroots gamma-control protocol, so `wlsunset` (already installed) now starts from one `exec_once` line in the MangoWM config, after the notifications entry, with approximate coordinates for the user's city, kept only in the live config. Defaults are kept (4000K at night, 6500K by day). The Quiet Strip activation pins the whole MangoWM config by hash, so its pin was updated in the same change; its `check` passed before and after. This is a display behaviour, not a Rhapsody token output.
 
+When the machine files were brought into Git, the coordinates moved out of the MangoWM config into the private `~/.config/limux/location`, read by the tracked `limux-night-light` helper, so no location is committed.
+

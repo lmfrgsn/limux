@@ -1,0 +1,26 @@
+configuration {
+    modi: "drun";
+    terminal: "foot";
+    font: "Inter,Adwaita Sans 12";
+    dpi: 96;
+    show-icons: true;
+    icon-theme: "Adwaita";
+    application-fallback-icon: "application-x-executable";
+    drun-display-format: "{name}";
+    drun-match-fields: "name";
+    drun-show-actions: false;
+    display-drun: "";
+    matching: "fuzzy";
+    sort: true;
+    case-sensitive: false;
+    hover-select: true;
+    sidebar-mode: false;
+    kb-cancel: "Escape,Control+g,Control+bracketleft";
+    kb-accept-entry: "Return,KP_Enter";
+    kb-row-up: "Up,Control+p";
+    kb-row-down: "Down,Control+n";
+    me-select-entry: "MousePrimary";
+    me-accept-entry: "MouseDPrimary";
+}
+
+@theme "/home/liam/.config/rofi/charcoal.rasi"

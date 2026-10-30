@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+state="${XDG_STATE_HOME:-$HOME/.local/state}/rofi-redesign"
+mkdir -p "$state"
+if ! pacman -Q inter-font >/dev/null 2>&1; then
+    sudo pacman -S --needed inter-font
+fi
+fc-cache -f
+printf 'Font: '
+fc-match 'Inter,Adwaita Sans'
+# These exercise the installed Rofi parser without opening the launcher.
+rofi -dump-theme > "$state/parsed-theme.rasi" 2> "$state/theme-errors.log"
+rofi -dump-config > "$state/parsed-config.rasi" 2> "$state/config-errors.log"
+if [[ -s "$state/theme-errors.log" || -s "$state/config-errors.log" ]]; then
+    cat "$state/theme-errors.log" "$state/config-errors.log" >&2
+    exit 1
+fi
+if pgrep -u "$(id -u)" -x rofi >/dev/null; then
+    echo 'Rofi is already open. Press Escape, then Command+Space to view the new theme.'
+    exit 0
+fi
+rofi -show drun > "$state/launcher.log" 2>&1 &
+launcher_pid=$!
+sleep 2
+if kill -0 "$launcher_pid" 2>/dev/null; then
+    if grim "$state/preview.png"; then
+        echo "Preview captured: $state/preview.png"
+    fi
+    echo 'Try searching an application name, Up/Down, Enter, mouse selection, and Escape.'
+    echo 'Command+Space opens this launcher normally; no Mango reload is needed.'
+fi
+wait "$launcher_pid" || {
+    result=$?
+    # Escape is a normal cancellation; do not report it as a setup failure.
+    if ((result > 1)); then cat "$state/launcher.log" >&2; exit "$result"; fi
+}
