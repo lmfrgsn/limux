@@ -1,5 +1,9 @@
 import importlib.util
+import hashlib
 from pathlib import Path
+import re
+import shutil
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch, MagicMock
@@ -128,6 +132,42 @@ class HeadingTypographyTest(unittest.TestCase):
         self.assertIn('padding: 2px 8px 1px 8px;', theme)
         self.assertNotIn('element selected', theme)
         self.assertNotIn('box-search', theme)
+
+
+class NeutralCandidateTest(unittest.TestCase):
+    def test_approved_override_and_picker_behaviour_are_preserved(self):
+        self.assertEqual(hashlib.sha256(commands.preview_theme().encode()).hexdigest(),
+                         '924c247930d332c008108d5b0a79c5c2f2e407dc697af0295240d2dcdfdc8faf')
+        invocations = []
+        with patch.dict(commands.os.environ, {'WAYLAND_DISPLAY': 'wayland-1'}), \
+             patch.object(commands.subprocess, 'run', side_effect=lambda *a, **k: (
+                 invocations.append((a, k)) or MagicMock(returncode=1))), \
+             patch.object(commands, 'execute') as execute:
+            for mode in ('preview', 'candidate'):
+                with patch.object(commands.sys, 'argv', ['limux-commands', mode]):
+                    commands.main()
+        self.assertEqual(invocations[0][1]['input'], invocations[1][1]['input'])
+        before, candidate = (list(call[0][0]) for call in invocations)
+        style_index = before.index('-theme-str') + 1
+        self.assertNotEqual(before[style_index], candidate[style_index])
+        candidate[style_index] = before[style_index]
+        self.assertEqual(before, candidate)
+        execute.assert_not_called()
+
+    @unittest.skipUnless(shutil.which('rofi'), 'Rofi is not installed')
+    def test_native_parser_resolves_neutral_selection_and_compact_hierarchy(self):
+        result = subprocess.run(['rofi', '-theme', str(commands.THEME), '-theme-str',
+                                 commands.preview_theme(candidate=True), '-dump-theme'],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        blocks = dict(re.findall(r'(?m)^([\w*. -]+) \{([^}]+)\}', result.stdout))
+        self.assertIn('"box-search","listview","message"', blocks['mainbox'].replace(' ', ''))
+        self.assertIn('border:           0px', blocks['element'])
+        selected = blocks['element selected.normal']
+        self.assertIn('168, 168, 180', selected)
+        self.assertNotIn('227, 190, 71', selected)
+        self.assertIn('6px 0px 0px', blocks['element normal.active'])
+        self.assertIn('8px', blocks['inputbar'])
 
 class PersonalQuicklinksTest(unittest.TestCase):
     def test_private_links_and_empty_groups(self):

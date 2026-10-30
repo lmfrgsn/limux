@@ -212,17 +212,21 @@ def execute(action):
     subprocess.run(['wl-copy', '--', value], check=True)
 
 
-def preview_theme(tokens_path=TOKENS):
+def preview_theme(tokens_path=TOKENS, candidate=False):
     tokens = tomllib.loads(tokens_path.read_text())
     font = tokens['typography']['sans']
-    quiet = tokens['colors']['text_secondary']
-    metrics = tokens['limux_commands']
+    colors = tokens['colors']
+    overrides = tokens['limux_commands_candidate'] if candidate else {}
+    metrics = {**tokens['limux_commands'],
+               **{key: value for key, value in overrides.items() if key != 'heading_text_color'}}
+    quiet = colors[overrides['heading_text_color']] if candidate else colors['text_secondary']
     if not font.replace(' ', '').isalpha() or not quiet.startswith('#') or len(quiet) != 7:
         raise ValueError('invalid Rhapsody heading tokens')
     for name, value in metrics.items():
-        if type(value) is not int or not 0 < value <= (1600 if name == 'width' else 100):
+        minimum = 1 if name in ('width', 'list_lines', 'heading_size') else 0
+        if type(value) is not int or not minimum <= value <= (1600 if name == 'width' else 100):
             raise ValueError(f'invalid Commands geometry: {name}')
-    return ('textbox-heading {\n content: "COMMANDS";\n}\n'
+    base = ('textbox-heading {\n content: "COMMANDS";\n}\n'
             'entry {\n placeholder: "Search commands";\n}\n'
             f'window {{\n width: {metrics["width"]}px;\n}}\n'
             f'listview {{\n lines: {metrics["list_lines"]};\n}}\n'
@@ -232,6 +236,22 @@ def preview_theme(tokens_path=TOKENS):
             f' text-color: {quiet};\n' ' }\n'
             'element-text normal.active, element-text alternate.active {\n'
             f' font: "{font} {metrics["heading_size"]}";\n' ' }')
+    if not candidate:
+        return base
+    semantics = tokens['semantics']
+    selection = colors[semantics['list_selected_neutral']]
+    selected_ink = colors[semantics['on_list_selected_neutral']]
+    if not all(value.startswith('#') and len(value) == 7 for value in (selection, selected_ink)):
+        raise ValueError('invalid Commands selection tokens')
+    return (base + '\n'
+            'mainbox {\n children: [ box-search, listview, message ];\n'
+            f' spacing: {metrics["mainbox_spacing"]}px;\n}}\n'
+            f'window {{\n padding: {metrics["window_padding"]}px;\n}}\n'
+            f'inputbar {{\n padding: {metrics["search_padding"]}px;\n}}\n'
+            f'element {{\n padding: {metrics["row_padding"]}px;\n border: 0px;\n}}\n'
+            'element selected.normal, element selected.active {\n'
+            f' background-color: {selection};\n border-color: {selection};\n'
+            f' text-color: {selected_ink};\n}}\n')
 
 
 def picker_lock():
@@ -250,7 +270,7 @@ def picker_lock():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('mode', choices=['preview', 'list', 'check', 'init-snippets'])
+    parser.add_argument('mode', choices=['preview', 'candidate', 'list', 'check', 'init-snippets'])
     args = parser.parse_args()
     if args.mode == 'init-snippets':
         SNIPPETS.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -272,7 +292,7 @@ def main():
     lock_fd = picker_lock()
     if lock_fd is None:
         return
-    theme_override = preview_theme()
+    theme_override = preview_theme(candidate=args.mode == 'candidate')
     try:
         result = subprocess.run(['rofi', '-dmenu', '-i', '-no-custom', '-no-sort', '-matching', 'fuzzy',
                                  '-format', 'i', '-theme', str(THEME),

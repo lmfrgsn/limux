@@ -72,3 +72,24 @@ Personal snippets and quicklinks share `~/.config/limux/commands.toml`, outside 
 The sole live MangoWM config now contains one `SUPER,k` binding to Limux Commands and the original `SUPER,space` Rofi application binding. MangoWM's native parser accepts the live file. Limux Commands holds a nonblocking per-user lock for the duration of its Rofi picker, so repeated Command+K presses cannot open a second Commands instance. The approved Rhapsody theme override, command text, section styling, search behaviour, private snippets and quicklinks are unchanged. The personal config remains outside Git with mode 600.
 
 The Codex sandbox can inspect the live config but cannot connect to the Wayland compositor. Its tests validate binding parsing, single-instance locking, section metadata, search terms, selection mapping, cancellation and clipboard invocation; actual keypresses and visual interactions must be checked in Foot: Command+K opens Commands; a second Command+K does not open another copy; arrows skip headings; typing `workspace`, `screenshot`, `lorem` or `email` filters; Escape closes; Enter on Lorem or a snippet copies text; Command+Space still opens the normal application launcher. To remove the binding, run `python3 ~/limux/scripts/activate-commands.py rollback` from Foot. Activation can be repeated with `activate`.
+
+## Neutral Commands candidate — preview only
+
+This candidate keeps the current single-line shortcut text, group order, fuzzy search, nonselectable headings and all actions. It changes only the Commands Rofi override: the selected row uses neutral `metal` with graphite text and no yellow edge; section headings use 10px muted neutral text; the search padding, row padding and outer spacing are slightly tighter. The existing 700px width stays because shorter widths previously truncated complete shortcuts. The decorative top `COMMANDS` heading is omitted; the search placeholder identifies the picker. The application launcher and Command+K binding remain on the approved live styling. Selected text measures 5.2:1 against `metal`; the selected fill differs 2.22:1 from the porcelain window, so actual focus visibility still needs screenshot review.
+
+Review it from Foot without changing a live file:
+
+```sh
+cd ~/limux
+python3 scripts/limux-commands.py candidate
+```
+
+Escape closes the candidate. Command+K still opens the approved design. To capture a screenshot while the candidate is open, run this in Foot; the screenshot stays under Git-ignored `build/` and may contain private snippet *names*:
+
+```sh
+cd ~/limux
+(sleep 3; grim build/limux-commands-candidate.png) &
+python3 scripts/limux-commands.py candidate
+```
+
+Check the selected row, header hierarchy and full shortcut labels at the desktop's actual scale. Search `workspace`, `screenshot`, `lorem` and `email`; verify arrow navigation, nonselectable headings, Enter on Lorem or a nonprivate test snippet, and Escape. The candidate theme passes the installed Rofi 2.0 parser, but parser success does not prove pixels or keyboard interaction. The known missing `xdg-open` dependency affects quicklink launching in both the approved and candidate pickers; fixing it is separate functional work.
