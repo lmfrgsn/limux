@@ -56,6 +56,7 @@ Study the complete image, including its rationale and palette, before visual wor
 - The approved Rofi launcher retains a recessed search field and compact rows. “RHAPSODY / 01” was rejected as decorative branding.
 - The current Rofi list uses a pale-grey selected row with a narrow yellow edge. This is an approved baseline, open to a separate future colour review. Limux Commands is built on the same Rofi theme and is functional, but it has no approved visual design: its redesign is parked, and its candidate neutral styling is not a decision.
 - Limux Files (Thunar) applies the bar's patterns to a window: one porcelain surface with hairlines, the path as text, the launcher's recessed input, a graphite inset-style selection, quiet labels and measurements, and outline icons. Its approved target and known GTK 3 gaps are in the [decision log](design-decisions.md#limux-files--thunar-design-approved-and-implemented--2026-10-30).
+- Notifications (Mako) are porcelain cards on the window grid with a label, summary and body hierarchy; signal red marks critical only, and there are no icons.
 - Controls, content and passive information are visibly different. Typography, boundaries and surface depth work together: porcelain foregrounds, cool neutral ground, metal-like recesses and graphite ink. Passive measurements should not become competing badges.
 
 The screenshot is source context, not a layout target. Avoid gratuitous boxes, stripes, bevels, oversized controls, blur and gradients. Use depth only when it helps show interaction or material relationship.
@@ -74,7 +75,7 @@ Rhapsody is predominantly a light system environment with integrated dark develo
 
 | Light system components | Dark developer components |
 | --- | --- |
-| Mangobar, Rofi, MangoWM chrome and Thunar (Limux Files) currently; Mako is a future target | Foot, terminal-based Codex and appropriate developer-oriented tools |
+| Mangobar, Rofi, MangoWM chrome, Thunar (Limux Files) and Mako notifications | Foot, terminal-based Codex and appropriate developer-oriented tools |
 
 Light and dark components share hierarchy, alignment and contrast discipline. Dark developer surfaces belong to the porcelain-to-graphite system; the current Rofi launcher is light.
 

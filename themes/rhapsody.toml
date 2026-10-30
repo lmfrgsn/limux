@@ -119,6 +119,25 @@ heading_padding_top = 1
 heading_padding_bottom = 0
 heading_text_color = "text_quiet"
 
+[mako]
+# Approved 2026-10-30: porcelain card on the window grid with a label, summary
+# and body hierarchy. Signal red marks critical only. No icons; the label names
+# the app. Typeface is typography.sans at typography.ui_size.
+surface = "surface"
+text = "text"
+secondary = "text_secondary"
+label = "text_quiet"
+edge = "metal"
+urgent = "signal_red"
+progress = "canvas"
+border = 1
+radius = 6
+padding_vertical = 12
+padding_horizontal = 16
+width = 360
+margin = 12
+label_tracking = 600
+
 [mango]
 # Approved initial MangoWM baseline from fd645da; preserve these exact values.
 border_px = 2

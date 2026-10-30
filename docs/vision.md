@@ -6,7 +6,7 @@ Braun industrial design is fundamental to Limux, particularly the ET 66 calculat
 
 Rhapsody draws from Macintosh Platinum's light system cohesion, Apple Rhapsody's developer character and NeXTSTEP's utility and hierarchy. It is a contemporary interpretation. Porcelain, cool grey, metal and graphite define its material hierarchy; lavender is almost imperceptible within neutral greys. State colours have separate purposes. The approved Quiet Workspace Strip and Foot block cursor share the warm orange token through independent semantic roles. The original yellow workspace concept and previous yellow Foot cursor remain historical references; Rofi's yellow selection edge remains a separate state.
 
-The system environment is predominantly light: Mangobar, Rofi, the Thunar file window, system controls and window chrome. Foot and appropriate developer tools are deliberately dark and coordinated through typography, spacing, borders and contrast. Mako is a future styling target; its current configuration has not been approved as a Rhapsody treatment.
+The system environment is predominantly light: Mangobar, Rofi, the Thunar file window, notifications, system controls and window chrome. Foot and appropriate developer tools are deliberately dark and coordinated through typography, spacing, borders and contrast.
 
 The [canonical design language](design-language.md) records the current direction and six foundation colours. Read it with the [original visual reference](references/braun-interface-concept.png), [archived source](references/original-design-reference.md) and [decision log](design-decisions.md). Approved component baselines are specific; system-wide typography and future component treatments remain open.
 

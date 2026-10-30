@@ -15,3 +15,5 @@ Rofi at `e1f7538` is approved. From Foot, run `python3 scripts/activate-rofi.py 
 MangoWM appearance at `fd645da` is approved. From Foot, run `python3 scripts/mango-appearance.py activate`, then `python3 scripts/mango-appearance.py verify`. Use `rollback` to restore the previous appearance or `preview` for a timed review. See [MangoWM activation and recovery](docs/architecture.md#mangowm-approved-appearance-and-reversible-preview).
 
 Limux Files restyles Thunar from the `[thunar]` tokens: one porcelain surface, the path as text, outline icons and graphite selection. Install `adw-gtk-theme`, then run `python3 scripts/activate-gtk.py activate` from Foot; `rollback` restores the defaults. See [Limux Files activation and recovery](docs/architecture.md#limux-files-thunar--activation-and-recovery).
+
+Notifications use the Rhapsody Mako design from the `[mako]` tokens. From Foot, `python3 scripts/activate-mako.py activate` applies it and `rollback` restores the previous config. See [Mako activation and recovery](docs/architecture.md#mako-notifications--activation-and-recovery).

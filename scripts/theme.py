@@ -10,6 +10,7 @@ from rofi import render as render_rofi
 from mango import render as render_mango
 from foot import render as render_foot
 from gtk import render as render_gtk
+from mako import render as render_mako
 
 parser = argparse.ArgumentParser()
 parser.add_argument('action', choices=['validate', 'render'])
@@ -31,6 +32,7 @@ try:
     mango = render_mango(theme)
     foot = render_foot(theme)
     gtk = render_gtk(theme)
+    mako = render_mako(theme)
     if args.action == 'render':
         if args.output is None:
             parser.error('render requires --output')
@@ -41,6 +43,7 @@ try:
         (args.output / 'mango.conf').write_text(mango)
         (args.output / 'foot.ini').write_text(foot)
         (args.output / 'gtk.css').write_text(gtk)
+        (args.output / 'mako').write_text(mako)
     print(f"Validated {theme['name']}" + ('; preview written' if args.action == 'render' else ''))
 except (OSError, KeyError, ValueError, TypeError, AssertionError) as e:
     parser.exit(1, f'Invalid theme: {e}\n')
