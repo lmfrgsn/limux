@@ -22,6 +22,8 @@ Pre-Rhapsody Mangobar CSS and the Rofi theme/search icon have been imported as h
 
 ## Mangobar preview adapter
 
+The approved Quiet Workspace Strip visual preview uses an isolated 0.2.2 build and is **not live**. Its upstream comparison, separate T2/visual patches, prepared activation and pending functional checks are documented in [the engineering review](quiet-bar-engineering-review.md). The baseline workflow below remains the active approved state until a later explicit activation decision.
+
 Mangobar 0.2.2 reads generated CSS independently from its JSON behaviour config. The adapter maps semantic colour references and component geometry from the canonical tokens. Candidate 2 uses signal yellow for active workspaces and signal red for urgent workspaces; neutral accent is restored but not used as selection. It validates text contrast before writing output. Green is reserved until a module exposes a reliable positive state.
 
 Inspection of the locally retained native `style.c` and `mangobar.c` confirms horizontal padding/margins, minimum width, corner radius and menu border colour. Workspace border width, shadows and vertical control inset are unavailable. Global typography applies throughout. Hover overlays inherited base/global styles, so global and base-tag rules deliberately omit colours; a radius-only hover preserves selected/urgent colours. This is covered by an optional compiled native-parser test. Inter is installed and remains the preview choice; final typography is unresolved.

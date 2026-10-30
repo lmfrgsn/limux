@@ -1,0 +1,123 @@
+--- a/style.h
++++ b/style.h
+@@ -24,6 +24,7 @@
+     int margin_right;
+     int radius; // corner radius; -1 = pill, >=0 explicit (0 = square)
+     int min_width; // minimum module width
++    int background_inset; // vertical tag background inset
+     bool color_set;
+     bool background_set;
+     bool border_color_set;
+@@ -34,6 +35,7 @@
+     bool margin_right_set;
+     bool radius_set;
+     bool min_width_set;
++    bool background_inset_set;
+ } Style;
+ 
+ // One selector rule
+--- a/style.c
++++ b/style.c
+@@ -377,6 +377,9 @@
+   } else if (strcmp(prop, "border-radius") == 0) {
+     st->radius = parse_int(val);
+     st->radius_set = true;
++  } else if (strcmp(prop, "background-inset") == 0) {
++    st->background_inset = parse_int(val);
++    st->background_inset_set = true;
+   } else if (strcmp(prop, "min-width") == 0) {
+     st->min_width = parse_int(val);
+     st->min_width_set = true;
+@@ -722,6 +725,8 @@
+     dst->radius = s->radius;
+   if (s->min_width_set)
+     dst->min_width = s->min_width;
++  if (s->background_inset_set)
++    dst->background_inset = s->background_inset;
+   dst->color_set |= s->color_set;
+   dst->background_set |= s->background_set;
+   dst->border_color_set |= s->border_color_set;
+@@ -732,6 +737,7 @@
+   dst->margin_right_set |= s->margin_right_set;
+   dst->radius_set |= s->radius_set;
+   dst->min_width_set |= s->min_width_set;
++  dst->background_inset_set |= s->background_inset_set;
+ }
+ 
+ Style style_overlay(const Style *base, const Style *over) {
+--- a/mangobar.c
++++ b/mangobar.c
+@@ -199,6 +199,7 @@
+   int margin_l, margin_r;
+   int radius; // -1=pill, >=0 explicit radius (0=square)
+   int min_width; // minimum module width
++  int background_inset; // vertical tag fill inset
+   bool center; // center text (tag buttons)
+ } ModuleStyle;
+ 
+@@ -926,7 +927,12 @@
+   uint32_t x2 = g->x2;
+   uint32_t max_x = g->x2;
+   if (x2 > x1) {
+-    int rad = module_radius(st, buf_h);
++    int inset = strcmp(module, "tags") == 0 ? st->background_inset : 0;
++    if (inset < 0) inset = 0;
++    if (inset > (int)buf_h / 3) inset = (int)buf_h / 3;
++    uint32_t fill_h = buf_h - 2 * (uint32_t)inset;
++    int fill_y = g_rt->bar_top + inset;
++    int rad = module_radius(st, fill_h);
+     // Rounded background
+     if (bar_bg_cr) {
+       cairo_pattern_t *pat = NULL;
+@@ -958,8 +964,8 @@
+         pixman_color_to_doubles(&st->bg, &r, &g, &b, &a);
+         cairo_set_source_rgba(bar_bg_cr, r, g, b, a);
+       }
+-      cairo_rounded_rect(bar_bg_cr, x1, g_rt->bar_top, (double)(x2 - x1),
+-                                (double)buf_h, rad);
++      cairo_rounded_rect(bar_bg_cr, x1, fill_y, (double)(x2 - x1),
++                                (double)fill_h, rad);
+       cairo_fill(bar_bg_cr);
+       if (pat)
+         cairo_pattern_destroy(pat);
+@@ -967,8 +973,8 @@
+       uint32_t s = g_draw_scale > 0 ? g_draw_scale : 1;
+       pixman_image_fill_boxes(
+           PIXMAN_OP_OVER, bg, &st->bg, 1,
+-          &(pixman_box32_t){.x1 = x1 * s, .x2 = x2 * s, .y1 = g_rt->bar_top * s,
+-                            .y2 = (g_rt->bar_top + buf_h) * s});
++          &(pixman_box32_t){.x1 = x1 * s, .x2 = x2 * s, .y1 = fill_y * s,
++                            .y2 = (fill_y + fill_h) * s});
+     }
+     uint32_t text_x = x1 + st->pad_l;
+     if (st->center) {
+@@ -1577,6 +1583,7 @@
+                       (uint64_t)(uint32_t)st->margin_r);
+   h = hash_mix(h, ((uint64_t)(uint32_t)st->radius << 32) |
+                       (uint64_t)(uint32_t)st->min_width);
++  h = hash_mix(h, (uint64_t)(uint32_t)st->background_inset);
+   return h;
+ }
+ 
+@@ -2014,9 +2021,9 @@
+   }
+ 
+   // Middle background
+-  bool mid_valid = right_start > left_end;
+-  int mid_x0 = (int)(left_end * (uint32_t)scale);
+-  int mid_x1 = (int)(right_start * (uint32_t)scale);
++  bool mid_valid = logical_w > 0;
++  int mid_x0 = 0;
++  int mid_x1 = (int)bar->width;
+   int mid_y0 = top * scale;
+   int mid_y1 = (top + (int)buf_h) * scale;
+   pixman_color_t *mid_color =
+@@ -4904,6 +4911,8 @@
+     ms->radius = s.radius;
+   if (s.min_width_set)
+     ms->min_width = s.min_width;
++  if (s.background_inset_set)
++    ms->background_inset = s.background_inset;
+ }
+ 
+ static void apply_css(ModuleStyle *ms, const char *module, const char *state) {
