@@ -135,5 +135,29 @@ class GtkActivationTests(unittest.TestCase):
         a.rollback(self.live, manifest)
         self.assertFalse((self.live.icons/manifest['icon_theme']).exists())
 
+    def install_previous_css(self):
+        old = b'/* earlier approved stylesheet */\n'
+        a.write_css(self.live, old)
+        return dict(self.manifest, css_previous_sha256=[a.digest(old)]), old
+
+    def test_previous_stylesheet_is_upgraded_in_place(self):
+        manifest, _ = self.install_previous_css()
+        self.assertEqual(a.classify(self.live, manifest)['css'], 'previous')
+        a.activate(self.live, manifest, *self.candidate)
+        self.assertEqual(set(a.classify(self.live, manifest).values()), {'active'})
+        self.assertEqual(sorted(p.name for p in self.live.css.parent.iterdir()), ['gtk.css'])
+
+    def test_failed_activation_restores_the_previous_stylesheet(self):
+        manifest, old = self.install_previous_css()
+        self.live.fail_on = 'gtk-theme'
+        with self.assertRaisesRegex(RuntimeError, 'simulated'):
+            a.activate(self.live, manifest, *self.candidate)
+        self.assertEqual(self.live.css.read_bytes(), old)
+
+    def test_rollback_also_removes_a_previous_stylesheet(self):
+        manifest, _ = self.install_previous_css()
+        a.rollback(self.live, manifest)
+        self.assertFalse(self.live.css.exists())
+
 if __name__ == '__main__':
     unittest.main()

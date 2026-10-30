@@ -91,14 +91,16 @@ class Live:
 
 def classify(live, manifest):
     """Return each owned item's state: 'original', 'active', 'previous' (an earlier
-    approved icon set, safe to replace) or 'unknown'."""
+    approved stylesheet or icon set, safe to replace) or 'unknown'."""
     state = {}
     if live.css.is_symlink() or (live.css.exists() and not live.css.is_file()):
         state['css'] = 'unknown'
     elif not live.css.exists():
         state['css'] = 'original'
     else:
-        state['css'] = 'active' if digest(live.css.read_bytes()) == manifest['css_sha256'] else 'unknown'
+        found = digest(live.css.read_bytes())
+        state['css'] = ('active' if found == manifest['css_sha256'] else
+                        'previous' if found in manifest.get('css_previous_sha256', []) else 'unknown')
     icons = live.icons/manifest['icon_theme']
     if icons.is_symlink() or (icons.exists() and not icons.is_dir()):
         state['icons'] = 'unknown'
@@ -181,12 +183,15 @@ def activate(live, manifest, css, files, links):
     unknown = sorted(k for k, v in state.items() if v == 'unknown')
     if unknown:
         raise RuntimeError('Unrecognised existing values; refusing to overwrite: ' + ', '.join(unknown))
-    done, aside = [], None
+    done, aside, old_css = [], None, None
     try:
         if state['icons'] in ('original', 'previous'):
             aside = install_icons(live, manifest, files, links)
             done.append('icons')
-        if state['css'] == 'original':
+        if state['css'] == 'previous':
+            old_css = live.css.read_bytes()
+            write_css(live, css)
+        elif state['css'] == 'original':
             write_css(live, css)
             done.append('css')
         for name, (kind, value) in manifest['xfconf'].items():
@@ -205,6 +210,8 @@ def activate(live, manifest, css, files, links):
             remove(live, manifest, item)
         if aside is not None:
             os.rename(aside, live.icons/manifest['icon_theme'])
+        if old_css is not None:
+            write_css(live, old_css)
         raise
     if aside is not None:
         shutil.rmtree(aside)
@@ -219,7 +226,7 @@ def rollback(live, manifest):
     order = ([f'gsettings:{k}' for k in reversed(manifest['gsettings'])] +
              [f'xfconf:{n}' for n in manifest['xfconf']] + ['css', 'icons'])
     for item in order:
-        if state[item] == 'active' or (item == 'icons' and state[item] == 'previous'):
+        if state[item] in ('active', 'previous'):
             remove(live, manifest, item)
     return sorted(k for k, v in state.items() if v == 'unknown')
 

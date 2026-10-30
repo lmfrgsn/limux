@@ -313,6 +313,8 @@ python3 scripts/activate-gtk.py rollback
 
 Trash, removable-drive mounting and thumbnails come from the separately installed `gvfs` and `tumbler`, which start on demand over D-Bus; they are functionality, not part of this activation or its rollback.
 
+With `gvfs` present, Thunar's file highlighting is on and it fills a selected grid item with GTK's `theme_selected_bg_color` (graphite) or `theme_unfocused_selected_bg_color` (metal), which the stylesheet defines; the label uses the same porcelain/graphite text as list selection. `css_previous_sha256` lets `activate` replace an earlier approved stylesheet in place and restore it if a later step fails.
+
 Activation owns `~/.config/gtk-3.0/gtk.css`, `~/.local/share/icons/Limux-Rhapsody/`, the `font-name`, `gtk-theme` and `icon-theme` GSettings keys, and the nine Thunar properties. It refuses any existing value it does not recognise, writes the icons and stylesheet before switching the theme, and undoes completed steps if a later step fails. Rollback switches the theme back first, restores Adwaita Sans 11 and Adwaita icons, then resets the Thunar properties and removes the two files; it does not read current tokens, and it leaves alone any property you changed after activation, naming it. Running Thunar windows pick up the theme switch immediately but read the stylesheet and icon theme at start, so close all Thunar windows (or run `thunar -q`) and reopen. Firefox's default theme follows GTK, so restart Firefox and review its toolbars and file dialogs. The GTK interface font becomes Inter 10 system-wide (from Adwaita Sans 11). No shortcuts, Thunar accelerators or custom actions are changed.
 
 
