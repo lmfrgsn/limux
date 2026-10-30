@@ -354,3 +354,22 @@ The user chose location-based night light over fixed times. MangoWM supports the
 
 When the machine files were brought into Git, the coordinates moved out of the MangoWM config into the private `~/.config/limux/location`, read by the tracked `limux-night-light` helper, so no location is committed.
 
+## Bar status icons and agent indicators — design target approved — 2026-10-30
+
+**Request.** Show what Codex and Claude Code sessions are doing from any workspace (working, needs input, idle, error), and let Wi-Fi, battery and volume appear as text, icon + value or icons only, without rewriting the bar.
+
+**Icon family.** Isolated previews ran temporary overlay Mangobar instances with private fontconfig files (fonts unpacked from hash-verified packages; nothing installed). Material Symbols (Arch `ttf-material-symbols-variable`) and Nerd Fonts symbols drew status as filled shapes (a solid Wi-Fi wedge and battery block) that read as a phone status bar, away from the reference's thin Wi-Fi arcs. The user chose **Tabler Icons** (MIT, line-drawn; npm `@tabler/icons-webfont` 3.49.0, integrity-verified) at its **regular stroke and the bar's text size**, as **icon + value**, over the 200/300 strokes and a 1.3× scale.
+
+**Spacing.** With even gaps, values floated between neighbouring icons. Approved: icon and value **4px** apart, **20px** between pairs, **36px** between the agent group and the system group, and a **20px** right inset matching the left inset measured on the live bar (20.0px left; preview right 20.7px, the difference being the percent glyph's side bearing). These become tokens.
+
+**States.** Working: open spinner, quiet. Needs input: alert circle in orange with the agent name in ink. Idle: dashed circle, quiet. Error: circled ×, signal red. Codex has no failure hook, so it shows working, needs input and idle only.
+
+**Technical findings.**
+- Mangobar uses one font (fcft) for the whole bar; per-module `font-family` replaces the bar font. Icons therefore come from fontconfig fallback behind Inter, inheriting its size and weight. A fontconfig `matrix` rule can scale only the icon font, so larger icons need no bar patch.
+- Inter and Adwaita Sans contain private-use glyphs (for example U+E000, U+E04D–E050) that collide with Material code points; Tabler's needed code points are free.
+- Mangobar's `padding` reads only the vertical and horizontal pair; asymmetric spacing needs `padding-left`/`padding-right`.
+- Custom modules support `exec`, `interval`, `signal` (SIGRTMIN+N for immediate refresh) and click actions, but not per-state classes; state colour needs a small bar patch or one module per state.
+- Claude Code hooks: `UserPromptSubmit`, `PreToolUse`/`PostToolUse`, `PermissionRequest` and approval notifications, `Stop`, `StopFailure` (API errors), `SessionEnd`. Codex 0.165 hooks (enabled by default, trusted once in `/hooks`): `UserPromptSubmit`, `PreToolUse`/`PostToolUse`, `PermissionRequest`, `Stop`, `Interrupt`, `SessionEnd`; no failure event. Both support asynchronous command hooks. MangoWM reports each window's process ID, so a click can focus the agent's Foot window.
+
+**Status.** Design target approved; not implemented or activated. Implementation needs the Tabler font installed as a pinned user font, one fontconfig fallback rule, display and spacing tokens, the hook writers, the bar module and click-to-focus, each with activation and rollback.
+
