@@ -214,9 +214,11 @@ terminal, with 6.73:1 text contrast; review its visibility on-device.
 
 ## Foot approved baseline — activation and recovery
 
-The approved palette and generated output from `5cf323e` are pinned in
-[foot.json](../themes/recovery/foot.json). No colour, font size, padding, cursor or
-selection value changes in this workflow. DejaVu Sans Mono 16pt remains the local
+The approved orange-cursor palette is pinned by
+[foot.json](../themes/recovery/foot.json). Foot uses the independent
+`terminal_cursor` and `on_terminal_cursor` semantic roles, currently mapped to
+`workspace_orange` (`#D46A43`) and `signal_ink` (`#141810`). The block cursor and
+hollow unfocused state are approved. DejaVu Sans Mono 16pt remains the local
 Foot baseline while the final font choice is open. IBM Plex Mono is still absent;
 Fontconfig resolves it to DejaVu. To compare later **if Plex is installed**, use
 `python3 scripts/preview-foot.py --shell --font "IBM Plex Mono"`. This is a
@@ -224,37 +226,34 @@ preview-only 16pt comparison, rejects fallback and does not change canonical
 font tokens. Equal point sizes are a starting comparison, not proof of equal
 perceived x-height. No font is installed by these tools.
 
-Before activation, open a real shell:
+The orange appearance is active in `~/.config/foot/rhapsody.ini`, included by the
+single functional `~/.config/foot/foot.ini`. Check it without modifying the live
+configuration:
 
 ```sh
 cd ~/limux
-python3 scripts/preview-foot.py --shell
-```
-
-In that separate window, use `pwd` and `git status --short` to inspect normal
-output. Run `seq 1 200` and scroll back with the existing wheel/keyboard controls;
-drag-select text and check Command+C/V and Ctrl+Shift+C/V. Run `sleep 30` and
-interrupt it with Ctrl+C. Run `python3 scripts/preview-foot.py --sample` inside
-this shell for ANSI/selection samples, then `exit` to return to the shell. Open
-`codex` normally and inspect its actual output and navigation without requesting
-project changes. Applications may supply truecolour or change the cursor, so
-palette contrast tests alone cannot certify every Codex view. No Codex settings
-are changed. Close the preview when finished.
-
-After these desktop checks pass:
-
-```sh
-cd ~/limux
-python3 scripts/activate-foot.py check
-python3 scripts/activate-foot.py activate
 python3 scripts/activate-foot.py verify
-# Open a new terminal through the existing shortcut, or run:
+foot -C -c ~/.config/foot/foot.ini
 foot
-# Restore previous styling for subsequently opened windows:
-python3 scripts/activate-foot.py rollback
 ```
 
-Activation generates `~/.config/foot/rhapsody.ini` and replaces the original
+The newly opened `foot` process reads the approved orange include. Existing Foot
+windows or a persistent server are not restarted by activation and keep their
+current appearance until their lifecycle naturally ends. The optional specimen
+preview remains available through `scripts/preview-foot.py`; it does not alter
+the live include.
+
+Recovery remains guarded and exact:
+
+```sh
+cd ~/limux
+# Restore the exact prior yellow-cursor Rhapsody fragment for new windows:
+python3 scripts/activate-foot.py rollback
+# Or remove the Rhapsody include and restore the original font line:
+python3 scripts/activate-foot.py restore-original
+```
+
+Activation generated `~/.config/foot/rhapsody.ini` and replaced the original
 `font=DEjaVu Sans Mono:size=16` line in the sole functional `foot.ini` with a native
 absolute `include=` path. `XDG_CONFIG_HOME` is respected. All remaining bytes,
 including Command+C/V bindings, stay identical. Foot's include returns parsing
@@ -279,6 +278,6 @@ staging files are removed automatically. Rollback ignores current token/adapter
 drift, but refuses unknown local edits rather than overwriting them.
 
 `verify` checks exact approved on-disk contents and native syntax; it does not
-claim to inspect pixels or change existing windows. In the Codex sandbox the
-real-shell launch and activation were blocked by Wayland access, before live
-writes. Desktop shell/Codex/clipboard/scrollback validation remains pending.
+inspect pixels or change existing windows. The orange cursor was visually
+approved and activated. Native validation confirms a newly launched Foot reads
+the active include; it does not assert the appearance of already-running windows.

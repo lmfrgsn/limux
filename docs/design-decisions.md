@@ -1,6 +1,6 @@
 # Design decisions and implementation audit
 
-Recorded 2026-10-28. The [design language](design-language.md) is the sole maintained design specification; this log records status, rationale and discrepancies. Evidence: [original source](references/original-design-reference.md), [original image](references/braun-interface-concept.png), [tokens](../themes/rhapsody.toml), [Mangobar adapter](../scripts/mangobar.py), and locally inspected generated `build/rhapsody/mangobar.css` (ignored, reproducible output).
+Recorded 2026-10-28; entries preserve the state at the time recorded. The [design language](design-language.md) is the sole maintained design specification; this log records status, rationale and discrepancies. Later dated approvals supersede earlier pending or proposed states. Evidence: [original source](references/original-design-reference.md), [original image](references/braun-interface-concept.png), [tokens](../themes/rhapsody.toml), [Mangobar adapter](../scripts/mangobar.py), and locally inspected generated `build/rhapsody/mangobar.css` (ignored, reproducible output).
 
 **Reading this log:** dated entries preserve what was proposed or pending at that time. The [current reconciliation](#current-rhapsody-reconciliation--2026-10-30) supersedes earlier yellow-workspace and pending-activation statements; it does not erase their historical rationale.
 
@@ -200,12 +200,12 @@ font comfort and selection/cursor behaviour remain pending user review using the
 [preview workflow](architecture.md#foot-preview--specimen-or-normal-shell).
 
 
-## Foot palette approved — 5cf323e; guarded activation prepared
+## Foot palette approved — initial 5cf323e state, superseded cursor colour
 
 The user visually approved the graphite ground, colour direction, yellow cursor,
 muted functional colours and relationship to the light desktop as the initial
-baseline. All generated appearance bytes remain identical to `5cf323e`; its hash
-is pinned for activation. DejaVu Sans Mono 16pt is retained, not finalized as a
+baseline. The later orange cursor approval below supersedes only the cursor
+foreground/background mapping. DejaVu Sans Mono 16pt is retained, not finalized as a
 system-wide font decision. IBM Plex Mono is not installed, so no rendered Plex
 comparison is claimed. A preview-only family option now supports comparison at
 the same readable point size when available, explicitly rejecting fallback.
@@ -265,13 +265,13 @@ The user approved the visual direction at `ec2ba0f` and requested an engineering
 
 The user approved and activated the Quiet Workspace Strip after the engineering review. The current live stylesheet's SHA-256 matches the generated Quiet Strip (`03c674d5acb12287503b9fd08b9adb6903e8c7feaaf083d11dc8f93db598ab7c`); the live MangoWM config has one `SUPER,k` Limux Commands binding, one `SUPER,space` Rofi launcher binding and one `limux-bar start` entry. This repository inspection cannot reach the graphical process namespace, so those on-disk checks do not certify every live interaction. The [architecture status table](architecture.md#current-implementation-and-approval-status--2026-10-30) is the maintained current-state summary.
 
-The orange active workspace at `#D46A43` is an approved component decision, superseding the original yellow boxed workspace as the live design. The six foundation colours remain. Foot's yellow cursor and Rofi/Commands' yellow list edge are approved *current baselines* and have not been reevaluated for the quieter direction. ANSI yellow is terminal content, not a navigation signal. Mako and GTK/Thunar have no approved Rhapsody adapter. The original Braun image, archived source, old boxed Mangobar renderer, pinned patches, prior binary/CSS and rollback state remain reference and recovery assets.
+The orange active workspace at `#D46A43` is an approved component decision, superseding the original yellow boxed workspace as the live design. The six foundation colours remain. Foot's approved block cursor now shares the orange swatch, while Rofi/Commands retain a distinct yellow list edge and Foot search/ANSI yellow remain separate roles. Mako and GTK/Thunar have no approved Rhapsody adapter. The original Braun image, archived source, old boxed Mangobar renderer, pinned patches, prior binary/CSS and rollback state remain reference and recovery assets.
 
-Verified source distinctions: `render_quiet()` maps the active workspace to orange; the legacy `render()` uses `selected` yellow; Rofi uses yellow for the selected row edge; Foot uses yellow for its cursor, search match and ANSI yellow; MangoWM uses yellow for a split-placement indicator. Limux Commands previously held 700px width, 11 rows and heading metrics inside its Python theme override. These are different roles with different owners. The review's `xdg-open` observation is confirmed on this host (`command -v xdg-open` finds nothing; `xdg-utils` is not installed). Quicklink repair is a separate functional task and was not attempted here. The review's container-only test errors do not describe this host's test environment.
+Verified source distinctions: `render_quiet()` maps the active workspace to orange; the legacy `render()` uses `selected` yellow; Rofi uses yellow for the selected row edge; Foot uses orange for its cursor and yellow for search match and ANSI yellow; MangoWM uses yellow for a split-placement indicator. Limux Commands previously held 700px width, 11 rows and heading metrics inside its Python theme override. These are different roles with different owners. The review's `xdg-open` observation is confirmed on this host (`command -v xdg-open` finds nothing; `xdg-utils` is not installed). Quicklink repair is a separate functional task and was not attempted here. The review's container-only test errors do not describe this host's test environment.
 
 This reconciliation adds explicit semantic references for active workspace, list selection, terminal cursor and terminal search match. The old `selected` mapping stays solely for the recoverable boxed bar renderer. Commands' approved geometry and heading metrics move to `[limux_commands]`; the native Rofi selectors and functional registry stay in the adapter. Pre/post hashes of the generated legacy bar, active Quiet Strip, Rofi, MangoWM, Foot and Commands theme override are identical. No activation script, live appearance file, shortcut, hardware setting or rollback manifest was changed.
 
-Separate decisions still needed: whether Rofi/Commands should keep a yellow list edge or use a neutral focus treatment; whether Foot's cursor and search cues should remain yellow or use other tested values; whether Commands should get a modern interface redesign; and later system-wide typography and Mako/GTK styling. Each needs on-device previews and explicit visual approval. The active bar orange and geometry are settled for this task and are not reopened.
+Separate decisions still needed: whether Rofi/Commands should keep a yellow list edge or use a neutral focus treatment; whether Foot's search cues should remain yellow or use other tested values; whether Commands should get a modern interface redesign; and later system-wide typography and Mako/GTK styling. Each needs on-device previews and explicit visual approval. The active bar and Foot cursor orange are settled.
 
 ## Limux Commands neutral candidate — preview pending screenshot review
 
@@ -283,7 +283,7 @@ The new `candidate` picker mode uses the same registry, rows, lock, Rofi invocat
 
 The user reviewed and approved the orange Foot block cursor. `terminal_cursor` independently maps to the shared `workspace_orange` swatch (`#D46A43`), and `on_terminal_cursor` maps to `signal_ink` (`#141810`) at 5.09:1 contrast. `workspace_active` retains its separate semantic mapping to that same swatch. Changing the shared swatch updates both components; changing either role reference affects only its owning component. The block style and hollow unfocused cursor remain. Graphite background, typography, padding, ANSI palette, selection, search/no-match colours and keyboard behavior are unchanged.
 
-Foot's text contrast validation remains at 4.5:1 for cursor and selection pairs. The previous approved yellow-cursor fragment is preserved verbatim as `themes/recovery/foot-yellow-cursor.ini` and pinned separately. `activate-foot.py activate` now targets the orange fragment; `rollback` restores the exact yellow-cursor fragment, and `restore-original` returns to the pre-Rhapsody Foot configuration. Live activation still requires the existing Wayland, native parser, version and configuration ownership checks. Existing Foot windows are not restarted.
+Foot's text contrast validation remains at 4.5:1 for cursor and selection pairs; the approved orange/ink pair passes at approximately 5.09:1. The previous approved yellow-cursor fragment is preserved verbatim as `themes/recovery/foot-yellow-cursor.ini` and pinned separately. `activate-foot.py activate` targets the orange fragment; `rollback` restores the exact yellow-cursor fragment, and `restore-original` returns to the pre-Rhapsody Foot configuration. The user activated the orange appearance. `activate-foot.py verify` and native Foot configuration parsing confirm the live include and generated fragment. Existing Foot windows or a persistent server are not restarted.
 
 ## Limux Commands neutral refinement — pending visual review
 

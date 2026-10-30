@@ -136,8 +136,8 @@ global_color = "accent"
 overlay_color = "text_secondary"
 
 [foot]
-# Palette approved as initial Foot baseline at 5cf323e; activation is separate.
-# Retain the installed live font and comfortable point size; Plex remains open.
+# Current approved Foot palette includes the orange block cursor; live activation
+# is guarded by scripts/activate-foot.py. Plex remains an open font comparison.
 font = "DejaVu Sans Mono"
 font_size = 16
 padding = 8
