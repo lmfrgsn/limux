@@ -55,13 +55,14 @@ Study the complete image, including its rationale and palette, before visual wor
 - The image's light bar and yellow boxed workspaces explain the original concept. The approved live Mangobar uses nine plain numbers on one uninterrupted porcelain surface, with one small inset orange active control and no visible layout indicator.
 - The approved Rofi launcher retains a recessed search field and compact rows. “RHAPSODY / 01” was rejected as decorative branding.
 - The current Rofi list uses a pale-grey selected row with a narrow yellow edge. This is an approved baseline, open to a separate future colour review. Limux Commands is built on the same Rofi theme and is functional, but it has no approved visual design: its redesign is parked, and its candidate neutral styling is not a decision.
+- Limux Files (Thunar) applies the bar's patterns to a window: one porcelain surface with hairlines, the path as text, the launcher's recessed input, a graphite inset-style selection, quiet labels and measurements, and outline icons. Its approved target and known GTK 3 gaps are in the [decision log](design-decisions.md#limux-files--thunar-design-approved-and-implemented--2026-10-30).
 - Controls, content and passive information are visibly different. Typography, boundaries and surface depth work together: porcelain foregrounds, cool neutral ground, metal-like recesses and graphite ink. Passive measurements should not become competing badges.
 
 The screenshot is source context, not a layout target. Avoid gratuitous boxes, stripes, bevels, oversized controls, blur and gradients. Use depth only when it helps show interaction or material relationship.
 
 ## Typography, geometry and states
 
-Typography is compact, readable and aligned; technical metadata is quieter than primary actions. Inter is the approved current bar and Rofi baseline, not a system-wide font commitment. Foot currently uses DejaVu Sans Mono. IBM Plex remains an unapproved future comparison. Check installed fonts and native rendering before changing them.
+Typography is compact, readable and aligned; technical metadata is quieter than primary actions. Inter is the approved current bar, Rofi and Thunar-window baseline, not a system-wide font commitment. Foot currently uses DejaVu Sans Mono. IBM Plex remains an unapproved future comparison. Check installed fonts and native rendering before changing them.
 
 The live component geometries are approved individually; they are not universal spacing or radius rules. The original 1px edge and 4-unit rhythm are historical exploration. Preserve stable hover geometry, especially across all workspace states.
 
@@ -73,7 +74,7 @@ Rhapsody is predominantly a light system environment with integrated dark develo
 
 | Light system components | Dark developer components |
 | --- | --- |
-| Mangobar, Rofi and MangoWM chrome currently; Mako and GTK/Thunar are future targets | Foot, terminal-based Codex and appropriate developer-oriented tools |
+| Mangobar, Rofi, MangoWM chrome and Thunar (Limux Files) currently; Mako is a future target | Foot, terminal-based Codex and appropriate developer-oriented tools |
 
 Light and dark components share hierarchy, alignment and contrast discipline. Dark developer surfaces belong to the porcelain-to-graphite system; the current Rofi launcher is light.
 
@@ -88,6 +89,7 @@ Light and dark components share hierarchy, alignment and contrast discipline. Da
 | Urgency/error and positive status | `urgent` → `signal_red`; `success` → `signal_green` | Red is used for supported urgent states; green is reserved where positive meaning is verified |
 | Neutral emphasis | `emphasis` → `accent` | General non-signal emphasis; MangoWM focus currently refers to the neutral accent |
 | Terminal ANSI | `[foot]` regular/bright and `[foot.colors]`/`[foot.blends]` | Terminal palette, including ANSI yellow; ANSI names do not dictate UI state colours |
+| File selection | `[thunar]` `selected` → `text` (graphite) with `surface` ink; inactive window → `metal` with `text` ink | Approved Limux Files; the file window carries no signal colour |
 | Historical boxed workspace | `selected` → `signal_yellow` | Kept only for the old Mangobar renderer and rollback evidence; not a current universal selection role |
 
 The first migration step is complete: approved values are named by purpose, and active adapter output is generated from the tokens. Workspace and cursor roles may point to the same canonical colour while retaining independent mappings. The active-workspace white foreground exception is enforced only in the Mangobar adapter; other general contrast validation remains unchanged. The old boxed renderer and its guarded recovery hash remain. Later visual changes should alter only the relevant role mapping and recovery pins. Do not alter the six foundation colours to accomplish these reviews. Retire the legacy `selected` name only when the old renderer and rollback path have a reviewed replacement.

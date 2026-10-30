@@ -139,6 +139,37 @@ scratchpad_color = "dark_terminal"
 global_color = "accent"
 overlay_color = "text_secondary"
 
+[thunar]
+# Limux Files on Thunar 4.20 over the adw-gtk3 GTK 3 theme. Approved design
+# target 2026-10-30: one porcelain surface, type-led path, quiet labels,
+# graphite selection (metal when inactive), outline icons. Font applies to
+# Thunar windows only; system-wide typography remains open.
+gtk_theme = "adw-gtk3"
+icon_theme = "Limux-Rhapsody"
+font_size = 10
+surface = "surface"
+hover = "chrome"
+location = "chrome"
+recess = "canvas"
+recess_edge = "metal"
+selected = "text"
+on_selected = "surface"
+selected_inactive = "metal"
+on_selected_inactive = "text"
+icon_selected = "metal"
+text = "text"
+secondary = "text_secondary"
+quiet = "text_quiet"
+disabled = "metal"
+controls = "text"
+on_controls = "surface"
+focus = "accent"
+destructive = "signal_red"
+hairline_alpha = 0.10
+icon_folder = "chrome"
+icon_document = "surface"
+icon_stroke = "text_quiet"
+
 [foot]
 # Current approved Foot palette includes the orange block cursor; live activation
 # is guarded by scripts/activate-foot.py. Plex remains an open font comparison.
