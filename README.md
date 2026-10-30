@@ -17,3 +17,5 @@ MangoWM appearance at `fd645da` is approved. From Foot, run `python3 scripts/man
 Limux Files restyles Thunar from the `[thunar]` tokens: one porcelain surface, the path as text, outline icons and graphite selection. Install `adw-gtk-theme`, then run `python3 scripts/activate-gtk.py activate` from Foot; `rollback` restores the defaults. See [Limux Files activation and recovery](docs/architecture.md#limux-files-thunar--activation-and-recovery).
 
 Notifications use the Rhapsody Mako design from the `[mako]` tokens. From Foot, `python3 scripts/activate-mako.py activate` applies it and `rollback` restores the previous config. See [Mako activation and recovery](docs/architecture.md#mako-notifications--activation-and-recovery).
+
+Thunar uses Mac-style Command shortcuts from `scripts/thunar-shortcuts.py`; `rollback` restores Thunar's defaults. See [Thunar Command shortcuts](docs/architecture.md#thunar-command-shortcuts).

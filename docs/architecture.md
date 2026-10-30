@@ -349,3 +349,17 @@ python3 scripts/launcher-entries.py rollback       # show all system entries aga
 
 `launcher-entries.py` writes per-user overrides in `~/.local/share/applications`: `Hidden=true` shadows for Foot Client, Foot Server, both Qt V4L2 tools, Rofi, Rofi Theme Selector, Bulk Rename, Thunar Preferences and About Xfce, and renamed copies of the Thunar and Foot entries (`Files`/`Thunar`, `Terminal`/`Foot`) that change only the main entry's names. `themes/recovery/launcher-entries.json` pins both the overrides and the system entries they copy, so a package update to those entries is reported for review rather than leaving a stale copy. Existing files are never overwritten; rollback removes only files still matching what it wrote.
 
+
+## Thunar Command shortcuts
+
+`scripts/thunar-shortcuts.py` gives Thunar's own actions Mac-style Command shortcuts in its accelerator map, `~/.config/Thunar/accels.scm`: ⌘C/X/V, ⌘Z and ⌘⇧Z, ⌘A, ⌘⌫ (move to Trash), ⌘D (duplicate), ⌘⇧N (new folder), ⌘↑/⌘↓ (parent/open), ⌘[ and ⌘] (back/forward), ⌘⇧H (home), ⌘L, ⌘F, ⌘T, ⌘W, ⌘Q, ⌘1–3 (views) and ⌘=/⌘−/⌘0 (zoom). Command keys MangoWM owns globally (N, I, R, O, M, G, E, K, Space, Tab, ←/→) are not used; those actions keep Thunar's defaults (for example Ctrl+N, Alt+Return, Ctrl+R).
+
+Thunar rewrites this file itself, so the controller compares which shortcuts are set rather than bytes, refuses to write while Thunar is running, and refuses hand-edited maps. Rollback writes back Thunar's exact default dump from `themes/recovery/thunar-accels-default.scm`. The test suite compiles a small program against GTK 3 to confirm each key parses as a Command shortcut.
+
+```sh
+cd ~/limux
+python3 scripts/thunar-shortcuts.py check
+python3 scripts/thunar-shortcuts.py activate   # close Thunar first
+python3 scripts/thunar-shortcuts.py rollback
+```
+

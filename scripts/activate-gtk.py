@@ -90,7 +90,8 @@ class Live:
 
 
 def classify(live, manifest):
-    """Return each owned item's state: 'original', 'active' or 'unknown'."""
+    """Return each owned item's state: 'original', 'active', 'previous' (an earlier
+    approved icon set, safe to replace) or 'unknown'."""
     state = {}
     if live.css.is_symlink() or (live.css.exists() and not live.css.is_file()):
         state['css'] = 'unknown'
@@ -104,7 +105,9 @@ def classify(live, manifest):
     elif not icons.exists():
         state['icons'] = 'original'
     else:
-        state['icons'] = 'active' if tree_digest(*read_tree(icons)) == manifest['icons_sha256'] else 'unknown'
+        found = tree_digest(*read_tree(icons))
+        state['icons'] = ('active' if found == manifest['icons_sha256'] else
+                          'previous' if found in manifest.get('icons_previous_sha256', []) else 'unknown')
     for key, value in manifest['gsettings'].items():
         current = live.get_setting(key)
         state[f'gsettings:{key}'] = ('active' if current == value else
@@ -116,9 +119,12 @@ def classify(live, manifest):
 
 
 def install_icons(live, manifest, files, links):
+    """Stage the set beside the live one and swap it in. An earlier approved set is
+    moved aside and returned, so a later failure can put it back."""
     final = live.icons/manifest['icon_theme']
     live.icons.mkdir(parents=True, exist_ok=True)
     staging = Path(tempfile.mkdtemp(prefix='.limux-icons-', dir=live.icons))
+    aside = None
     try:
         for rel, data in files.items():
             (staging/rel).parent.mkdir(parents=True, exist_ok=True)
@@ -126,10 +132,19 @@ def install_icons(live, manifest, files, links):
         for rel, target in links.items():
             (staging/rel).parent.mkdir(parents=True, exist_ok=True)
             (staging/rel).symlink_to(target)
-        os.rename(staging, final)
+        if final.exists():
+            aside = live.icons/f'.limux-icons-previous-{os.getpid()}'
+            os.rename(final, aside)
+        try:
+            os.rename(staging, final)
+        except BaseException:
+            if aside is not None:
+                os.rename(aside, final)
+            raise
         sync_directory(live.icons)
     finally:
         shutil.rmtree(staging, ignore_errors=True)
+    return aside
 
 
 def write_css(live, data):
@@ -166,10 +181,10 @@ def activate(live, manifest, css, files, links):
     unknown = sorted(k for k, v in state.items() if v == 'unknown')
     if unknown:
         raise RuntimeError('Unrecognised existing values; refusing to overwrite: ' + ', '.join(unknown))
-    done = []
+    done, aside = [], None
     try:
-        if state['icons'] == 'original':
-            install_icons(live, manifest, files, links)
+        if state['icons'] in ('original', 'previous'):
+            aside = install_icons(live, manifest, files, links)
             done.append('icons')
         if state['css'] == 'original':
             write_css(live, css)
@@ -188,7 +203,12 @@ def activate(live, manifest, css, files, links):
     except BaseException:
         for item in reversed(done):
             remove(live, manifest, item)
+        if aside is not None:
+            os.rename(aside, live.icons/manifest['icon_theme'])
         raise
+    if aside is not None:
+        shutil.rmtree(aside)
+        sync_directory(live.icons)
     return done
 
 
@@ -199,7 +219,7 @@ def rollback(live, manifest):
     order = ([f'gsettings:{k}' for k in reversed(manifest['gsettings'])] +
              [f'xfconf:{n}' for n in manifest['xfconf']] + ['css', 'icons'])
     for item in order:
-        if state[item] == 'active':
+        if state[item] == 'active' or (item == 'icons' and state[item] == 'previous'):
             remove(live, manifest, item)
     return sorted(k for k, v in state.items() if v == 'unknown')
 

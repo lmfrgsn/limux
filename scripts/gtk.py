@@ -3,16 +3,36 @@ view settings. Appearance and view presentation only; no shortcuts or actions.""
 import re
 from mangobar import contrast
 
-ICON_ALIASES = {
-    'places': ('folder', ['folder-documents', 'folder-download', 'folder-pictures', 'folder-music',
-                          'folder-videos', 'folder-templates', 'folder-publicshare', 'user-desktop',
-                          'inode-directory']),
-    'mimetypes': ('document', ['text-x-generic', 'text-markdown', 'text-plain', 'x-office-document',
-                               'x-office-spreadsheet', 'x-office-presentation', 'application-pdf',
-                               'application-vnd.oasis.opendocument.spreadsheet', 'application-x-generic',
-                               'image-x-generic', 'image-png', 'image-svg+xml', 'package-x-generic',
-                               'application-zip', 'text-x-script', 'text-x-python', 'audio-x-generic',
-                               'video-x-generic']),
+# Inner marks drawn once on a 16px grid and scaled for the 64px icons.
+GLYPHS = {
+    'text': 'M5.5 8h5M5.5 10h5M5.5 12h3',
+    'image': 'M5 12.5l2.25-2.75 1.75 1.75 1.25-1.25 1.75 2.25M9.75 7.5h.01',
+    'archive': 'M7 3.5v1M7 5.75v1M7 8v1M6 10.25h2v2H6z',
+    'audio': 'M9.5 11.5V7.25l2 .75M9.5 11.5a1.25 1.25 0 1 1-2.5 0 1.25 1.25 0 0 1 2.5 0z',
+    'video': 'M7 8.25v4l3.25-2z',
+    'code': 'M6.75 8.5 5.25 10l1.5 1.5M9.25 8.5l1.5 1.5-1.5 1.5',
+    'sheet': 'M5 8.5h6v4H5zM5 10.5h6M8 8.5v4',
+    'slides': 'M5 8.5h6v3.5H5z',
+}
+# Drawn icon -> (context, glyph, standard names that resolve to it before Adwaita's).
+ICONS = {
+    'folder': ('places', None, ['folder-documents', 'folder-download', 'folder-pictures', 'folder-music',
+                                'folder-videos', 'folder-templates', 'folder-publicshare', 'user-desktop',
+                                'inode-directory']),
+    'document': ('mimetypes', None, ['application-x-generic']),
+    'text': ('mimetypes', 'text', ['text-x-generic', 'text-plain', 'text-markdown', 'x-office-document',
+                                   'application-pdf', 'application-vnd.oasis.opendocument.text']),
+    'image': ('mimetypes', 'image', ['image-x-generic', 'image-png', 'image-jpeg', 'image-gif', 'image-webp',
+                                     'image-svg+xml']),
+    'archive': ('mimetypes', 'archive', ['package-x-generic', 'application-zip', 'application-x-tar',
+                                         'application-x-compressed-tar', 'application-x-7z-compressed']),
+    'audio': ('mimetypes', 'audio', ['audio-x-generic']),
+    'video': ('mimetypes', 'video', ['video-x-generic']),
+    'code': ('mimetypes', 'code', ['text-x-script', 'text-x-python', 'application-x-shellscript', 'text-x-csrc',
+                                   'text-x-chdr', 'application-json', 'text-html', 'text-css']),
+    'sheet': ('mimetypes', 'sheet', ['x-office-spreadsheet', 'application-vnd.oasis.opendocument.spreadsheet',
+                                     'text-csv']),
+    'slides': ('mimetypes', 'slides', ['x-office-presentation', 'application-vnd.oasis.opendocument.presentation']),
 }
 TOOLBAR = ('menu:0,back:1,forward:1,open-parent:0,open-home:0,new-tab:0,new-window:0,toggle-split-view:0,'
            'undo:0,redo:0,zoom-out:0,zoom-in:0,zoom-reset:0,view-as-icons:0,view-as-detailed-list:0,'
@@ -143,9 +163,14 @@ def render_icons(theme):
     for size, (width, folder_svg, document_svg) in shapes.items():
         directory = '16' if size == 16 else 'scalable'
         stroke = f'stroke="{c["icon_stroke"]}" stroke-width="{width}" stroke-linejoin="round"'
-        for context, (base, aliases) in ICON_ALIASES.items():
+        scale = size // 16
+        for base, (context, glyph, aliases) in ICONS.items():
             body = (folder_svg if base == 'folder' else document_svg).format(
                 fill=c['icon_folder' if base == 'folder' else 'icon_document'], stroke=stroke)
+            if glyph:
+                body += (f'<g transform="scale({scale})"><path d="{GLYPHS[glyph]}" fill="none" '
+                         f'stroke="{c["icon_stroke"]}" stroke-width="{1.1 if scale == 1 else 0.6}" '
+                         'stroke-linecap="round" stroke-linejoin="round"/></g>')
             files[f'{directory}/{context}/{base}.svg'] = (
                 f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" '
                 f'viewBox="0 0 {size} {size}">{body}</svg>\n').encode()

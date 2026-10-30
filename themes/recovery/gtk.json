@@ -1,11 +1,11 @@
 {
-  "approved": "Limux Files design target and Inter system interface font, user-approved 2026-10-30",
+  "approved": "Limux Files design target, Inter system font and expanded outline file icons, user-approved 2026-10-30",
   "thunar_version": "4.20.10",
   "gtk_package": "adw-gtk-theme",
   "font": "Inter",
   "css_sha256": "00c83fd11a9488c7e2297b38cde184de75e0e70aba176c329e346a3f0e9cbd43",
   "icon_theme": "Limux-Rhapsody",
-  "icons_sha256": "ea855b92c0757e1eb688589f4dd5ba1a84f6772ba13fcda607979edfa896e86e",
+  "icons_sha256": "92662514ae01fd81066c28c91a80ac7d9f7fc75c1aedc304a74cb18fc9a36b72",
   "gsettings": {
     "font-name": "Inter 10",
     "icon-theme": "Limux-Rhapsody",
@@ -53,5 +53,8 @@
       "bool",
       "false"
     ]
-  }
+  },
+  "icons_previous_sha256": [
+    "ea855b92c0757e1eb688589f4dd5ba1a84f6772ba13fcda607979edfa896e86e"
+  ]
 }

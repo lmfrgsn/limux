@@ -109,5 +109,31 @@ class GtkActivationTests(unittest.TestCase):
         self.assert_original()
 
 
+    def install_previous_icons(self):
+        files = {'index.theme': b'[Icon Theme]\nName=old\n', '16/places/folder.svg': b'<svg/>'}
+        manifest = dict(self.manifest, icons_previous_sha256=[a.tree_digest(files, {})])
+        a.install_icons(self.live, manifest, files, {})
+        return manifest
+
+    def test_previous_icon_set_is_upgraded_in_place(self):
+        manifest = self.install_previous_icons()
+        self.assertEqual(a.classify(self.live, manifest)['icons'], 'previous')
+        a.activate(self.live, manifest, *self.candidate)
+        self.assertEqual(set(a.classify(self.live, manifest).values()), {'active'})
+        self.assertEqual([p.name for p in self.live.icons.iterdir()], [manifest['icon_theme']])
+
+    def test_failed_activation_restores_the_previous_icon_set(self):
+        manifest = self.install_previous_icons()
+        self.live.fail_on = 'gtk-theme'
+        with self.assertRaisesRegex(RuntimeError, 'simulated'):
+            a.activate(self.live, manifest, *self.candidate)
+        self.assertEqual(a.classify(self.live, manifest)['icons'], 'previous')
+        self.assertEqual([p.name for p in self.live.icons.iterdir()], [manifest['icon_theme']])
+
+    def test_rollback_also_removes_a_previous_icon_set(self):
+        manifest = self.install_previous_icons()
+        a.rollback(self.live, manifest)
+        self.assertFalse((self.live.icons/manifest['icon_theme']).exists())
+
 if __name__ == '__main__':
     unittest.main()

@@ -10,7 +10,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'scripts'))
-from gtk import ICON_ALIASES, gsettings, render_css, render_icons, thunar_settings
+from gtk import ICONS, gsettings, render_css, render_icons, thunar_settings
 
 spec = importlib.util.spec_from_file_location('activate_gtk', ROOT/'scripts/activate-gtk.py')
 activation = importlib.util.module_from_spec(spec)
@@ -48,8 +48,10 @@ class GtkAdapterTests(unittest.TestCase):
         for rel, target in links.items():
             self.assertIn(str(Path(rel).parent/target), files)
         for directory in ('16', 'scalable'):
-            for context, (base, _) in ICON_ALIASES.items():
+            for base, (context, _, _) in ICONS.items():
                 self.assertIn(f'{directory}/{context}/{base}.svg', files)
+        names = [alias for _, _, aliases in ICONS.values() for alias in aliases]
+        self.assertEqual(len(names), len(set(names)))
         self.assertIn(b'Inherits=Adwaita,hicolor', files['index.theme'])
 
     def test_thunar_settings_are_presentation_only(self):
