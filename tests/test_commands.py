@@ -1,5 +1,7 @@
+from contextlib import contextmanager
 import importlib.util
 import hashlib
+import os
 from pathlib import Path
 import re
 import shutil
@@ -11,6 +13,25 @@ from unittest.mock import patch, MagicMock
 spec = importlib.util.spec_from_file_location('commands', Path(__file__).resolve().parents[1] / 'scripts/limux-commands.py')
 commands = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(commands)
+
+
+@contextmanager
+def isolated_picker():
+    """Run the picker against temporary state and lock paths, never the live desktop's."""
+    with tempfile.TemporaryDirectory() as folder:
+        folder = Path(folder)
+        with patch.dict(os.environ, {'XDG_STATE_HOME': str(folder / 'state'), 'WAYLAND_DISPLAY': 'wayland-1'}), \
+             patch.object(commands, 'HOME', folder):
+            marker = commands.appearance_state()
+            assert marker.is_relative_to(folder), marker
+            yield marker
+
+
+def write_candidate_marker(marker):
+    marker.parent.mkdir(parents=True)
+    marker.write_text('neutral-v1 ' + hashlib.sha256(
+        commands.preview_theme(candidate=True).encode()).hexdigest() + '\n')
+    marker.chmod(0o600)
 
 class CommandsTest(unittest.TestCase):
     def test_actual_bindings_and_gestures(self):
@@ -55,7 +76,7 @@ class PreviewFlowTest(unittest.TestCase):
         self.assertIn('meta\x1fEveryday', labels[1])
 
     def test_cancel_has_no_action(self):
-        with patch.dict(commands.os.environ, {'WAYLAND_DISPLAY': 'wayland-1'}), \
+        with isolated_picker(), \
              patch.object(commands.subprocess, 'run', return_value=MagicMock(returncode=1)), \
              patch.object(commands, 'execute') as execute:
             with patch.object(commands.sys, 'argv', ['limux-commands', 'preview']):
@@ -104,7 +125,7 @@ class FullShortcutLabelsTest(unittest.TestCase):
             self.assertNotIn('...', label)
 
     def test_preview_sends_plain_rows_without_markup(self):
-        with patch.dict(commands.os.environ, {'WAYLAND_DISPLAY': 'wayland-1'}), \
+        with isolated_picker(), \
              patch.object(commands.subprocess, 'run', return_value=MagicMock(returncode=1)) as run, \
              patch.object(commands.sys, 'argv', ['limux-commands', 'preview']):
             commands.main()
@@ -139,13 +160,15 @@ class NeutralCandidateTest(unittest.TestCase):
         self.assertEqual(hashlib.sha256(commands.preview_theme().encode()).hexdigest(),
                          '924c247930d332c008108d5b0a79c5c2f2e407dc697af0295240d2dcdfdc8faf')
         invocations = []
-        with patch.dict(commands.os.environ, {'WAYLAND_DISPLAY': 'wayland-1'}), \
+        with isolated_picker() as marker, \
              patch.object(commands.subprocess, 'run', side_effect=lambda *a, **k: (
                  invocations.append((a, k)) or MagicMock(returncode=1))), \
              patch.object(commands, 'execute') as execute:
+            self.assertFalse(commands.appearance_active())
             for mode in ('preview', 'candidate'):
                 with patch.object(commands.sys, 'argv', ['limux-commands', mode]):
                     commands.main()
+            self.assertFalse(marker.exists())
         self.assertEqual(invocations[0][1]['input'], invocations[1][1]['input'])
         before, candidate = (list(call[0][0]) for call in invocations)
         style_index = before.index('-theme-str') + 1
@@ -153,6 +176,14 @@ class NeutralCandidateTest(unittest.TestCase):
         candidate[style_index] = before[style_index]
         self.assertEqual(before, candidate)
         execute.assert_not_called()
+
+    def test_marker_path_follows_xdg_state_home_with_home_fallback(self):
+        with patch.dict(os.environ, {'XDG_STATE_HOME': '/xdg/state'}):
+            self.assertEqual(commands.appearance_state(), Path('/xdg/state/limux/commands-appearance'))
+        without = {k: v for k, v in os.environ.items() if k != 'XDG_STATE_HOME'}
+        with patch.dict(os.environ, without, clear=True), patch.object(commands, 'HOME', Path('/home/example')):
+            self.assertEqual(commands.appearance_state(),
+                             Path('/home/example/.local/state/limux/commands-appearance'))
 
     @unittest.skipUnless(shutil.which('rofi'), 'Rofi is not installed')
     def test_native_parser_resolves_neutral_selection_and_compact_hierarchy(self):
@@ -175,10 +206,11 @@ class NeutralCandidateTest(unittest.TestCase):
         self.assertIn('8px', blocks['inputbar'])
 
     def test_activated_marker_selects_candidate_only_for_command_k_mode(self):
-        with patch.dict(commands.os.environ, {'WAYLAND_DISPLAY': 'wayland-1'}), \
-             patch.object(commands, 'appearance_active', return_value=True), \
+        with isolated_picker() as marker, \
              patch.object(commands.subprocess, 'run', return_value=MagicMock(returncode=1)) as run, \
              patch.object(commands.sys, 'argv', ['limux-commands', 'preview']):
+            write_candidate_marker(marker)
+            self.assertTrue(commands.appearance_active())
             commands.main()
         args = run.call_args.args[0]
         self.assertEqual(args[args.index('-theme-str') + 1], commands.preview_theme(candidate=True))

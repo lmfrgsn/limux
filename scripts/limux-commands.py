@@ -20,7 +20,6 @@ THEME = HOME / '.config/rofi/charcoal.rasi'
 PROJECT = Path(__file__).resolve().parents[1]
 EXAMPLE = PROJECT / 'examples/commands.toml'
 TOKENS = PROJECT / 'themes/rhapsody.toml'
-APPEARANCE_STATE = HOME / '.local/state/limux/commands-appearance'
 MOD = {'super': '⌘', 'alt': '⌥', 'ctrl': '⌃', 'control': '⌃', 'shift': '⇧', 'none': ''}
 ACTION = {
     'reload_config': ('System', 'Reload MangoWM configuration'),
@@ -263,8 +262,14 @@ def preview_theme(tokens_path=TOKENS, candidate=False):
             f' text-color: {quiet};\n cursor: default;\n}}\n')
 
 
-def appearance_active(path=APPEARANCE_STATE):
+def appearance_state():
+    """Resolve the marker per call so XDG_STATE_HOME can redirect it."""
+    return Path(os.environ.get('XDG_STATE_HOME', HOME / '.local/state')) / 'limux/commands-appearance'
+
+
+def appearance_active(path=None):
     """Read the single activation marker; reject unreviewed appearance drift."""
+    path = path or appearance_state()
     if not path.exists() and not path.is_symlink():
         return False
     if path.is_symlink() or not path.is_file() or path.stat().st_uid != os.getuid():

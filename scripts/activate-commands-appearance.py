@@ -22,7 +22,7 @@ def load(name, filename):
 
 commands = load('limux_commands_appearance', 'limux-commands.py')
 binding = load('limux_commands_binding', 'activate-commands.py')
-STATE = commands.APPEARANCE_STATE
+STATE = commands.appearance_state()
 CANDIDATE_SHA256 = '036c640884eab51b1acf3addc371dac2c18d1177438496c0d5d2dcb2900931ea'
 MARKER = f'neutral-v1 {CANDIDATE_SHA256}\n'.encode()
 
