@@ -111,10 +111,11 @@ def render_css(theme):
 .thunar .path-bar .location-button:hover {{ background: {c["hover"]}; }}
 
 /* Text fields are flat with a metal edge; while typing, the edge and caret are orange. */
-.thunar entry, .thunar treeview entry {{ background: {c["field"]}; color: {c["text"]};
+.thunar entry, .thunar treeview entry, filechooser entry {{ background: {c["field"]}; color: {c["text"]};
   border: 1px solid {c["field_edge"]}; box-shadow: none; border-radius: 4px; min-height: 26px;
   caret-color: {c["caret"]}; }}
-.thunar entry:focus {{ border-color: {c["field_focus"]}; box-shadow: inset 0 0 0 1px {c["field_focus"]}; }}
+.thunar entry:focus, filechooser entry:focus {{ border-color: {c["field_focus"]};
+  box-shadow: inset 0 0 0 1px {c["field_focus"]}; }}
 
 /* Sidebar shares the surface; the current location is a quiet mark. */
 .thunar .sidebar, .thunar .sidebar .view {{ background: {c["surface"]}; }}
@@ -143,6 +144,41 @@ def render_css(theme):
 
 /* Frequent interactions respond instantly. */
 .thunar button, .thunar .view, .thunar menuitem {{ transition: none; }}
+
+/* GTK file choosers (Firefox and portal apps) take the Files treatment. */
+filechooser {{ font-family: "{font}"; font-size: {size}pt; background: {c["surface"]}; }}
+filechooser placessidebar, filechooser placessidebar list {{ background: {c["surface"]}; }}
+filechooser placessidebar {{ border-right: 1px solid {hair}; }}
+filechooser placessidebar row:selected, filechooser placessidebar row:selected:backdrop {{
+  background: {c["location"]}; color: {c["text"]}; }}
+filechooser .path-bar button {{ background: none; border: none; box-shadow: none; border-radius: 4px;
+  color: {c["quiet"]}; font-weight: 400; padding: 0 6px; min-height: 28px; }}
+filechooser .path-bar button:checked {{ color: {c["text"]}; font-weight: 600; background: none; }}
+filechooser .path-bar button:hover {{ background: {c["hover"]}; }}
+filechooser treeview header button {{ background: {c["surface"]}; border: none;
+  border-bottom: 1px solid {hair}; box-shadow: none; color: {c["quiet"]};
+  font-size: {size - 1}pt; font-weight: 500; padding: 6px 12px; }}
+filechooser .view:selected, filechooser .view text:selected {{
+  background: {c["selected"]}; color: {c["on_selected"]}; }}
+filechooser .view:selected:backdrop, filechooser .view text:selected:backdrop {{
+  background: {c["selected_inactive"]}; color: {c["on_selected_inactive"]}; }}
+filechooser treeview.view:hover {{ background: {c["hover"]}; }}
+
+/* Dialogs that carry their actions in a header bar (portal file choosers, Open With):
+   quiet text buttons, the graphite control for the main action. 'dialog' is the node
+   of real dialog windows only. */
+dialog headerbar.titlebar {{ background: {c["surface"]}; border: none; border-bottom: 1px solid {hair};
+  box-shadow: none; }}
+dialog headerbar.titlebar .title {{ color: {c["text"]}; font-weight: 600; }}
+dialog headerbar.titlebar button.text-button {{ background: none; border: none; box-shadow: none;
+  border-radius: 4px; color: {c["text"]}; font-weight: 500; }}
+dialog headerbar.titlebar button.text-button:hover {{ background: {c["hover"]}; }}
+dialog headerbar.titlebar button.text-button.suggested-action,
+dialog headerbar.titlebar button.text-button.suggested-action label {{ background: {c["controls"]};
+  color: {c["on_controls"]}; }}
+dialog headerbar.titlebar button.text-button.suggested-action:disabled,
+dialog headerbar.titlebar button.text-button.suggested-action:disabled label {{
+  background: {c["hover"]}; color: {c["disabled"]}; }}
 ''')
     return '\n'.join(lines)
 
@@ -234,7 +270,8 @@ DIALOG_THEME = 'Limux-Dialog'
 def render_dialog_css(theme):
     """A private GTK 3 theme for system prompts (the polkit password dialog): adw-gtk3
     plus the Limux card. Only processes launched with GTK_THEME=Limux-Dialog load it;
-    the user stylesheet with the named colours still applies on top."""
+    the user stylesheet still applies on top. (The GTK portal ignores GTK_THEME, so
+    its dialogs are styled from the user stylesheet instead.)"""
     t, c = theme['thunar'], palette(theme)
     font, size = interface_font(theme)
     hair = f'rgba({_rgb(c["text"])}, {t["hairline_alpha"]})'
@@ -270,6 +307,7 @@ dialog .dialog-action-area button:disabled {{ color: {c["disabled"]}; background
 
 dialog expander title {{ color: {c["secondary"]}; }}
 dialog expander title arrow {{ color: {c["quiet"]}; }}
+
 '''
 
 

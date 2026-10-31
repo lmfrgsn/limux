@@ -1,0 +1,12 @@
+{
+  "approved": "Limux screen-share picker (Rofi) and floating file choosers, 2026-10-31",
+  "packages": [
+    "xdg-desktop-portal",
+    "xdg-desktop-portal-wlr",
+    "xdg-desktop-portal-gtk"
+  ],
+  "files": {
+    ".config/xdg-desktop-portal-wlr/config": "8fcc3b5c23edbdb903851d21080d892ffab11c4f7d88bde9f5932978f8fed450",
+    ".local/bin/limux-screen-chooser": "62c48be87ed9b343650630e618be0c3a8e84bca03f7609aca299da1200a5b4f5"
+  }
+}

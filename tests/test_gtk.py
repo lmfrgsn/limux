@@ -30,11 +30,11 @@ class GtkAdapterTests(unittest.TestCase):
             for colour in re.findall(rb'#[0-9A-Fa-f]{6}', svg):
                 self.assertIn(colour.decode().upper(), tokens)
 
-    def test_layout_and_font_are_scoped_to_thunar(self):
+    def test_layout_and_font_are_scoped_to_thunar_and_file_choosers(self):
         css = render_css(self.theme)
         rules = [line for line in css.splitlines() if '{' in line and not line.startswith('@')]
         for rule in rules:
-            self.assertTrue(rule.startswith(('.thunar', 'window.thunar')), rule)
+            self.assertTrue(rule.startswith(('.thunar', 'window.thunar', 'filechooser', 'dialog headerbar')), rule)
         self.assertIn('window.thunar { font-family: "Inter"; font-size: 10pt; }', css)
 
     def test_selection_contrast_is_enforced(self):

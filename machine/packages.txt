@@ -56,4 +56,7 @@ tumbler
 wl-clipboard
 wlr-randr
 wlsunset
+xdg-desktop-portal
+xdg-desktop-portal-gtk
+xdg-desktop-portal-wlr
 xdg-utils

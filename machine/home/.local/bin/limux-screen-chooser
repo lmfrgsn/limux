@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+"""Limux screen-share chooser for xdg-desktop-portal-wlr (chooser_type = dmenu).
+The Limux picker lists what can be shared by name; the portal's own line for the
+choice is printed back unchanged. Escape cancels the share."""
+from html import escape
+import subprocess
+import sys
+
+
+def label(line):
+    kind, _, name = line.partition(': ')
+    if not name:
+        kind, name = 'Monitor', line
+    if kind == 'Monitor':
+        return ('Built-in display' if name.startswith('eDP') else f'Display {name}'), name
+    return name, kind
+
+
+lines = [line.rstrip('\n') for line in sys.stdin if line.strip()]
+if not lines:
+    sys.exit(1)
+rows = [f'{escape(title)}\t<span fgalpha="75%">{escape(detail)}</span>' for title, detail in map(label, lines)]
+result = subprocess.run(['rofi', '-dmenu', '-i', '-no-custom', '-markup-rows', '-format', 'i', '-p', '',
+                         '-theme-str', 'entry { placeholder: "Share your screen"; }'],
+                        input='\n'.join(rows) + '\n', text=True, capture_output=True)
+if result.returncode != 0 or not result.stdout.strip():
+    sys.exit(1)
+print(lines[int(result.stdout.strip())])

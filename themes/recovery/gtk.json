@@ -1,9 +1,9 @@
 {
-  "approved": "Limux Files design target, Inter system font and expanded outline file icons, user-approved 2026-10-30; icon-view selection follows Thunar's file highlighting (graphite tile, porcelain label); flat text fields with orange focus edge and caret, user-approved 2026-10-31; outline padlock (dialog-password) for system prompts",
+  "approved": "Limux Files design target, Inter system font and expanded outline file icons, user-approved 2026-10-30; icon-view selection follows Thunar's file highlighting (graphite tile, porcelain label); flat text fields with orange focus edge and caret, user-approved 2026-10-31; outline padlock (dialog-password) for system prompts; GTK file choosers take the Files treatment; header-bar dialogs: quiet buttons, graphite main action",
   "thunar_version": "4.20.10",
   "gtk_package": "adw-gtk-theme",
   "font": "Inter",
-  "css_sha256": "267f32d9099640f24b1c014c24e54b9076cc79b87ac0c4906c87155ab7209e5e",
+  "css_sha256": "2c9e9d3e0d2319f6a6f07a43d0dafe67cd5070f7b6d40defa37387737a206163",
   "icon_theme": "Limux-Rhapsody",
   "icons_sha256": "c970a18083484da88374bddea0db526eb1485cd1f25149682746a3f69a01fe05",
   "gsettings": {
@@ -60,6 +60,8 @@
   ],
   "css_previous_sha256": [
     "00c83fd11a9488c7e2297b38cde184de75e0e70aba176c329e346a3f0e9cbd43",
-    "a1c2866bd0ad6c684b06cfc121635b924aebd1f7d9aef9204ab00b70c33462f8"
+    "a1c2866bd0ad6c684b06cfc121635b924aebd1f7d9aef9204ab00b70c33462f8",
+    "267f32d9099640f24b1c014c24e54b9076cc79b87ac0c4906c87155ab7209e5e",
+    "9cdfbc8804a06ce1c8509ca74898d7776dc0833daf9771b8fa07864f9905e491"
   ]
 }

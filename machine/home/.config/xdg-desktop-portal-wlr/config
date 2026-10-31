@@ -1,0 +1,4 @@
+# Limux screen sharing: the Limux picker chooses what to share.
+[screencast]
+chooser_type = dmenu
+chooser_cmd = limux-screen-chooser
