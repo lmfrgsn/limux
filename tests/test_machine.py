@@ -72,7 +72,8 @@ class MachineTests(unittest.TestCase):
         private = {'.config/limux/commands.toml', '.config/limux/location'}
         generated = {'.config/gtk-3.0/gtk.css', '.config/foot/rhapsody.ini', '.config/mako/rhapsody',
                      '.config/rofi/charcoal.rasi', '.config/Thunar/accels.scm',
-                     '.config/mangobar/style.css', '.config/mangobar/config.jsonc'}
+                     '.config/mangobar/style.css', '.config/mangobar/config.jsonc',
+                     '.config/hypr/limux-lock.conf'}
         self.assertFalse(tracked & (private | generated))
         self.assertNotIn('/etc/fstab', m.SYSTEM_FILES)
         stored = {p.relative_to(ROOT/'machine/home').as_posix() for p in (ROOT/'machine/home').rglob('*') if p.is_file()}

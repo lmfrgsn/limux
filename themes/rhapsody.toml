@@ -183,6 +183,40 @@ scratchpad_color = "dark_terminal"
 global_color = "accent"
 overlay_color = "text_secondary"
 
+[lock]
+# Limux lock screen (hyprlock), approved target 2026-10-31: the desktop canvas,
+# a light clock, the date and one porcelain field with an orange edge (you are
+# always typing there). Sizes in logical pixels at the display's own scale.
+ground = "canvas"
+time = "text"
+# On the canvas ground only graphite reaches 4.5:1 (secondary grey is 4.12), so
+# the date and small labels use graphite and are set apart by size and weight.
+date = "text"
+labels = "text"
+placeholder = "text_quiet"
+field = "surface"
+field_edge = "workspace_orange"
+checking = "metal"
+fail = "signal_red"
+dots = "text"
+time_size = 96
+time_weight = 300
+date_size = 17
+note_size = 13
+field_width = 280
+field_height = 40
+field_edge_width = 2
+field_radius = 4
+dot_size = 8
+dot_gap = 9
+# Vertical rhythm: the stack's centre sits this far above the display centre
+# (40% from the top on the 1200px-tall display).
+stack_raise = 120
+date_gap = 14
+field_gap = 56
+note_gap = 12
+user_inset = 40
+
 [thunar]
 # Limux Files on Thunar 4.20 over the adw-gtk3 GTK 3 theme. Approved design
 # target 2026-10-30: one porcelain surface, type-led path, quiet labels,

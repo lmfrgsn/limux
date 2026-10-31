@@ -1,0 +1,20 @@
+#!/bin/sh
+# Limux idle steps for hypridle: dim and restore the display backlight, and
+# suspend only when running on battery.
+set -eu
+device=gmux_backlight
+case "${1:-}" in
+    dim)
+        brightnessctl -q -d "$device" -s >/dev/null
+        now=$(brightnessctl -d "$device" get)
+        brightnessctl -q -d "$device" set $((now / 3 + 1)) ;;
+    undim)
+        brightnessctl -q -d "$device" -r >/dev/null ;;
+    suspend-on-battery)
+        if [ "$(cat /sys/class/power_supply/ADP1/online)" = 0 ]; then
+            systemctl suspend
+        fi ;;
+    *)
+        echo 'usage: limux-idle dim|undim|suspend-on-battery' >&2
+        exit 2 ;;
+esac

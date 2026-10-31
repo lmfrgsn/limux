@@ -19,6 +19,8 @@ github-cli
 grim
 grub
 gvfs
+hypridle
+hyprlock
 inter-font
 less
 libnotify
