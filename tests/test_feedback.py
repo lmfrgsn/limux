@@ -73,30 +73,63 @@ class LevelCardTests(unittest.TestCase):
 
 
 class BatteryWarningTests(unittest.TestCase):
-    @unittest.skipUnless(shutil.which('dbus-run-session') and shutil.which('mako'), 'needs mako')
-    def test_thresholds_once_each_and_clear_on_charging(self):
+    """Runs the real watcher against a stand-in battery with stand-in notify-send and
+    makoctl that only log, so the test never starts Mako or reaches the screen."""
+
+    def run_watcher(self, steps, charge=True):
         with tempfile.TemporaryDirectory() as folder:
             folder = Path(folder)
-            (folder/'bat').mkdir()
-            (folder/'rt').mkdir()
-            (folder/'config').write_text('max-history=0\n')
-            script = folder/'run.sh'
-            script.write_text(f'''
-mako -c {folder}/config & m=$!; sleep 0.8
-set_bat() {{ echo $1 > {folder}/bat/capacity; echo $2 > {folder}/bat/status; sleep 1.2; }}
-shown() {{ makoctl list | grep -o 'Battery at [0-9]*%' | paste -sd, ; }}
-set_bat 12 Discharging
-XDG_RUNTIME_DIR={folder}/rt LIMUX_BATTERY={folder}/bat LIMUX_BATTERY_INTERVAL=0.3 {BIN}/limux-battery & w=$!
-sleep 0.8; echo "a=$(shown)"
-set_bat 9 Discharging; echo "b=$(shown)"
-set_bat 8 Discharging; echo "c=$(shown)"
-set_bat 4 Discharging; echo "d=$(shown)"
-set_bat 4 Charging; echo "e=$(shown)"
-kill $w $m
-''')
-            out = subprocess.run(['dbus-run-session', '--', 'bash', str(script)], capture_output=True, text=True, timeout=30).stdout
-            seen = dict(re.findall(r'^(\w)=(.*)$', out, re.M))
-            self.assertEqual(seen, {'a': '', 'b': 'Battery at 9%', 'c': 'Battery at 9%', 'd': 'Battery at 4%', 'e': ''})
+            bat, stubs, log = folder/'bat', folder/'bin', folder/'log'
+            bat.mkdir(); stubs.mkdir(); (folder/'rt').mkdir()
+            (stubs/'notify-send').write_text('#!/bin/sh\necho "notify $*" >> "$STUB_LOG"\necho 7\n')
+            (stubs/'makoctl').write_text('#!/bin/sh\necho "makoctl $*" >> "$STUB_LOG"\n')
+            for stub in stubs.iterdir():
+                stub.chmod(0o755)
+
+            def set_battery(percent, status):
+                if charge:   # worn battery: full is 75% of design, as on this MacBook
+                    (bat/'charge_full').write_text('7500\n')
+                    (bat/'charge_now').write_text(f'{percent * 75}\n')
+                    (bat/'capacity').write_text(f'{round(percent * 0.75)}\n')
+                else:
+                    (bat/'capacity').write_text(f'{percent}\n')
+                (bat/'status').write_text(status + '\n')
+
+            env = {**os.environ, 'PATH': f'{stubs}:{os.environ["PATH"]}', 'STUB_LOG': str(log),
+                   'XDG_RUNTIME_DIR': str(folder/'rt'), 'LIMUX_BATTERY': str(bat),
+                   'LIMUX_BATTERY_INTERVAL': '0.1', 'WAYLAND_DISPLAY': '', 'DBUS_SESSION_BUS_ADDRESS': 'disabled:'}
+            set_battery(*steps[0])
+            watcher = subprocess.Popen([str(BIN/'limux-battery')], env=env)
+            try:
+                seen = []
+                for percent, status in steps:
+                    set_battery(percent, status)
+                    __import__('time').sleep(0.5)
+                    seen.append(log.read_text().splitlines() if log.exists() else [])
+            finally:
+                watcher.terminate()
+                watcher.wait(5)
+            return seen
+
+    def test_thresholds_once_each_and_clear_on_charging(self):
+        seen = self.run_watcher([(12, 'Discharging'), (9, 'Discharging'), (8, 'Discharging'),
+                                 (4, 'Discharging'), (4, 'Charging')])
+        notes = [line for line in seen[-1] if line.startswith('notify')]
+        self.assertEqual(seen[0], [])
+        self.assertEqual(len(notes), 2)
+        self.assertIn('Battery at 9%', notes[0])
+        self.assertIn('Battery at 4%', notes[1])
+        self.assertIn('--replace-id=7', notes[1])          # the 5% card replaces the 10% one
+        self.assertIn('makoctl dismiss -n 7', seen[-1])
+
+    def test_uses_the_bars_percentage_not_design_capacity(self):
+        # At a true 12% of what it holds now, design capacity reads 9%: no warning yet.
+        seen = self.run_watcher([(12, 'Discharging')])
+        self.assertEqual(seen[-1], [])
+
+    def test_falls_back_to_capacity(self):
+        seen = self.run_watcher([(9, 'Discharging')], charge=False)
+        self.assertIn('Battery at 9%', seen[-1][0])
 
 
 class FirewallTests(unittest.TestCase):
@@ -117,6 +150,26 @@ class FirewallTests(unittest.TestCase):
             if 'Operation not permitted' in exc.stderr:
                 self.skipTest('user namespaces unavailable')
             raise
+
+
+class LlmnrTests(unittest.TestCase):
+    def test_dropin_turns_off_only_llmnr(self):
+        llmnr = load('llmnr', ROOT/'scripts/llmnr.py')
+        settings = [line for line in llmnr.CONTENT.splitlines() if '=' in line and not line.startswith('#')]
+        self.assertEqual(settings, ['LLMNR=no'])
+        self.assertIn('[Resolve]', llmnr.CONTENT)
+
+    def test_edited_dropin_is_refused(self):
+        llmnr = load('llmnr', ROOT/'scripts/llmnr.py')
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder)/'limux-no-llmnr.conf'
+            with patch.object(llmnr, 'DROPIN', path):
+                self.assertEqual(llmnr.state(), 'original')
+                path.write_text(llmnr.CONTENT)
+                self.assertEqual(llmnr.state(), 'active')
+                path.write_text(llmnr.CONTENT + 'MulticastDNS=no\n')
+                with self.assertRaises(RuntimeError):
+                    llmnr.state()
 
 
 class UpdateTests(unittest.TestCase):

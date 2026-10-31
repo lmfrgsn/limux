@@ -25,6 +25,7 @@ checks=(
     'Image viewer|activate-imv.py verify'
     'Activity Monitor|activate-btop.py verify'
     'Firewall|firewall.py verify'
+    'No LLMNR lookups|llmnr.py verify'
 )
 
 finish() {

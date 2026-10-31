@@ -9,11 +9,25 @@ mkdir -p "$runtime"
 exec 9>"$runtime/battery.lock"
 flock -n 9 || exit 0   # one watcher per session
 
+# The bar's percentage: remaining over what the battery holds now (energy, else
+# charge), rounded half up. The kernel's capacity measures against the original
+# design size, which this worn battery no longer reaches, so it reads far lower.
+percent() {
+    local unit now full
+    for unit in energy charge; do
+        if [[ -r $battery/${unit}_now && -r $battery/${unit}_full ]]; then
+            now=$(<"$battery/${unit}_now"); full=$(<"$battery/${unit}_full")
+            if (( full > 0 )); then echo $(( (200 * now / full + 1) / 2 )); return; fi
+        fi
+    done
+    cat "$battery/capacity"
+}
+
 warned=100   # lowest threshold already announced during this discharge
 id=0
 while sleep "${LIMUX_BATTERY_INTERVAL:-60}" 9>&-; do   # sleep must not hold the lock
-    [[ -r $battery/capacity ]] || continue
-    capacity=$(<"$battery/capacity")
+    [[ -r $battery/status ]] || continue
+    capacity=$(percent) || continue
     status=$(<"$battery/status")
     if [[ $status != Discharging ]]; then
         if (( id > 0 )); then makoctl dismiss -n "$id" >/dev/null 2>&1 || true; fi
