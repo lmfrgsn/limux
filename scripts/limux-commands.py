@@ -80,6 +80,12 @@ def shortcuts(path=MANGO):
         if len(fields) < 3:
             continue
         modifiers, name, action = fields[:3]
+        # Enter runs a keyboard shortcut exactly as its key would; Quit stays reference-only.
+        run = None
+        if kind == 'bind' and action == 'spawn':
+            run = ('spawn', ','.join(fields[3:]).strip())
+        elif kind == 'bind' and action in ACTION and action != 'quit':
+            run = ('dispatch', ','.join(fields[2:]))
         if action == 'spawn':
             command = ','.join(fields[3:]).strip()
             if command in SPAWN:
@@ -113,7 +119,7 @@ def shortcuts(path=MANGO):
         elif kind == 'axisbind':
             label += ' scroll'
             category = 'Mouse'
-        entries.append((category, label, description, None))
+        entries.append((category, label, description, run))
     return entries
 
 
@@ -206,8 +212,10 @@ def display_rows(groups, tokens_path=TOKENS):
         labels.append(f'{escape(category.upper())}\0nonselectable\x1ftrue\x1factive\x1ftrue')
         actions.append(None)
         for _, shortcut, description, action in items:
-            primary, detail = ((description, shortcut) if action is None
-                               else (shortcut, VERBS.get(description, description)))
+            # Shortcut rows name the action and show its key; content rows (snippets,
+            # quicklinks, utilities) name the item and show a verb.
+            primary, detail = ((shortcut, VERBS[description]) if description in VERBS
+                               else (description, shortcut))
             search_terms = category + (' email address phone signature' if shortcut == 'Set up snippets' else '')
             labels.append(f'{escape(primary)}\t{secondary(r, escape(detail))}\0meta\x1f{search_terms}')
             actions.append(action)
@@ -223,6 +231,12 @@ def execute(action):
         return
     if kind == 'run':
         subprocess.Popen(value, start_new_session=True)
+        return
+    if kind == 'spawn':
+        subprocess.Popen(['sh', '-c', value], start_new_session=True)
+        return
+    if kind == 'dispatch':
+        subprocess.run(['mmsg', 'dispatch', value], check=True, capture_output=True, timeout=5)
         return
     if kind == 'uuid':
         value = str(uuid.uuid4())

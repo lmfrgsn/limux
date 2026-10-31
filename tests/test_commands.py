@@ -32,7 +32,7 @@ def visible(label):
 class CommandsTest(unittest.TestCase):
     def test_actual_bindings_and_gestures(self):
         rows = commands.shortcuts()
-        self.assertIn(('Apps', '⌘Space', 'Open application launcher', None), rows)
+        self.assertIn(('Apps', '⌘Space', 'Open application launcher', ('spawn', 'rofi -show drun')), rows)
         self.assertTrue(any(r[1] == '4-finger swipe up' for r in rows))
         self.assertFalse(any(r[1] == '⌘K' for r in rows))
         self.assertTrue(any(r[1] == '⌃1' and 'workspace 1' in r[2] for r in rows))
@@ -54,7 +54,23 @@ class CommandsTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / 'mango.conf'
             path.write_text('bind=SUPER,k,spawn,unknown-app\nbind=SUPER,space,spawn,rofi -show drun\n# bind=SUPER,x,quit\n')
-            self.assertEqual(commands.shortcuts(path), [('Apps', '⌘Space', 'Open application launcher', None)])
+            self.assertEqual(commands.shortcuts(path), [('Apps', '⌘Space', 'Open application launcher',
+                                                         ('spawn', 'rofi -show drun'))])
+
+    def test_shortcut_rows_run_their_binding(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'mango.conf'
+            path.write_text('bind=CTRL,2,view,2,0\nbind=ALT,q,killclient,\nbind=SUPER,m,quit\n'
+                            'mousebind=SUPER,btn_left,moveresize,curmove\ngesturebind=none,up,4,enteroverview\n')
+            rows = {r[2]: r[3] for r in commands.shortcuts(path)}
+        self.assertEqual(rows['View workspace 2'], ('dispatch', 'view,2,0'))
+        self.assertEqual(rows['Close focused window'], ('dispatch', 'killclient,'))
+        self.assertIsNone(rows['Quit MangoWM'])            # never from a stray Enter
+        self.assertIsNone(rows['Move or resize window'])   # mouse: reference only
+        self.assertIsNone(rows['Open overview'])           # gesture: reference only
+        with patch.object(commands.subprocess, 'run') as run:
+            commands.execute(('dispatch', 'view,2,0'))
+            run.assert_called_once_with(['mmsg', 'dispatch', 'view,2,0'], check=True, capture_output=True, timeout=5)
 
 if __name__ == '__main__':
     unittest.main()
