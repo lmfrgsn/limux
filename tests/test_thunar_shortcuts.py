@@ -53,6 +53,13 @@ class ThunarShortcutTests(unittest.TestCase):
         self.assertEqual(t.state(reordered), 'active')
         self.assertEqual(t.state(DEFAULTS + '(gtk_accel_path "<Actions>/ThunarWindow/reload" "<Super>y")\n'), 'unknown')
 
+    def test_thunar_modifier_order_still_counts_as_active(self):
+        saved = t.render(DEFAULTS).replace('"<Super><Shift>z"', '"<Shift><Super>z"')
+        self.assertIn('"<Shift><Super>z"', saved)
+        self.assertEqual(t.state(saved), 'active')
+        self.assertEqual(t.state(saved.replace('"<Shift><Super>z"', '"<Shift><Super>y"')), 'unknown')
+        self.assertEqual(t.state(saved.replace('"<Shift><Super>z"', '"<Super>z"')), 'unknown')
+
     def test_activate_and_rollback_in_isolated_config(self):
         with tempfile.TemporaryDirectory() as folder:
             live = Path(folder)/'Thunar/accels.scm'

@@ -66,9 +66,15 @@ def render(original):
     return '\n'.join(out) + '\n'
 
 
+def same_keys(accels):
+    """Thunar may save modifiers in another order (<Shift><Super>z for <Super><Shift>z)."""
+    return {path: (frozenset(re.findall(r'<([^>]+)>', accel)), accel.rsplit('>', 1)[-1])
+            for path, accel in accels.items()}
+
+
 def state(text):
     current = parse(text)
-    return 'active' if current == SHORTCUTS else 'original' if not current else 'unknown'
+    return 'active' if same_keys(current) == same_keys(SHORTCUTS) else 'original' if not current else 'unknown'
 
 
 def thunar_running():
