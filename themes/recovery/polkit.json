@@ -1,0 +1,8 @@
+{
+  "approved": "Limux prompt theme for the polkit dialog (flat field with orange edge, graphite default action, outline padlock), user-requested 2026-10-31",
+  "package": "polkit-gnome",
+  "files": {
+    "gtk-3.0/gtk.css": "348a1fb395cdb5ed0a4c317e3ffb1090b287066043293f09625de36e24bc6314",
+    "index.theme": "a6d6b8dd6cff763f342fd9149ffe70639327e669ee48f3ea9bde14aab5a913b4"
+  }
+}
