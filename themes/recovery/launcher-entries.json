@@ -1,8 +1,9 @@
 {
-  "approved": "Limux launcher entries, user-approved 2026-10-30",
+  "approved": "Limux launcher entries, user-approved 2026-10-30; Activity Monitor added 2026-10-31",
   "sources": {
     "thunar.desktop": "9ba66c6509a531f6a85d607cfb7fa9a569109c3ed34748258c076673ca31555b",
-    "foot.desktop": "6e6cc17d67eee442cc59290a1b72ef904a71084a319b349ea520ef81a3cee3d3"
+    "foot.desktop": "6e6cc17d67eee442cc59290a1b72ef904a71084a319b349ea520ef81a3cee3d3",
+    "btop.desktop": "60277c5bee574d48e46b0991360c69876dbf3283a485412f89f8d00af0fa157e"
   },
   "files": {
     "footclient.desktop": "8ef555b979e937fa1f56c21dac2fbc470e0deacdc1bfc000d1a01db94adf28ac",
@@ -15,6 +16,7 @@
     "thunar-settings.desktop": "03348f4b5430d3d223212dec351e2470358b5f280c12351c20b7e99fe57bb986",
     "xfce4-about.desktop": "daedd6a43c9b1f60f94bfc83b1d091944ceef7f75025c9c4d73cca779162eee4",
     "thunar.desktop": "1ac6804a428f7eb0c97d477a1715b34191fb5a519682ec13b10a27e187f4321a",
-    "foot.desktop": "e24e5792d9c9cea19fcda6eb5f4d85a29f64d7aab8696a2f583ee376b29cf02b"
+    "foot.desktop": "e24e5792d9c9cea19fcda6eb5f4d85a29f64d7aab8696a2f583ee376b29cf02b",
+    "btop.desktop": "c2bcc115250b56d82cb0f95b582c10ec5820a0db058585c0b10f0298c5fc424a"
   }
 }

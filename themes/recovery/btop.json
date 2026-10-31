@@ -1,0 +1,16 @@
+{
+  "approved": "Limux btop appearance, user-approved 2026-10-31",
+  "theme": "dd7bc7dd94108457a4066d469fc800ffa81a2a7ccb74f1ff6beaa7ddf380805d",
+  "settings": {
+    "color_theme": "\"limux-rhapsody\"",
+    "theme_background": "false",
+    "truecolor": "true",
+    "rounded_corners": "false"
+  },
+  "defaults": {
+    "color_theme": "\"Default\"",
+    "theme_background": "true",
+    "truecolor": "true",
+    "rounded_corners": "true"
+  }
+}

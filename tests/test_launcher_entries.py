@@ -17,6 +17,8 @@ def system_fixture(folder):
         '[Desktop Entry]\nName[en_GB]=Thunar File Manager\nName=Thunar File Manager\nGenericName=File Manager\n'
         'Exec=thunar %F\nActions=open-home;\n\n[Desktop Action open-home]\nName=Home\nExec=thunar %U\n')
     (folder/'foot.desktop').write_text('[Desktop Entry]\nName=Foot\nGenericName=Terminal\nExec=foot\n')
+    (folder/'btop.desktop').write_text('[Desktop Entry]\nName=btop++\nGenericName=System Monitor\n'
+                                       'GenericName[it]=Monitor di sistema\nExec=btop\nTerminal=true\n')
     return folder
 
 
@@ -41,6 +43,10 @@ class LauncherEntriesTests(unittest.TestCase):
         self.assertIn('Exec=thunar %F\n', thunar)
         self.assertIn('[Desktop Action open-home]\nName=Home\n', thunar)
         self.assertIn('Name=Terminal\n', self.files['foot.desktop'].decode())
+        monitor = self.files['btop.desktop'].decode()
+        self.assertIn('Name=Activity Monitor\nGenericName=btop\n', monitor)
+        self.assertNotIn('Monitor di sistema', monitor)
+        self.assertIn('Terminal=true\n', monitor)
 
     def test_hidden_entries_use_the_desktop_entry_hidden_key(self):
         for app in e.HIDE:

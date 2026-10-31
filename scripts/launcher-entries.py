@@ -16,7 +16,7 @@ SYSTEM = Path('/usr/share/applications')
 HIDE = ('footclient', 'foot-server', 'qv4l2', 'qvidcap', 'rofi', 'rofi-theme-selector',
         'thunar-bulk-rename', 'thunar-settings', 'xfce4-about')
 # Name by role, matching the Command menu; the app name stays as GenericName for search.
-RENAME = {'thunar': ('Files', 'Thunar'), 'foot': ('Terminal', 'Foot')}
+RENAME = {'thunar': ('Files', 'Thunar'), 'foot': ('Terminal', 'Foot'), 'btop': ('Activity Monitor', 'btop')}
 
 
 def digest(data):
@@ -125,7 +125,7 @@ def main():
     files = candidate(manifest)
     if args.action == 'activate':
         activate(directory, manifest, files)
-        print('Activated Limux launcher entries: Firefox, Files and Terminal.')
+        print('Activated Limux launcher entries: Firefox, Files, Terminal and Activity Monitor.')
         return
     state = classify(directory, manifest)
     summary = ('active' if set(state.values()) == {'active'} else 'not applied' if set(state.values()) == {'original'}

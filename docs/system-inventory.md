@@ -6,7 +6,7 @@ Read-only snapshot: 30 October 2026, updated after the user's Waybar and library
 
 | Question | Finding |
 | --- | --- |
-| Installed packages | 550 pacman packages: 65 explicitly installed, one foreign package (`apple-bcm-firmware`) and no orphans (`upower` is now marked explicitly installed). The user removed `cairomm`, `glibmm`, `fmt` and `libsigc++`, then installed `adw-gtk-theme`, `xdg-utils`, `gvfs` and `tumbler`. The foreign package is hardware firmware and must remain. |
+| Installed packages | 551 pacman packages: 66 explicitly installed, one foreign package (`apple-bcm-firmware`) and no orphans (`upower` is now marked explicitly installed). The user removed `cairomm`, `glibmm`, `fmt` and `libsigc++`, then installed `adw-gtk-theme`, `xdg-utils`, `gvfs` and `tumbler`. The foreign package is hardware firmware and must remain. |
 | Desktop shell | MangoWM 0.18.3, configured for the internal display at 1.5 scale. One `exec_once` path starts `limux-bar`; others start Mako through a wrapper, start `wlsunset` night light and initialize keyboard backlight. |
 | Bar | The **activated** Quiet Workspace Strip CSS/config hashes match the approved candidate. `limux-bar` points to a versioned custom Mangobar 0.2.2; the previous user-installed binary and exact rollback bytes remain available. The user reports one managed process; the sandbox cannot independently inspect it. |
 | Rhapsody | MangoWM, Mangobar, the Limux picker (launcher and Command menu), Foot, Thunar and Mako use approved Rhapsody outputs. Firefox follows the GTK theme. |
@@ -24,6 +24,7 @@ Each filled a gap that affected security or everyday use; each has a guarded act
 | `xdg-desktop-portal`, `-wlr`, `-gtk` | Screen sharing in Firefox did not work; file choosers now float and take the Files design. |
 | `cliphist` | No clipboard history; Command+Shift+V, memory only. |
 | `imv` | Images opened in Firefox; now a dedicated viewer on the graphite ground. |
+| `btop` | No way to see what was using CPU, memory, battery or heat. Activity Monitor in the launcher and Command menu, in the terminal's graphite. |
 
 ## Considered and deferred
 
@@ -36,18 +37,18 @@ Reviewed with the user on 31 October 2026 and left out to avoid unused software.
 | `wiremix` (volume mixer) | A second audio output appears (headphones, HDMI, Bluetooth). | One output, the built-in speakers; volume keys work. |
 | `satty` (screenshot annotation) | Screenshots are often marked up before sharing. | Command+Shift+3 and 4 capture as before. |
 | `zathura` (PDF viewer) | Keyboard-driven PDF reading is wanted. | Firefox's PDF viewer; zathura now brings GTK 4. |
-| `btop`, `fzf`, `bat`, `eza`, `zoxide` | Personal preference. | `ripgrep` is already installed. |
+| `fzf`, `bat`, `eza`, `zoxide` | Personal preference. | `ripgrep` is already installed. |
 
 ## Installed software
 
-The 65 explicitly installed packages are grouped here; the other 485 packages are libraries and transitive dependencies. Package installation does not prove a daemon is running or an application is used.
+The 66 explicitly installed packages are grouped here; the other 485 packages are libraries and transitive dependencies. Package installation does not prove a daemon is running or an application is used.
 
 | Area | Explicit packages and purpose | Current Limux use |
 | --- | --- | --- |
 | Base, boot, storage | `base`, `grub`, `efibootmgr`, `btrfs-progs`, `lvm2`, `sudo`, `linux-firmware`, `mesa` | Keep for boot, storage and graphics; do not infer redundancy from this inventory. |
 | T2 Mac hardware | `linux-t2`, `linux-t2-headers`, `apple-bcm-firmware`, `apple-t2-audio-config`, `arch-mact2-mirrorlist`, `arch-mact2-rankmirrors`, `tiny-dfr`, `t2fanrd`, `alsa-utils`, `brightnessctl`, `lilv-tools`, `lsp-plugins-lv2`, `rtkit`, `playerctl` | Keep. Kernel, Wi-Fi firmware, Touch Bar, fan, DSP/audio, media keys and backlight paths are working hardware dependencies. `apple-bcm-firmware` is both foreign and unrequired in pacman metadata; that is **not** evidence it is unused. |
 | Network, Bluetooth, audio, power | `networkmanager`, `bluez`, `bluez-tools`, `bluez-utils`, `pipewire-alsa`, `pipewire-pulse`, `upower` | NetworkManager, Bluetooth stack and PipeWire audio integration. WirePlumber and PipeWire core are installed as dependencies. `upower` reports battery state over D-Bus to Firefox and WirePlumber; it starts on demand and has no enabled service. |
-| Shell and applications | `mangowm`, `foot`, `rofi`, `thunar`, `mako`, `firefox`, `imv`, `hyprlock`, `hypridle`, `polkit-gnome`, `libnotify`, `inter-font`, `ttf-dejavu`, `adw-gtk-theme`, `xdg-utils`, `gvfs`, `tumbler` | MangoWM shell; Foot terminal; Rofi launcher and Commands picker; Thunar files; Mako notifications; Firefox browser; imv images; hyprlock and hypridle lock the session; polkit-gnome answers admin prompts. Inter is the interface font; Foot uses Adwaita Mono. adw-gtk3 is the GTK base for Limux Files; `xdg-utils` opens quicklinks; `gvfs` gives Thunar Trash and removable-drive mounting (pulling in `udisks2`, `openssh` and storage libraries; no new enabled services, only on-demand D-Bus activation); `tumbler` makes thumbnails on demand. |
+| Shell and applications | `mangowm`, `foot`, `rofi`, `thunar`, `mako`, `firefox`, `imv`, `btop`, `hyprlock`, `hypridle`, `polkit-gnome`, `libnotify`, `inter-font`, `ttf-dejavu`, `adw-gtk-theme`, `xdg-utils`, `gvfs`, `tumbler` | MangoWM shell; Foot terminal; Rofi launcher and Commands picker; Thunar files; Mako notifications; Firefox browser; imv images; btop as Activity Monitor; hyprlock and hypridle lock the session; polkit-gnome answers admin prompts. Inter is the interface font; Foot uses Adwaita Mono. adw-gtk3 is the GTK base for Limux Files; `xdg-utils` opens quicklinks; `gvfs` gives Thunar Trash and removable-drive mounting (pulling in `udisks2`, `openssh` and storage libraries; no new enabled services, only on-demand D-Bus activation); `tumbler` makes thumbnails on demand. |
 | Wayland utilities | `grim`, `slurp`, `wl-clipboard`, `cliphist`, `wlr-randr`, `wlsunset`, `xdg-desktop-portal`, `xdg-desktop-portal-wlr`, `xdg-desktop-portal-gtk` | Screenshot and clipboard tools are used; `cliphist` keeps clipboard history in memory. The portals start on demand for screen sharing and file choosers. `wlr-randr` is installed for display control, while the observed 1.5 scale is in MangoWM config. `wlsunset` starts once per MangoWM session for night light. Waybar has been removed. |
 | Development and maintenance | `base-devel`, `git`, `github-cli`, `meson`, `ninja`, `rust`, `tllist`, `nano`, `less`, `libxslt` | Build and maintenance tools. Meson/Ninja and `tllist` support rebuilding custom Mangobar. Git supports Limux recovery. `github-cli` was installed by the user; no Limux script uses it. Do not remove build tools while a patched bar is maintained. |
 

@@ -297,3 +297,28 @@ terminal_bright_yellow = ["signal_yellow", "surface", 0.20]
 terminal_bright_blue = ["terminal_blue", "surface", 0.20]
 terminal_bright_magenta = ["terminal_magenta", "surface", 0.20]
 terminal_bright_cyan = ["terminal_cyan", "surface", 0.20]
+
+[btop]
+# Limux system monitor (btop 1.4), approved 2026-10-31: one graphite
+# surface with hairline boxes (square corners), quiet metal titles, brighter key
+# letters, chrome values, the orange selected row with dark ink like the Foot
+# cursor. Load graphs rise from metal through chrome to terminal red; graphs where
+# high is good or neutral (free memory, network) never turn red.
+background = "dark_terminal"
+text = "chrome"
+title = "metal"
+keys = "chrome"
+quiet = "metal"
+selected = "workspace_orange"
+on_selected = "signal_ink"
+hairline = "btop_hairline"
+inactive = "btop_inactive"
+load = ["metal", "chrome", "terminal_red"]
+calm = ["btop_calm", "metal", "chrome"]
+rounded_corners = false
+
+[btop.blends]
+# sRGB channel mixes, like [foot.blends]: source, destination, destination proportion.
+btop_hairline = ["dark_terminal", "metal", 0.30]
+btop_inactive = ["dark_terminal", "metal", 0.50]
+btop_calm = ["dark_terminal", "metal", 0.65]
