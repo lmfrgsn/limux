@@ -208,7 +208,10 @@ field_height = 40
 field_edge_width = 2
 field_radius = 4
 dot_size = 8
-dot_gap = 9
+dot_gap = 7
+# Every lock transition (fade in, fade out on unlock, field colour changes) in
+# tenths of a second.
+motion = 2
 # Vertical rhythm: the stack's centre sits this far above the display centre
 # (40% from the top on the 1200px-tall display).
 stack_raise = 120

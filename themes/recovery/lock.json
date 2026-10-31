@@ -1,13 +1,18 @@
 {
-  "approved": "Limux lock screen design target, user-approved 2026-10-31; idle: dim 4m30s, lock 5m, display off 5m30s, suspend 15m on battery only",
+  "approved": "Limux lock screen design target, user-approved 2026-10-31; idle: dim 4m30s, lock 5m, display off 5m30s, suspend 15m on battery only; spaced dots and 0.2 s transitions",
   "packages": [
     "hyprlock",
     "hypridle"
   ],
   "files": {
-    ".config/hypr/limux-lock.conf": "a0f4a6d6aec4cc0533b72ff6a7125c01a40c204148cab50204e87d139b7178f7",
+    ".config/hypr/limux-lock.conf": "7e45ed3647f2e473c22695dfda168e26eb70c12eeb631935200dd948e886af51",
     ".config/hypr/hyprlock.conf": "175e3693d0389bf982c4369e38b2a0358b26b4288c80f561413abf1639ea226b",
     ".config/hypr/hypridle.conf": "8bf83a7607a13531da42c748353efee72cd5661afea3a832f07b3b8b1aba65f9",
     ".local/bin/limux-idle": "b4e1b8ce587793858c3b8d3da7ce522119b11c61049d67c1a509f6e4d816fea2"
+  },
+  "previous": {
+    ".config/hypr/limux-lock.conf": [
+      "a0f4a6d6aec4cc0533b72ff6a7125c01a40c204148cab50204e87d139b7178f7"
+    ]
   }
 }

@@ -23,6 +23,8 @@ class LockTests(unittest.TestCase):
         self.assertIn('fail_color = rgb(AD4038)', conf)
         self.assertIn('capslock_color = -1', conf)          # caps lock is a label, not an edge colour
         self.assertIn('size = 280, 40', conf)
+        self.assertIn('dots_spacing = 0.88', conf)
+        self.assertIn('animation = fadeOut, 1, 2, limux', conf)
         # hyprlang treats a lone '#' as a comment; colours inside markup must be '##'.
         for line in conf.splitlines():
             if not line.lstrip().startswith('#'):

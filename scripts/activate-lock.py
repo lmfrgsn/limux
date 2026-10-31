@@ -90,7 +90,7 @@ def mango_lines(text):
 
 
 def owned_state(manifest):
-    """'original', 'active' or 'unknown' for each owned item."""
+    """'original', 'active', 'previous' (an earlier approved version) or 'unknown' for each owned item."""
     state = {}
     for rel, pin in manifest['files'].items():
         path = HOME/rel
@@ -99,7 +99,9 @@ def owned_state(manifest):
         elif not path.exists():
             state[rel] = 'original'
         else:
-            state[rel] = 'active' if digest(path.read_bytes()) == pin else 'unknown'
+            found = digest(path.read_bytes())
+            state[rel] = ('active' if found == pin else
+                          'previous' if found in manifest.get('previous', {}).get(rel, []) else 'unknown')
     binding, autostart = mango_lines(CONFIG.read_text())
     state['binding'] = 'active' if binding else 'original'
     state['autostart'] = 'active' if autostart else 'original'
@@ -217,15 +219,30 @@ def activate(manifest):
     if set(state.values()) == {'active'} and len(hypridle_pids()) == 1:
         print('Lock screen already active.')
         return
-    if hypridle_pids():
+    upgrade = state['binding'] == 'active' and state['autostart'] == 'active'
+    if hypridle_pids() and not upgrade:
         raise RuntimeError('hypridle is already running outside Limux; stop it first')
+    if upgrade:
+        # Only appearance or helper files change; the running hypridle keeps going
+        # and hyprlock reads its config at each lock.
+        for path, data in files.items():
+            if state[str(path.relative_to(HOME))] == 'previous':
+                atomic_write(path, data, 0o755 if path.name == 'limux-idle' else 0o644)
+        if set(owned_state(manifest).values()) != {'active'}:
+            raise RuntimeError('upgrade did not verify')
+        print('Lock screen updated in place.')
+        return
     written = []
     before = CONFIG.read_text()
     try:
+        replaced = {}
         for path, data in files.items():
             if not path.exists():
                 atomic_write(path, data, 0o755 if path.name == 'limux-idle' else 0o644)
                 written.append(path)
+            elif state[str(path.relative_to(HOME))] == 'previous':
+                replaced[path] = path.read_bytes()
+                atomic_write(path, data, 0o755 if path.name == 'limux-idle' else 0o644)
         after = without_lines(before)
         write_mango(before, with_lines(after))
         subprocess.Popen(['setsid', '-f', 'hypridle'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -241,6 +258,8 @@ def activate(manifest):
             write_mango(CONFIG.read_text(), before)
         for path in written:
             path.unlink(missing_ok=True)
+        for path, data in replaced.items():
+            atomic_write(path, data, 0o755 if path.name == 'limux-idle' else 0o644)
         raise RuntimeError('activation failed; previous state restored') from failure
     print('Lock screen active: locks at 5 minutes idle and before sleep; Ctrl+Command+Q locks now.')
 

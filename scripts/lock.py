@@ -7,7 +7,7 @@ from mangobar import contrast
 COLORS = ('ground', 'time', 'date', 'labels', 'placeholder', 'field', 'field_edge', 'checking', 'fail', 'dots')
 METRICS = (('time_size', 32, 200), ('time_weight', 100, 900), ('date_size', 8, 48), ('note_size', 8, 32),
            ('field_width', 120, 600), ('field_height', 24, 80), ('field_edge_width', 1, 4),
-           ('field_radius', 0, 20), ('dot_size', 4, 20), ('dot_gap', 2, 24), ('stack_raise', 0, 400),
+           ('field_radius', 0, 20), ('dot_size', 4, 20), ('dot_gap', 2, 24), ('motion', 1, 10), ('stack_raise', 0, 400),
            ('date_gap', 0, 80), ('field_gap', 0, 160), ('note_gap', 0, 60), ('user_inset', 0, 200))
 CAPS = '/sys/class/leds/input*::capslock/brightness'
 
@@ -46,7 +46,8 @@ def render(theme):
     field_y = date_y - date_text // 2 - k['field_gap'] - k['field_height'] // 2
     note_y = field_y - k['field_height'] // 2 - k['note_gap'] - note_text // 2
     dots = round(k['dot_size'] / k['field_height'], 2)
-    spacing = round(min(1, k['dot_gap'] / k['dot_size'] - 1 if k['dot_gap'] > k['dot_size'] else 0.15), 2)
+    # hyprlock's dot spacing is the gap as a fraction of the dot size.
+    spacing = round(min(1, k['dot_gap'] / k['dot_size']), 2)
 
     def label(text, size, colour, y, halign='center', valign='center'):
         return (f'label {{\n    text = {text}\n    color = {rgb(colour)}\n    font_size = {size}\n'
@@ -56,6 +57,16 @@ def render(theme):
 # scripts/activate-lock.py owns this file. Sourced by hyprlock.conf.
 background {{
     color = {rgb(c['ground'])}
+}}
+
+animations {{
+    enabled = true
+    bezier = limux, 0.2, 0, 0, 1
+    animation = fadeIn, 1, {k['motion']}, limux
+    animation = fadeOut, 1, {k['motion']}, limux
+    animation = inputFieldColors, 1, {k['motion']}, limux
+    animation = inputFieldFade, 1, {k['motion']}, limux
+    animation = inputFieldDots, 1, {k['motion']}, limux
 }}
 
 ''' + label(f'<span font_weight="{k["time_weight"]}">$TIME</span>', k['time_size'], c['time'], time_y) + '\n' \
