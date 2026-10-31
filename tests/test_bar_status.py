@@ -48,6 +48,14 @@ class BarStatusTests(unittest.TestCase):
         self.assertTrue(data['custom/wifi']['exec'].startswith(LIVE['custom/wifi']['exec'] + ' --levels'))
         self.assertEqual(data['pulseaudio']['on-click'], 'mute')
         self.assertEqual(data['battery']['device'], 'BAT0')
+        # Mangobar's own banding (percent * n // 101) lands on the nearest quarter.
+        icons = data['battery']['icons']
+        level = lambda pct: icons[min(pct * len(icons) // 101, len(icons) - 1)]  # noqa: E731
+        bars = [b.TABLER[n] for n in ('battery', 'battery-1', 'battery-2', 'battery-3', 'battery-4')]
+        starts = {0: 0, 13: 1, 38: 2, 64: 3, 89: 4}
+        for pct in range(101):
+            expected = bars[max(v for k, v in starts.items() if k <= pct)]
+            self.assertEqual(level(pct), expected, pct)
         self.assertEqual(data['battery']['format'], '{icon} {percent}%')
         self.assertEqual(LIVE['battery']['format'], 'Bat {percent}%{icon}')  # input untouched
 

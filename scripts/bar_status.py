@@ -20,6 +20,11 @@ SLOTS = (('icon', 'agent_quiet'), ('icon-spin', 'agent_quiet'), ('icon-input', '
          ('icon-error', 'agent_error'),
          ('name', 'agent_quiet'), ('name-input', 'agent_name_alert'))
 DISPLAYS = ('text', 'icon-value', 'icons')
+# Mangobar picks icons[percent * n // 101], equal bands that round down. Eight
+# bands with each inner level twice show the nearest quarter: 1 bar from 13%,
+# 2 from 38%, 3 from 64%, full from 89%.
+BATTERY_LEVELS = ('battery', 'battery-1', 'battery-1', 'battery-2', 'battery-2',
+                  'battery-3', 'battery-3', 'battery-4')
 
 
 def tokens(theme):
@@ -73,7 +78,7 @@ def modules(theme, data, agent_script, runtime='$XDG_RUNTIME_DIR/limux/agents/ba
     data['battery'] = dict(data['battery'], **{
         'format': f'{{icon}}{sep}{value("{percent}%")}',
         'icon-charging': g['battery-charging'], 'icon-full': g['battery-4'], 'icon-discharging': '',
-        'icons': [g['battery'], g['battery-1'], g['battery-2'], g['battery-3'], g['battery-4']]})
+        'icons': [g[name] for name in BATTERY_LEVELS]})
     data['pulseaudio'] = dict(data['pulseaudio'], **{
         'format': f'{{icon}}{sep}{value("{volume}%")}', 'format-muted': '{icon}',
         'icon-muted': g['volume-3'], 'icons': [g['volume-2'], g['volume']]})

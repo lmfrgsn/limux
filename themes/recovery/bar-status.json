@@ -1,6 +1,6 @@
 {
-  "approved": "Bar status icons and agent indicators: Tabler 3.49.0 at text size, icon + value, approved spacing; user-approved live overlay 2026-10-30; working spinner rotation (spin_period 1000 ms), user-approved preview 2026-10-31; icons centred on the text with Wi-Fi and battery glyphs at 1.25x, user-approved preview 2026-10-31",
-  "config": "2e19feedaac0648d96beaa616a4d622622f92d5c53904ec8a6f8303f5a7e00b1",
+  "approved": "Bar status icons and agent indicators: Tabler 3.49.0 at text size, icon + value, approved spacing; user-approved live overlay 2026-10-30; working spinner rotation (spin_period 1000 ms), user-approved preview 2026-10-31; icons centred on the text with Wi-Fi and battery glyphs at 1.25x, user-approved preview 2026-10-31; battery icon shows the nearest quarter, user-approved without preview 2026-10-31",
+  "config": "d008b99e829d841c3c407791214d3d33acdd86d057144691a216c922dec4720d",
   "css": "ee435abe76766a7a1c982b79499666da6cd48ab482170e6be73743899f96e5d8",
   "rule": "ff5d6615769d449c44978774856b0b3898c36236cace4c675480e54e330a22a4",
   "binary": "38648d17066c270767a8b8baf7bd6ad441086b785d7c2aec1410bd0887547f1a",
