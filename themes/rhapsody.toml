@@ -96,6 +96,9 @@ agent_input = "workspace_orange"
 agent_error = "signal_red"
 # Real-time signal (SIGRTMIN+n) that refreshes the agent modules at once.
 refresh_signal = 8
+# Milliseconds per clockwise turn of the working spinner, drawn by the bar
+# (patches/mangobar/04-spin-custom-modules.patch) at about 15 frames a second.
+spin_period = 1000
 
 [rofi]
 # Limux pickers (launcher and Command menu), approved 2026-10-30: the notification

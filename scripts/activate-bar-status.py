@@ -102,7 +102,8 @@ def generate(quiet_config):
 
 def build_binary():
     builder = load('quiet_build', ROOT/'scripts/quiet-mangobar-build.py')
-    patches = builder.PATCHES + (ROOT/'patches/mangobar/03-hide-empty-custom-modules.patch',)
+    patches = builder.PATCHES + (ROOT/'patches/mangobar/03-hide-empty-custom-modules.patch',
+                                 ROOT/'patches/mangobar/04-spin-custom-modules.patch')
     return builder.build(patches, ROOT/'build/bar-status').read_bytes()
 
 

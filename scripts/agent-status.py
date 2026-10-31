@@ -27,7 +27,7 @@ IDLE = {'SessionStart', 'Stop', 'Interrupt'}
 # Claude Code notification types that mean the agent is waiting for the user.
 INPUT_NOTIFICATIONS = {'permission_prompt', 'agent_needs_input', 'elicitation_dialog', 'elicitation_url_dialog'}
 # Bar module texts: one module per colour, so an absent state takes no space.
-SLOTS = ('icon', 'icon-input', 'icon-error', 'name', 'name-input')
+SLOTS = ('icon', 'icon-spin', 'icon-input', 'icon-error', 'name', 'name-input')
 # Tabler Icons 3.49.0 code points, matching themes/rhapsody.toml [bar_status].
 GLYPHS = {'working': '', 'input': '', 'idle': '', 'error': ''}
 SIGNAL = 8
@@ -156,7 +156,7 @@ def texts(found):
     out = {f'{agent}-{slot}': '' for agent in AGENTS for slot in SLOTS}
     for agent, (state, count) in summary(found).items():
         name = AGENTS[agent] + (f' {count}' if count > 1 else '')
-        icon_slot = {'input': 'icon-input', 'error': 'icon-error'}.get(state, 'icon')
+        icon_slot = {'working': 'icon-spin', 'input': 'icon-input', 'error': 'icon-error'}.get(state, 'icon')
         out[f'{agent}-{icon_slot}'] = GLYPHS[state]
         out[f'{agent}-{"name-input" if state == "input" else "name"}'] = name
     return out

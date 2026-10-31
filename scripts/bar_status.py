@@ -1,7 +1,8 @@
 """Bar status readings and agent indicators from [bar_status] tokens: Mangobar
 module definitions and CSS for the Quiet Workspace Strip. Needs Tabler Icons as
 the bar font's fallback and patches/mangobar/03-hide-empty-custom-modules.patch,
-so a state module with no text takes no space."""
+so a state module with no text takes no space, and 04-spin-custom-modules.patch,
+so the working icon rotates."""
 import re
 
 # Tabler Icons 3.49.0 code points (dist/tabler-icons.css).
@@ -13,7 +14,9 @@ TABLER = {
 }
 AGENTS = ('codex', 'claude')
 # Must match SLOTS in scripts/agent-status.py; each slot is one coloured module.
-SLOTS = (('icon', 'agent_quiet'), ('icon-input', 'agent_input'), ('icon-error', 'agent_error'),
+# The working icon has its own slot so only it rotates (spin_period).
+SLOTS = (('icon', 'agent_quiet'), ('icon-spin', 'agent_quiet'), ('icon-input', 'agent_input'),
+         ('icon-error', 'agent_error'),
          ('name', 'agent_quiet'), ('name-input', 'agent_name_alert'))
 DISPLAYS = ('text', 'icon-value', 'icons')
 
@@ -31,6 +34,8 @@ def tokens(theme):
         raise ValueError('bar_status group gap must not be smaller than the item gap')
     if type(t['refresh_signal']) is not int or not 1 <= t['refresh_signal'] <= 20:
         raise ValueError('invalid bar_status refresh signal')
+    if type(t['spin_period']) is not int or not 400 <= t['spin_period'] <= 4000:
+        raise ValueError('invalid bar_status spin period: 400–4000 ms')
     for key in ('agent_quiet', 'agent_name_alert', 'agent_input', 'agent_error'):
         if not re.fullmatch(r'#[0-9A-Fa-f]{6}', theme['colors'][t[key]]):
             raise ValueError(f'invalid bar_status colour: {key}')
@@ -49,6 +54,8 @@ def modules(theme, data, agent_script, runtime='$XDG_RUNTIME_DIR/limux/agents/ba
             data[f'custom/agent-{agent}-{slot}'] = {
                 'exec': f'cat "{runtime}/{agent}-{slot}" 2>/dev/null', 'interval': 30,
                 'signal': t['refresh_signal'], 'format': '{}', 'on-click': f'python3 {agent_script} focus {agent}'}
+            if slot == 'icon-spin':
+                data[f'custom/agent-{agent}-{slot}']['spin-period'] = t['spin_period']
     if t['display'] == 'text':
         return data
     sep = ' ' if t['display'] == 'icon-value' else ''

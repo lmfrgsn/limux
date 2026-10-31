@@ -1,0 +1,207 @@
+--- a/mangobar.c
++++ b/mangobar.c
+@@ -515,6 +515,7 @@ typedef struct Bar {
+   struct zxdg_output_v1 *xdg_output;
+   uint32_t registry_name;
+   char *name;
++  bool spinning; // Limux: a rotating module is visible; redraw each frame
+   int out_x, out_y; // output position in global coords
+   int out_w, out_h; // output logical size
+   bool configured;
+@@ -791,6 +792,48 @@ static void ensure_module_min_width(ModuleStyle *st, const char *text) {
+     st->min_width = need;
+ }
+ 
++// Limux: while g_text_spin is set, draw_text rotates each glyph clockwise by
++// g_text_angle radians about its own centre; layout and advance are unchanged.
++static bool g_text_spin;
++static double g_text_angle;
++#define SPIN_FRAME_MS 66 // about 15 frames per second
++static uint64_t last_spin_ms;
++static uint64_t now_ms(void);
++
++// The current animation frame; the rotation angle for a period follows from it.
++static uint64_t spin_frame(void) { return now_ms() / SPIN_FRAME_MS; }
++
++static double spin_angle(int period) {
++  return 2 * M_PI * (double)(spin_frame() * SPIN_FRAME_MS % (uint64_t)period) / period;
++}
++
++// Composite glyph g as if placed at (gx, gy), rotated by g_text_angle. The
++// rotated glyph fits in a centred square of side s (the glyph box diagonal).
++static void composite_spun_glyph(const struct fcft_glyph *g, pixman_image_t *mask,
++                                 pixman_image_t *dst, int32_t gx, int32_t gy,
++                                 int32_t s) {
++  pixman_image_t *src = pixman_image_create_bits(
++      pixman_image_get_format(g->pix), g->width, g->height,
++      pixman_image_get_data(g->pix), pixman_image_get_stride(g->pix));
++  if (!src)
++    return;
++  double c = cos(g_text_angle), n = sin(g_text_angle);
++  double cx = g->width / 2.0, cy = g->height / 2.0;
++  // Destination to source: the inverse (counter-clockwise) rotation.
++  pixman_transform_t t = {{
++      {pixman_double_to_fixed(c), pixman_double_to_fixed(n),
++       pixman_double_to_fixed(cx - c * cx - n * cy)},
++      {pixman_double_to_fixed(-n), pixman_double_to_fixed(c),
++       pixman_double_to_fixed(cy + n * cx - c * cy)},
++      {0, 0, pixman_fixed_1}}};
++  pixman_image_set_transform(src, &t);
++  pixman_image_set_filter(src, PIXMAN_FILTER_BILINEAR, NULL, 0);
++  int32_t x0 = gx + (g->width - s) / 2, y0 = gy + (g->height - s) / 2;
++  pixman_image_composite32(PIXMAN_OP_OVER, src, mask, dst, x0 - gx, y0 - gy, 0,
++                           0, x0, y0, s, s);
++  pixman_image_unref(src);
++}
++
+ static uint32_t draw_text(const char *text, uint32_t x, uint32_t y,
+                           pixman_image_t *fg, pixman_image_t *fg_mask,
+                           pixman_image_t *bg, pixman_color_t *fg_color,
+@@ -826,7 +869,22 @@ static uint32_t draw_text(const char *text, uint32_t x, uint32_t y,
+       break;
+     last_cp = codepoint;
+ 
+-    if (fg && fg_color) {
++    if (fg && fg_color && g_text_spin) {
++      int32_t s = (int32_t)ceil(hypot(g->width, g->height)) + 2;
++      int32_t gy = (int32_t)dy - g->y;
++      if (pixman_image_get_format(g->pix) == PIXMAN_a8r8g8b8) {
++        composite_spun_glyph(g, NULL, fg, gx, gy, s);
++      } else {
++        int32_t x0 = gx + (g->width - s) / 2;
++        pixman_image_fill_boxes(
++            PIXMAN_OP_OVER, fg, fg_color, 1,
++            &(pixman_box32_t){.x1 = x0, .x2 = x0 + s, .y1 = 0, .y2 = (int32_t)dbuf});
++      }
++      pixman_image_t *mask = pixman_image_create_solid_fill(
++          &(pixman_color_t){0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF});
++      composite_spun_glyph(g, mask, fg_mask, gx, gy, s);
++      pixman_image_unref(mask);
++    } else if (fg && fg_color) {
+       if (pixman_image_get_format(g->pix) == PIXMAN_a8r8g8b8) {
+         pixman_image_composite32(PIXMAN_OP_OVER, g->pix, NULL, fg, 0, 0, 0, 0,
+                                  gx, (int32_t)dy - g->y, g->width, g->height);
+@@ -1132,6 +1190,7 @@ typedef struct {
+   bool is_tray;
+   uint32_t width;
+   int tray_icon_size;
++  int spin_period; // Limux: custom module "spin-period"
+ } ModuleEntry;
+ 
+ typedef struct {
+@@ -1186,7 +1245,8 @@ static int append_module_entries(Bar *bar, int id, ModuleEntry *ents, int max,
+     *me = (ModuleEntry){.text = texts[(*text_n)++],
+                         .st = &g_rt->st_custom[ci],
+                         .module = names[(*name_n)++],
+-                        .tag = -1};
++                        .tag = -1,
++                        .spin_period = g_cfg.customs[ci].spin_period};
+     int ml = module_max_length(me->module);
+     if (ml > 0)
+       truncate_text_to_width((char *)me->text, me->text, 256, (uint32_t)ml);
+@@ -1629,6 +1689,16 @@ static void entry_signature(const Bar *bar, const ModuleEntry *e, char *ident,
+     key[ksz - 1] = '\0';
+     return;
+   }
++  // Limux: a rotating entry is a new raster every frame.
++  if (e->spin_period > 0 && (size_t)o < ksz - 1) {
++    int n = snprintf(key + o, ksz - (size_t)o, "|r%llu",
++                     (unsigned long long)spin_frame());
++    o = n < 0 ? o : o + n;
++    if ((size_t)o >= ksz) {
++      key[ksz - 1] = '\0';
++      return;
++    }
++  }
+   if (e->is_tray) {
+     int n = 0;
+     MangobarTrayItem **items = tray_visible_items(tray, &n);
+@@ -1680,9 +1750,15 @@ static pixman_image_t *render_entry_raster(Bar *bar, const LaidEntry *le,
+   if (le->e.is_tray)
+     paint_tray_entry(bar, &le->e, &le->g, y, bar->w_fg, bar->w_mask, bar->w_bg,
+                      buf_h);
+-  else
++  else {
++    // Limux: a "spin-period" module turns once per period while visible.
++    g_text_spin = le->e.spin_period > 0 && le->e.text && le->e.text[0];
++    if (g_text_spin)
++      g_text_angle = spin_angle(le->e.spin_period);
+     paint_module(bar, le->e.module, le->e.tag, le->e.text, le->e.st, &le->g, y,
+                  bar->w_fg, bar->w_mask, bar->w_bg, buf_h);
++    g_text_spin = false;
++  }
+ 
+   if (bar_bg_cr) {
+     cairo_destroy(bar_bg_cr);
+@@ -1866,6 +1942,7 @@ static void draw_bar(Bar *bar) {
+ 
+   bar->hotspot_count = 0;
+   bar->tray_hotspot_count = 0;
++  bar->spinning = false;
+ 
+   uint32_t y = (uint32_t)g_rt->bar_top + (g_rt->bar_h + font->ascent - font->descent) / 2;
+   uint32_t buf_h = g_rt->bar_h;
+@@ -2114,6 +2191,8 @@ static void draw_bar(Bar *bar) {
+     BarSlot *ns = &next[next_n];
+     entry_signature(bar, &le->e, ns->ident, sizeof(ns->ident), ns->key,
+                     sizeof(ns->key));
++    if (le->e.spin_period > 0 && le->e.text && le->e.text[0])
++      bar->spinning = true;
+     ns->x0 = le->g.x0 * (uint32_t)scale;
+     ns->x1 = le->g.paint * (uint32_t)scale;
+     ns->y0 = (uint32_t)(top * scale);
+@@ -4739,6 +4818,17 @@ static void event_loop() {
+       timeout = 100;
+     else if (popup.open)
+       timeout = 50;
++    // Limux: wake for the next frame while a rotating module is visible.
++    {
++      Bar *sb;
++      wl_list_for_each(sb, &bar_list, link) if (sb->spinning) {
++        uint64_t since = now_ms() - last_spin_ms;
++        int wait = since >= SPIN_FRAME_MS ? 0 : (int)(SPIN_FRAME_MS - since);
++        if (timeout > wait)
++          timeout = wait;
++        break;
++      }
++    }
+     {
+       Bar *wb;
+       wl_list_for_each(wb, &bar_list, link) if (wb->commit_pending) {
+@@ -4883,6 +4973,16 @@ static void event_loop() {
+           IPC_LOG("[tick] %s ipc_fd=%d redraw=%d\n", bt->name, ipc_fd,
+                   bt->redraw);
+     }
++    if (now_ms() - last_spin_ms >= SPIN_FRAME_MS) {
++      Bar *sb;
++      bool any = false;
++      wl_list_for_each(sb, &bar_list, link) if (sb->spinning) {
++        sb->redraw = true;
++        any = true;
++      }
++      if (any)
++        last_spin_ms = now_ms();
++    }
+     Bar *b;
+     wl_list_for_each(b, &bar_list, link) {
+       if (b->redraw && b->configured) {
+--- a/rtconfig.c
++++ b/rtconfig.c
+@@ -367,6 +367,7 @@ static void parse_custom_module(cJSON *obj, const char *name) {
+   cfg_str(obj, "exec", cm->exec, sizeof(cm->exec));
+   cm->interval = cfg_int(obj, "interval", 0);
+   cm->signal = cfg_int(obj, "signal", 0);
++  cm->spin_period = cfg_int(obj, "spin-period", 0);
+   cfg_str(obj, "format", cm->format, sizeof(cm->format));
+ 
+   char css_name[64];
+--- a/rtconfig.h
++++ b/rtconfig.h
+@@ -42,6 +42,7 @@ typedef struct {
+   char format[256]; // format string; "{}" is replaced with exec output
+   int interval; // refresh interval in seconds
+   int signal; // SIGRTMIN+N used to trigger an update (0 = none)
++  int spin_period; // Limux: ms per turn of the rotating text (0 = none)
+   char output[256]; // latest command output
+   uint64_t last_run_ms;
+   bool enabled;

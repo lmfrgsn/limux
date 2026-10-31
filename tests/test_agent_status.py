@@ -53,11 +53,17 @@ class AgentStatusTests(unittest.TestCase):
 
     def test_most_urgent_session_wins_and_count_shows(self):
         bar = self.apply('codex', event('PreToolUse', 'one'), event('Stop', 'two'))
-        self.assertEqual(bar['codex-icon'], a.GLYPHS['working'])
+        self.assertEqual(bar['codex-icon-spin'], a.GLYPHS['working'])
+        self.assertEqual(bar['codex-icon'], '')
         self.assertEqual(bar['codex-name'], 'Codex 2')
         bar = self.apply('codex', event('StopFailure', 'two'))
         self.assertEqual(bar['codex-icon-error'], a.GLYPHS['error'])
-        self.assertEqual(bar['codex-icon'], '')
+        self.assertEqual(bar['codex-icon-spin'], '')
+
+    def test_idle_uses_the_still_icon_slot(self):
+        bar = self.apply('claude', event('Stop'))
+        self.assertEqual(bar['claude-icon'], a.GLYPHS['idle'])
+        self.assertEqual(bar['claude-icon-spin'], '')
 
     def test_session_end_and_dead_agents_disappear(self):
         self.apply('claude', event('Stop'))

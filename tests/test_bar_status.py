@@ -33,6 +33,13 @@ class BarStatusTests(unittest.TestCase):
         module = data['custom/agent-claude-icon-input']
         self.assertEqual(module['signal'], THEME['bar_status']['refresh_signal'])
         self.assertIn('focus claude', module['on-click'])
+        # Only the working icon rotates.
+        spinning = [k for k, v in data.items() if isinstance(v, dict) and 'spin-period' in v]
+        self.assertEqual(spinning, [f'custom/agent-{a}-icon-spin' for a in b.AGENTS])
+        self.assertEqual(data['custom/agent-codex-icon-spin']['spin-period'],
+                         THEME['bar_status']['spin_period'])
+        # Mangobar keeps CSS selectors and click actions in 32-byte buffers.
+        self.assertTrue(all(len(m.replace('custom/', 'custom-')) <= 31 for m in right))
         # Regenerating does not duplicate agent modules.
         self.assertEqual(b.modules(THEME, data, '/repo/scripts/agent-status.py')['modules-right'], right)
 
@@ -62,7 +69,8 @@ class BarStatusTests(unittest.TestCase):
         self.assertIn(THEME['colors']['workspace_orange'], re.search(r'#custom-agent-claude-icon-input \{[^}]*\}', css).group())
 
     def test_invalid_tokens_are_refused(self):
-        for key, value in (('display', 'fancy'), ('item_gap', 21), ('group_gap', 10), ('refresh_signal', 40)):
+        for key, value in (('display', 'fancy'), ('item_gap', 21), ('group_gap', 10), ('refresh_signal', 40),
+                           ('spin_period', 100)):
             theme = copy.deepcopy(THEME)
             theme['bar_status'][key] = value
             with self.assertRaises(ValueError):

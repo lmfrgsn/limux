@@ -1,9 +1,9 @@
 {
-  "approved": "Bar status icons and agent indicators: Tabler 3.49.0 at text size, icon + value, approved spacing; user-approved live overlay 2026-10-30",
-  "config": "5e7f424e43bd3df0da4ddeb21259eade044fe8b822f6630fbb4535aacf92db51",
-  "css": "365fdb2a429901c6d9ff301b9eb34b1c9616ee9259f6f31fa3567dd1e368ac81",
+  "approved": "Bar status icons and agent indicators: Tabler 3.49.0 at text size, icon + value, approved spacing; user-approved live overlay 2026-10-30; working spinner rotation (spin_period 1000 ms), user-approved preview 2026-10-31",
+  "config": "b2ca9588045e356953ad45b40daf4321eeda3df971d7fcd7f5d02bc81ed34069",
+  "css": "ee435abe76766a7a1c982b79499666da6cd48ab482170e6be73743899f96e5d8",
   "rule": "ff5d6615769d449c44978774856b0b3898c36236cace4c675480e54e330a22a4",
-  "binary": "1ea3a23b0f29fa88d34d94fb1bdb0c100384be8a3ffe97a49884514ef1524ac0",
+  "binary": "4c4bb6f7da0950d0f68c9bc96dfdb536513a51b1f982d974c2714e0d49133d27",
   "wifi": "3ddd795dfed4690c608945acca6f0025356d9d21acd16ec3f45572738e6bce09",
   "wifi_previous_sha256": "048ce49b0bc4929b19b6b7b505fb076eb374892a56502d6e3c6afbb3b2d1d29d",
   "codex": "5b5f82d575a19996ce505abcfaa9ace920607463f82ffca22108a4f0dc298d7e",
