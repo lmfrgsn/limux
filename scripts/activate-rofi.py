@@ -160,7 +160,7 @@ def main():
         if functional_config(dump(['-config', str(config), '-theme', str(stage), '-dump-config'])) != current_function:
             raise RuntimeError('Staged theme changes Rofi functionality')
         if args.action == 'check':
-            state = {manifest['baseline_sha256']: 'Limux picker', manifest['previous_sha256']: 'previous yellow-edge Rhapsody',
+            state = {manifest['baseline_sha256']: 'Limux picker', manifest['previous_sha256']: 'previous graphite Limux picker',
                      manifest['rollback_sha256']: 'pre-Rhapsody theme'}[digest(before)]
             print(f'Native syntax, approved hash, default launcher and preserved config verified. Live: {state}.')
             print('Search/navigation/Enter/Escape bindings preserved; interactive checks require the desktop.')
@@ -185,7 +185,7 @@ def main():
                     raise RuntimeError('Protected configuration changed')
 
             changed = transition(live, desired, verify)
-    print(('Activated' if changed else 'Already using') + {'rollback': ' the previous yellow-edge Rhapsody launcher.',
+    print(('Activated' if changed else 'Already using') + {'rollback': ' the previous graphite Limux picker.',
           'restore-original': ' the pre-Rhapsody launcher.', 'activate': ' the approved Limux picker.'}[args.action])
     print('Command+Space uses it normally. Check search, Up/Down, Escape, then reopen and launch an app with Enter.')
 

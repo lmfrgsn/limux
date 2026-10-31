@@ -29,9 +29,12 @@ selected = "signal_yellow"
 on_selected = "text"
 workspace_active = "workspace_orange"
 on_workspace_active = "pure_white"
-# Launcher and Command menu selection: the graphite inset shared with Thunar.
-list_selected = "text"
-on_list_selected = "surface"
+# Launcher and Command menu selection: the bar's active-workspace treatment,
+# orange inset with white text (approved 2026-10-31). Thunar keeps graphite.
+list_selected = "workspace_orange"
+on_list_selected = "pure_white"
+# Text insertion point in the picker and Thunar fields, like the terminal cursor.
+text_caret = "workspace_orange"
 # Separate terminal/workspace roles intentionally share the approved orange swatch.
 terminal_cursor = "workspace_orange"
 on_terminal_cursor = "signal_ink"
@@ -109,25 +112,29 @@ wifi_icon_scale = 1.25
 battery_icon_scale = 1.25
 
 [rofi]
-# Limux pickers (launcher and Command menu), approved 2026-10-30: the notification
-# card, the recessed search field, one shared left edge, graphite inset selection,
-# a quiet secondary column at a fixed tab stop, no icons. Font sizes in points.
+# Limux pickers (launcher and Command menu), approved 2026-10-30, refined 2026-10-31:
+# the notification card, a flat search with an orange caret above a hairline, one
+# shared left edge, orange inset selection, a quiet secondary column at a fixed
+# tab stop, no icons. Font sizes in points.
 width = 640
 padding = 12
 spacing = 8
 radius = 6
-field_radius = 3
-search_padding_vertical = 9
-search_padding_horizontal = 12
+# The search sits flat on the card, divided from the list by a full-width hairline.
+search_padding_vertical = 14
+hairline_alpha = 0.10
+caret_width = 2
 row_padding_vertical = 8
 row_padding_horizontal = 12
 row_radius = 4
 font_size = 10
-entry_size = 11
+entry_size = 13
 heading_size = 8
 secondary_stop = 430
 secondary_alpha = 75
 lines = 7
+# White on orange (~3.5:1) for selected rows extends the bar's approved exception.
+selected_contrast_exception = "approved-white-on-orange"
 
 [limux_commands]
 # Command menu differences from the shared picker; behaviour stays in the script.
@@ -186,8 +193,11 @@ icon_theme = "Limux-Rhapsody"
 surface = "surface"
 hover = "chrome"
 location = "chrome"
-recess = "canvas"
-recess_edge = "metal"
+# Text fields are flat: porcelain with a metal edge, orange edge and caret while typing.
+field = "surface"
+field_edge = "metal"
+field_focus = "workspace_orange"
+caret = "workspace_orange"
 selected = "text"
 on_selected = "surface"
 selected_inactive = "metal"

@@ -8,7 +8,7 @@ The [canonical design language](design-language.md), [original visual reference]
 | --- | --- | --- | --- |
 | MangoWM | Rhapsody border/gap baseline; live config retains functional bindings and T2 settings | `[mango]` tokens, `scripts/mango.py` | `scripts/mango-appearance.py rollback` |
 | Mangobar | Refined Quiet Workspace Strip active on pinned patched 0.2.2; white active number, 8px left inset and charging text | `workspace_active` / `on_workspace_active` semantics, `[mangobar_candidate]` geometry, `render_quiet()` | `restore-prior` reverts this refinement; `rollback` restores the pre-Strip baseline |
-| Rofi application launcher | Approved Limux picker on Command+Space: graphite selection, quiet secondary column, no icons; lists Firefox, Files and Terminal | `[rofi]` tokens, `scripts/rofi.py`; entries in `scripts/launcher-entries.py` | `scripts/activate-rofi.py rollback` (previous yellow-edge launcher) or `restore-original`; `scripts/launcher-entries.py rollback` |
+| Rofi application launcher | Approved Limux picker on Command+Space: flat search with orange caret, orange selection, quiet secondary column, no icons; lists Firefox, Files and Terminal | `[rofi]` tokens, `scripts/rofi.py`; entries in `scripts/launcher-entries.py` | `scripts/activate-rofi.py rollback` (previous graphite picker) or `restore-original`; `scripts/launcher-entries.py rollback` |
 | Limux Commands | Approved Limux picker on Command+K: actions with a quiet key or verb column, quiet section labels, opens on the first command | Shared picker theme plus a small `[limux_commands]` override in `scripts/limux-commands.py` | Follows the launcher theme's rollback; `scripts/activate-commands.py rollback` removes the binding |
 | Foot | Approved graphite palette with orange block cursor and hollow unfocused state | `[foot]` tokens, `scripts/foot.py` | `scripts/activate-foot.py rollback` restores the previous DejaVu Sans Mono 16 styling; `restore-original` restores pre-Rhapsody config |
 | Thunar / GTK 3 (Limux Files) | Approved design, implemented; activation requires the `adw-gtk-theme` package | `[thunar]` tokens, `scripts/gtk.py` | `scripts/activate-gtk.py rollback` restores default GTK theme, icons and Thunar view settings |
@@ -345,7 +345,7 @@ The Command menu (`scripts/limux-commands.py`) sends markup rows: the action, a 
 cd ~/limux
 python3 scripts/activate-rofi.py check
 python3 scripts/activate-rofi.py activate
-python3 scripts/activate-rofi.py rollback          # previous yellow-edge Rhapsody launcher
+python3 scripts/activate-rofi.py rollback          # previous graphite Limux picker
 python3 scripts/activate-rofi.py restore-original  # pre-Rhapsody launcher
 python3 scripts/launcher-entries.py check
 python3 scripts/launcher-entries.py activate

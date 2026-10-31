@@ -23,6 +23,10 @@ def load_script(name, module_name):
 quiet = load_script('quiet-bar.py', 'quiet_bar')
 builder = load_script('quiet-mangobar-build.py', 'quiet_mangobar_build')
 THEME = tomllib.loads((ROOT / 'themes/rhapsody.toml').read_text())
+# The Quiet Strip's own config: while bar status is active, its activation keeps
+# that input in its state folder and the live file is the layered result.
+BAR_STATUS_INPUT = Path.home() / '.local/state/limux/bar-status-activation/config'
+QUIET_INPUT = BAR_STATUS_INPUT if BAR_STATUS_INPUT.exists() else quiet.LIVE
 
 
 class QuietBarTest(unittest.TestCase):
@@ -68,7 +72,7 @@ class QuietBarTest(unittest.TestCase):
             render_quiet(changed)
 
     def test_preview_config_preserves_functional_modules(self):
-        original = json.loads(quiet.LIVE.read_text())
+        original = json.loads(QUIET_INPUT.read_text())
         # The active Quiet Strip has already hidden the layout indicator.
         with tempfile.TemporaryDirectory() as d:
             source = Path(d) / 'active.jsonc'
@@ -96,7 +100,7 @@ class QuietBarTest(unittest.TestCase):
             source.write_text(sources['rtconfig.c'])
             header.write_text(sources['rtconfig.h'])
             config = path / 'candidate.jsonc'
-            config.write_text(json.dumps(quiet.candidate_config(THEME)))
+            config.write_text(json.dumps(quiet.candidate_config(THEME, QUIET_INPUT)))
             harness = path / 'check.c'
             harness.write_text(r'''
 #include "rtconfig.h"

@@ -64,7 +64,7 @@ class RofiActivationTests(unittest.TestCase):
             home = Path(directory)
             repo = home/'repo'
             (repo/'themes/recovery').mkdir(parents=True)
-            for file in ('rofi-before-rhapsody.rasi', 'rofi-rhapsody-yellow-edge.rasi', 'rofi-search.svg', 'rofi.json'):
+            for file in ('rofi-before-rhapsody.rasi', 'rofi-limux-picker-graphite.rasi', 'rofi-search.svg', 'rofi.json'):
                 shutil.copyfile(ROOT/'themes/recovery'/file, repo/'themes/recovery'/file)
             shutil.copyfile(ROOT/'themes/rhapsody.toml', repo/'themes/rhapsody.toml')
             config = home/'.config/rofi/config.rasi'

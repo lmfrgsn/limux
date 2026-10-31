@@ -57,7 +57,9 @@ class ThemeTests(unittest.TestCase):
         theme = self.theme
         colors, roles = theme['colors'], theme['semantics']
         self.assertEqual(colors[roles['workspace_active']], '#D46A43')
-        self.assertEqual(colors[roles['list_selected']], '#343442')
+        self.assertEqual(roles['list_selected'], 'workspace_orange')
+        self.assertEqual(roles['on_list_selected'], 'pure_white')
+        self.assertEqual(roles['text_caret'], 'workspace_orange')
         self.assertEqual(colors[roles['terminal_cursor']], '#D46A43')
         self.assertEqual(roles['terminal_cursor'], 'workspace_orange')
         self.assertEqual(roles['workspace_active'], 'workspace_orange')
@@ -65,14 +67,16 @@ class ThemeTests(unittest.TestCase):
         self.assertEqual(roles['on_workspace_active'], 'pure_white')
         self.assertEqual(colors[roles['on_terminal_cursor']], '#141810')
         self.assertIn('background: #D46A43;', render_quiet(theme))
-        self.assertIn('background-color: #343442;', render_rofi(theme))
+        self.assertIn('background-color: #D46A43;', render_rofi(theme))
         self.assertIn('cursor=141810 D46A43', render_foot(theme))
         changed = copy.deepcopy(theme)
         changed['colors']['workspace_orange'] = '#CC693F'
         # The approved white-on-#D46A43 exception is tightly color-pinned.
         with self.assertRaisesRegex(ValueError, 'unapproved active workspace contrast exception'):
             render_quiet(changed)
-        self.assertEqual(render_rofi(changed), render_rofi(theme))
+        # The picker selection shares the exception, so it refuses the same change.
+        with self.assertRaisesRegex(ValueError, 'contrast'):
+            render_rofi(changed)
         self.assertNotEqual(render_foot(changed), render_foot(theme))
         cursor_only = copy.deepcopy(theme)
         cursor_only['semantics']['terminal_cursor'] = 'signal_yellow'

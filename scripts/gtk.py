@@ -51,7 +51,7 @@ def palette(theme):
         c[role] = value.upper()
     for ink, surface in [('text', 'surface'), ('secondary', 'surface'), ('quiet', 'surface'),
                          ('on_selected', 'selected'), ('on_selected_inactive', 'selected_inactive'),
-                         ('text', 'hover'), ('text', 'recess'), ('on_controls', 'controls')]:
+                         ('text', 'hover'), ('text', 'field'), ('on_controls', 'controls')]:
         if contrast(c[ink], c[surface]) < 4.5:
             raise ValueError(f'insufficient Thunar contrast: {ink} on {surface}')
     return c
@@ -110,11 +110,11 @@ def render_css(theme):
 .thunar .path-bar .location-button:checked {{ color: {c["text"]}; font-weight: 600; background: none; }}
 .thunar .path-bar .location-button:hover {{ background: {c["hover"]}; }}
 
-/* Only text entry is recessed: canvas floor, metal top/left edge, porcelain lower edge. */
-.thunar entry, .thunar treeview entry {{ background: {c["recess"]}; color: {c["text"]};
-  border-style: solid; border-width: 1px 0 0 1px; border-color: {c["recess_edge"]};
-  box-shadow: inset -1px -1px 0 {c["surface"]}; border-radius: 3px; min-height: 26px; }}
-.thunar entry:focus {{ border-color: {c["focus"]}; }}
+/* Text fields are flat with a metal edge; while typing, the edge and caret are orange. */
+.thunar entry, .thunar treeview entry {{ background: {c["field"]}; color: {c["text"]};
+  border: 1px solid {c["field_edge"]}; box-shadow: none; border-radius: 4px; min-height: 26px;
+  caret-color: {c["caret"]}; }}
+.thunar entry:focus {{ border-color: {c["field_focus"]}; box-shadow: inset 0 0 0 1px {c["field_focus"]}; }}
 
 /* Sidebar shares the surface; the current location is a quiet mark. */
 .thunar .sidebar, .thunar .sidebar .view {{ background: {c["surface"]}; }}

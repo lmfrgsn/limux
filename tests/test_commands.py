@@ -167,7 +167,7 @@ class PickerThemeTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         blocks = dict(re.findall(r'(?m)^([\w*. -]+) \{([^}]+)\}', result.stdout))
         self.assertIn('"box-search","listview","message"', blocks['mainbox'].replace(' ', ''))
-        self.assertIn('52, 52, 66', blocks['element selected.normal'])
+        self.assertIn('212, 106, 67', blocks['element selected.normal'])
         self.assertNotIn('227, 190, 71', result.stdout)
         for state in ('element normal.active', 'element alternate.active', 'element selected.active'):
             self.assertIn('background-color: transparent', blocks[state])

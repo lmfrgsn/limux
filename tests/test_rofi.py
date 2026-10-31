@@ -27,15 +27,26 @@ class RofiTests(unittest.TestCase):
         self.assertEqual(keys, set(THEME_CONFIGURATION))
         for forbidden in ('kb-', 'matching:', 'terminal:', 'modi:', 'exec:', 'element-icon'):
             self.assertNotIn(forbidden, rasi)
-        # Selection is the graphite inset shared with Thunar, not the old yellow edge.
-        self.assertIn('background-color: #343442;', re.search(r'element selected.normal \{([^}]+)', rasi).group(1))
+        # Selection is the bar's orange inset with white text, not the old yellow edge.
+        selected = re.search(r'element selected.normal \{([^}]+)', rasi).group(1)
+        self.assertIn('background-color: #D46A43;', selected)
+        self.assertIn('text-color: #FFFFFF;', selected)
         self.assertNotIn('#E3BE47', rasi)
+        # Flat search: no recess fill, quiet placeholder, orange caret, hairline below.
+        search = re.search(r'box-search \{([^}]+)', rasi).group(1)
+        self.assertNotIn('background-color', search)
+        self.assertIn('border: 0px 0px 1px 0px;', search)
+        entry = re.search(r'entry \{([^}]+)', rasi).group(1)
+        self.assertIn('placeholder-color: #686773;', entry)
+        self.assertIn('cursor-color: #D46A43;', entry)
         self.assertIn('tab-stops: [ 430px ];', rasi)
         self.assertIn('box-search', rasi)
         self.assertIn('highlight: bold;', rasi)
 
     def test_invalid_tokens_and_low_contrast(self):
-        for section, key, value in [('rofi', 'width', -1), ('colors', 'canvas', '#343442'),
+        for section, key, value in [('rofi', 'width', -1), ('colors', 'text_quiet', '#B8B8C2'),
+                                    ('rofi', 'selected_contrast_exception', None),
+                                    ('semantics', 'on_list_selected', 'surface'),
                                     ('colors', 'metal', 'invalid'), ('typography', 'sans', 'a";')]:
             other = copy.deepcopy(self.theme)
             other[section][key] = value
@@ -66,7 +77,7 @@ class RofiTests(unittest.TestCase):
                 self.assertIsNotNone(match, (widget, key))
                 return match.group(1).strip()
             self.assertEqual(prop('entry', 'placeholder'), '"Search applications"')
-            self.assertEqual(prop('entry', 'font'), '"Inter 11"')
+            self.assertEqual(prop('entry', 'font'), '"Inter 13"')
             self.assertNotIn('RHAPSODY /', result.stdout)
             self.assertNotIn('textbox-edition', result.stdout)
             for widget in ('box-search', 'inputbar', 'message'):
