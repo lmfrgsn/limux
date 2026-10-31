@@ -2,7 +2,8 @@
 module definitions and CSS for the Quiet Workspace Strip. Needs Tabler Icons as
 the bar font's fallback and patches/mangobar/03-hide-empty-custom-modules.patch,
 so a state module with no text takes no space, and 04-spin-custom-modules.patch,
-so the working icon rotates."""
+so the working icon rotates, and 05-icon-glyphs.patch, which centres icons on
+the text and scales the Wi-Fi and battery glyphs."""
 import re
 
 # Tabler Icons 3.49.0 code points (dist/tabler-icons.css).
@@ -34,6 +35,9 @@ def tokens(theme):
         raise ValueError('bar_status group gap must not be smaller than the item gap')
     if type(t['refresh_signal']) is not int or not 1 <= t['refresh_signal'] <= 20:
         raise ValueError('invalid bar_status refresh signal')
+    for key in ('wifi_icon_scale', 'battery_icon_scale'):
+        if type(t[key]) not in (int, float) or not 1 <= t[key] <= 2:
+            raise ValueError(f'invalid bar_status {key}: 1–2')
     if type(t['spin_period']) is not int or not 400 <= t['spin_period'] <= 4000:
         raise ValueError('invalid bar_status spin period: 400–4000 ms')
     for key in ('agent_quiet', 'agent_name_alert', 'agent_input', 'agent_error'):
@@ -73,6 +77,14 @@ def modules(theme, data, agent_script, runtime='$XDG_RUNTIME_DIR/limux/agents/ba
     data['pulseaudio'] = dict(data['pulseaudio'], **{
         'format': f'{{icon}}{sep}{value("{volume}%")}', 'format-muted': '{icon}',
         'icon-muted': g['volume-3'], 'icons': [g['volume-2'], g['volume']]})
+    # Short, wide glyphs drawn larger so they match the text (05-icon-glyphs.patch).
+    scales = {**{g[n]: t['wifi_icon_scale'] for n in TABLER if n.startswith('wifi')},
+              **{g[n]: t['battery_icon_scale'] for n in TABLER if n.startswith('battery')}}
+    scales = {glyph: k for glyph, k in scales.items() if k != 1}
+    if scales:
+        data['glyph-scale'] = scales
+    else:
+        data.pop('glyph-scale', None)
     return data
 
 

@@ -99,6 +99,10 @@ refresh_signal = 8
 # Milliseconds per clockwise turn of the working spinner, drawn by the bar
 # (patches/mangobar/04-spin-custom-modules.patch) at about 15 frames a second.
 spin_period = 1000
+# Wi-Fi and battery glyphs are short and wide, so they are drawn larger than the
+# text (patches/mangobar/05-icon-glyphs.patch); 1 keeps the text size.
+wifi_icon_scale = 1.25
+battery_icon_scale = 1.25
 
 [rofi]
 # Limux pickers (launcher and Command menu), approved 2026-10-30: the notification

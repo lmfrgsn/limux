@@ -1,0 +1,200 @@
+--- a/mangobar.c
++++ b/mangobar.c
+@@ -704,6 +704,8 @@ static struct wl_buffer *create_transparent_buffer(uint32_t w, uint32_t h,
+ }
+ 
+ // ========== Text drawing ==========
++static struct fcft_font *glyph_font(struct fcft_font *f, uint32_t cp);
++
+ // Measure rendered text width and bounds (incl. glyph bearings) in px
+ static uint32_t text_metrics_font(const struct fcft_font *f, const char *text,
+                                   int32_t *min_x, int32_t *max_x) {
+@@ -713,13 +715,13 @@ static uint32_t text_metrics_font(const struct fcft_font *f, const char *text,
+   for (const char *p = text; *p; p++) {
+     if (utf8_decode(&state, &codepoint, (uint8_t)*p))
+       continue;
++    struct fcft_font *gf = glyph_font((struct fcft_font *)f, codepoint);
+     const struct fcft_glyph *g =
+-        fcft_rasterize_char_utf32((struct fcft_font *)f, codepoint,
+-                                  FCFT_SUBPIXEL_NONE);
++        fcft_rasterize_char_utf32(gf, codepoint, FCFT_SUBPIXEL_NONE);
+     if (!g)
+       continue;
+     long kern = 0;
+-    if (last_cp)
++    if (last_cp && gf == f)
+       fcft_kerning((struct fcft_font *)f, last_cp, codepoint, &kern, NULL);
+     pen += (int32_t)kern;
+     int32_t gx = pen + g->x;
+@@ -743,8 +745,10 @@ static uint32_t text_metrics(const char *text, int32_t *min_x, int32_t *max_x) {
+ }
+ 
+ // Create or fetch a font sized for `scale` (HiDPI rendering).
++static struct fcft_font *g_scaled_fonts[8]; // font_for_scale cache
++
+ static struct fcft_font *font_for_scale(int scale) {
+-  static struct fcft_font *cache[8];
++  struct fcft_font **cache = g_scaled_fonts;
+   static int cached_scale[8];
+   if (scale < 1)
+     scale = 1;
+@@ -769,6 +773,46 @@ static struct fcft_font *font_for_scale(int scale) {
+   return cache[scale];
+ }
+ 
++// Limux: "glyph-scale" glyphs come from the same font pattern at k times the
++// size of the font being measured or drawn: the logical font for layout, the
++// per-output scaled font for drawing.
++static struct {
++  const struct fcft_font *base;
++  double k;
++  struct fcft_font *font;
++} g_glyph_fonts[32];
++static int g_glyph_font_count;
++
++static struct fcft_font *glyph_font(struct fcft_font *f, uint32_t cp) {
++  double k = 0;
++  for (int i = 0; i < g_cfg.glyph_count; i++)
++    if (g_cfg.glyph_cp[i] == cp)
++      k = g_cfg.glyph_k[i];
++  if (k <= 0)
++    return f;
++  for (int i = 0; i < g_glyph_font_count; i++)
++    if (g_glyph_fonts[i].base == f && g_glyph_fonts[i].k == k)
++      return g_glyph_fonts[i].font;
++  const char *sp = strstr(g_font_base, ":size=");
++  if (!sp || g_glyph_font_count >= 32)
++    return f;
++  int px = 0;
++  if (f == font)
++    px = atoi(sp + 6);
++  for (int s = 1; s < 8 && !px; s++)
++    if (g_scaled_fonts[s] == f)
++      px = atoi(sp + 6) * s;
++  if (px <= 0)
++    return f;
++  char buf[256];
++  snprintf(buf, sizeof(buf), "%.*s:size=%.2f", (int)(sp - g_font_base),
++           g_font_base, px * k);
++  struct fcft_font *nf = fcft_from_name(1, (const char *[]){buf}, NULL);
++  g_glyph_fonts[g_glyph_font_count++] =
++      (typeof(g_glyph_fonts[0])){f, k, nf ? nf : f};
++  return nf ? nf : f;
++}
++
+ // Reserve width for two digits so 3% / 30% keep the module size.
+ static void ensure_numeric_min_width(ModuleStyle *st, const char *fmt,
+                                      const char *icon) {
+@@ -851,16 +895,22 @@ static uint32_t draw_text(const char *text, uint32_t x, uint32_t y,
+   int32_t mn = 0;
+   text_metrics_font(df, text, &mn, NULL);
+   int32_t pen = (int32_t)dx - mn;
++  // Limux: icon-font glyphs (Private Use Area) are centred on the text's
++  // cap height, so a scaled icon font stays level with the text beside it.
++  const struct fcft_glyph *cap =
++      fcft_rasterize_char_utf32(df, 'H', FCFT_SUBPIXEL_NONE);
++  int32_t cap_mid2 = cap ? 2 * ((int32_t)dy - cap->y) + cap->height : 0;
+   uint32_t state = 0, codepoint = 0, last_cp = 0;
+   for (const char *p = text; *p; p++) {
+     if (utf8_decode(&state, &codepoint, (uint8_t)*p))
+       continue;
++    struct fcft_font *gf = glyph_font(df, codepoint);
+     const struct fcft_glyph *g =
+-        fcft_rasterize_char_utf32(df, codepoint, FCFT_SUBPIXEL_NONE);
++        fcft_rasterize_char_utf32(gf, codepoint, FCFT_SUBPIXEL_NONE);
+     if (!g)
+       continue;
+     long kern = 0;
+-    if (last_cp)
++    if (last_cp && gf == df)
+       fcft_kerning(df, last_cp, codepoint, &kern, NULL);
+     pen += (int32_t)kern;
+     int32_t gx = pen + g->x;
+@@ -868,10 +918,12 @@ static uint32_t draw_text(const char *text, uint32_t x, uint32_t y,
+     if (gx >= (int32_t)dmax)
+       break;
+     last_cp = codepoint;
++    int32_t gy = (int32_t)dy - g->y;
++    if (cap && ((codepoint >= 0xE000 && codepoint <= 0xF8FF) || codepoint >= 0xF0000))
++      gy = (cap_mid2 - g->height) / 2;
+ 
+     if (fg && fg_color && g_text_spin) {
+       int32_t s = (int32_t)ceil(hypot(g->width, g->height)) + 2;
+-      int32_t gy = (int32_t)dy - g->y;
+       if (pixman_image_get_format(g->pix) == PIXMAN_a8r8g8b8) {
+         composite_spun_glyph(g, NULL, fg, gx, gy, s);
+       } else {
+@@ -887,7 +939,7 @@ static uint32_t draw_text(const char *text, uint32_t x, uint32_t y,
+     } else if (fg && fg_color) {
+       if (pixman_image_get_format(g->pix) == PIXMAN_a8r8g8b8) {
+         pixman_image_composite32(PIXMAN_OP_OVER, g->pix, NULL, fg, 0, 0, 0, 0,
+-                                 gx, (int32_t)dy - g->y, g->width, g->height);
++                                 gx, gy, g->width, g->height);
+       } else {
+         pixman_image_fill_boxes(
+             PIXMAN_OP_OVER, fg, fg_color, 1,
+@@ -896,7 +948,7 @@ static uint32_t draw_text(const char *text, uint32_t x, uint32_t y,
+       pixman_image_t *mask = pixman_image_create_solid_fill(
+           &(pixman_color_t){0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF});
+       pixman_image_composite32(PIXMAN_OP_OVER, g->pix, mask, fg_mask, 0, 0, 0,
+-                               0, gx, (int32_t)dy - g->y, g->width, g->height);
++                               0, gx, gy, g->width, g->height);
+       pixman_image_unref(mask);
+     }
+     if (bg && bg_color)
+--- a/rtconfig.c
++++ b/rtconfig.c
+@@ -844,6 +844,32 @@ static int parse_object_into(cJSON *root, MangoConfig *cfg) {
+   if ((v = cJSON_GetObjectItemCaseSensitive(root, "buffer-scale")) &&
+       cJSON_IsNumber(v) && v->valueint > 0)
+     cfg->buffer_scale = v->valueint;
++  // Limux: {"<one glyph>": factor, ...}; factors outside 0.5–3 are ignored.
++  if ((v = cJSON_GetObjectItemCaseSensitive(root, "glyph-scale")) &&
++      cJSON_IsObject(v)) {
++    cfg->glyph_count = 0;
++    cJSON *e;
++    cJSON_ArrayForEach(e, v) {
++      const unsigned char *s = (const unsigned char *)e->string;
++      uint32_t cp;
++      if (!cJSON_IsNumber(e) || e->valuedouble < 0.5 || e->valuedouble > 3.0 ||
++          cfg->glyph_count >= MANGOBAR_MAX_GLYPH_SCALES)
++        continue;
++      if (s[0] < 0x80 && s[0] && !s[1])
++        cp = s[0];
++      else if ((s[0] & 0xE0) == 0xC0 && s[1] && !s[2])
++        cp = (uint32_t)(s[0] & 0x1F) << 6 | (s[1] & 0x3F);
++      else if ((s[0] & 0xF0) == 0xE0 && s[1] && s[2] && !s[3])
++        cp = (uint32_t)(s[0] & 0x0F) << 12 | (uint32_t)(s[1] & 0x3F) << 6 | (s[2] & 0x3F);
++      else if ((s[0] & 0xF8) == 0xF0 && s[1] && s[2] && s[3] && !s[4])
++        cp = (uint32_t)(s[0] & 0x07) << 18 | (uint32_t)(s[1] & 0x3F) << 12 |
++             (uint32_t)(s[2] & 0x3F) << 6 | (s[3] & 0x3F);
++      else
++        continue;
++      cfg->glyph_cp[cfg->glyph_count] = cp;
++      cfg->glyph_k[cfg->glyph_count++] = e->valuedouble;
++    }
++  }
+   if ((v = cJSON_GetObjectItemCaseSensitive(root, "scroll-interval")) &&
+       cJSON_IsNumber(v) && v->valueint >= 0)
+     cfg->scroll_interval = v->valueint;
+--- a/rtconfig.h
++++ b/rtconfig.h
+@@ -9,6 +9,7 @@
+ #define MANGOBAR_MAX_ACTIONS 128
+ #define MANGOBAR_MAX_MODULES 64
+ #define MANGOBAR_MAX_CUSTOM 64
++#define MANGOBAR_MAX_GLYPH_SCALES 16
+ #define MANGOBAR_MAX_BATTERIES 16
+ #define MANGOBAR_MAX_ALTS 128
+ #define MANGOBAR_MAX_ICONS 64
+@@ -133,6 +134,10 @@ typedef struct {
+   int right_count;
+   MangoCustomModule customs[MANGOBAR_MAX_CUSTOM];
+   int custom_count;
++  // Limux "glyph-scale": these code points are drawn at k times the text size.
++  uint32_t glyph_cp[MANGOBAR_MAX_GLYPH_SCALES];
++  double glyph_k[MANGOBAR_MAX_GLYPH_SCALES];
++  int glyph_count;
+   MangoAction actions[MANGOBAR_MAX_ACTIONS];
+   int action_count;
+   MangoAltFormat alts[MANGOBAR_MAX_ALTS];
