@@ -41,6 +41,7 @@ ninja
 pipewire-alsa
 pipewire-pulse
 playerctl
+polkit-gnome
 rofi
 rtkit
 rust
