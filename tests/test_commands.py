@@ -57,6 +57,21 @@ class CommandsTest(unittest.TestCase):
             self.assertEqual(commands.shortcuts(path), [('Apps', '⌘Space', 'Open application launcher',
                                                          ('spawn', 'rofi -show drun'))])
 
+    def test_power_actions_ask_first(self):
+        rows = {r[1]: r[3] for _, items in commands.registry() for r in items if r[0] == 'Power'}
+        self.assertEqual(rows['Sleep'], ('run', ['systemctl', 'suspend']))
+        for name, command in (('Restart', ['systemctl', 'reboot']), ('Shut down', ['systemctl', 'poweroff']),
+                              ('Log out', ['mmsg', 'dispatch', 'quit'])):
+            self.assertEqual(rows[name][0], 'confirm')
+            self.assertEqual(rows[name][1][2], command)
+        for answer, confirmed in (('0\n', True), ('1\n', False), ('', False)):
+            with patch.object(commands.subprocess, 'run') as run:
+                run.return_value.returncode, run.return_value.stdout = (0 if answer else 1), answer
+                self.assertEqual(commands.confirm('Shut down now?', 'Shut down'), confirmed)
+        with patch.object(commands, 'confirm', return_value=False), patch.object(commands.subprocess, 'Popen') as popen:
+            commands.execute(rows['Shut down'])
+            popen.assert_not_called()
+
     def test_shortcut_rows_run_their_binding(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / 'mango.conf'

@@ -191,6 +191,11 @@ def registry():
                                  ('Utilities', 'Current date', 'Copy ISO date', ('date', None)),
                                  ('Utilities', 'Clear clipboard history', 'Clear clipboard history',
                                   ('run', [str(HOME / '.local/bin/limux-clipboard'), 'clear']))]))
+    # Power: anything that ends the session asks first in the same picker.
+    groups.append(('Power', [('Power', 'Sleep', 'Sleep now', ('run', ['systemctl', 'suspend'])),
+                             ('Power', 'Restart', 'Restart', ('confirm', ('Restart now?', 'Restart', ['systemctl', 'reboot']))),
+                             ('Power', 'Shut down', 'Shut down', ('confirm', ('Shut down now?', 'Shut down', ['systemctl', 'poweroff']))),
+                             ('Power', 'Log out', 'Log out', ('confirm', ('Log out now?', 'Log out', ['mmsg', 'dispatch', 'quit'])))]))
     for category in ('Workspaces', 'Windows', 'Gestures', 'Foot', 'Apps', 'Hardware', 'Layout', 'Mouse', 'System'):
         items = [row for row in live if row[0] == category and id(row) not in used]
         if items:
@@ -200,7 +205,8 @@ def registry():
 
 VERBS = {'Copy snippet': 'Copy', 'Open quicklink': 'Open', 'Open in file manager': 'Open',
          'Copy placeholder paragraph': 'Copy', 'Copy UUID': 'Copy', 'Copy ISO date': 'Copy',
-         'Open snippet instructions': 'Open', 'Clear clipboard history': 'Clear'}
+         'Open snippet instructions': 'Open', 'Clear clipboard history': 'Clear',
+         'Sleep now': '', 'Restart': 'Asks first', 'Shut down': 'Asks first', 'Log out': 'Asks first'}
 
 
 def display_rows(groups, tokens_path=TOKENS):
@@ -222,6 +228,16 @@ def display_rows(groups, tokens_path=TOKENS):
     return labels, actions
 
 
+def confirm(question, verb):
+    """A two-row Limux picker: the action, then Cancel. It opens on Cancel, so only a
+    deliberate Up and Enter confirms; Escape cancels too."""
+    chosen = subprocess.run(['rofi', '-dmenu', '-i', '-no-custom', '-format', 'i', '-p', '', '-theme', str(THEME),
+                             '-selected-row', '1',
+                             '-theme-str', f'entry {{ placeholder: "{question}"; }} listview {{ lines: 2; }}'],
+                            input=f'{verb}\nCancel\n', text=True, capture_output=True)
+    return chosen.returncode == 0 and chosen.stdout.strip() == '0'
+
+
 def execute(action):
     if action is None:
         return
@@ -234,6 +250,11 @@ def execute(action):
         return
     if kind == 'spawn':
         subprocess.Popen(['sh', '-c', value], start_new_session=True)
+        return
+    if kind == 'confirm':
+        question, verb, command = value
+        if confirm(question, verb):
+            subprocess.Popen(command, start_new_session=True)
         return
     if kind == 'dispatch':
         subprocess.run(['mmsg', 'dispatch', value], check=True, capture_output=True, timeout=5)
