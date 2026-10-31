@@ -1,7 +1,10 @@
 {
-  "approved": "Rhapsody notifications, user-approved 2026-10-30",
+  "approved": "Rhapsody notifications, user-approved 2026-10-30; level card approved 2026-10-31",
   "mako_version": "1.11.0",
   "recovery_file": "mako-before-rhapsody.conf",
   "original_sha256": "cab0370ecf043f0ecab92fbac1d83bf31b530652f0cc67a3b260d7a7426d2490",
-  "baseline_sha256": "069cf721a4205b099ca4b73ee1cec705011ff27c0f6d579608244689dfdb3e58"
+  "baseline_sha256": "fd5b29ef55587f8368cb7039511c7edead4d05fdfea626799cec232e98ec1337",
+  "previous_sha256": [
+    "069cf721a4205b099ca4b73ee1cec705011ff27c0f6d579608244689dfdb3e58"
+  ]
 }

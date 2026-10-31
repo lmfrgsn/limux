@@ -82,7 +82,9 @@ def versions(config, style, manifest):
     if before not in (original, active):
         raise RuntimeError('Unknown Mako configuration; refusing to overwrite it')
     existing = regular(style) if style.exists() or style.is_symlink() else None
-    if existing is not None and digest(existing) != manifest['baseline_sha256']:
+    # A previous approved fragment is recognised so activate can upgrade it in place.
+    known = [manifest['baseline_sha256'], *manifest.get('previous_sha256', [])]
+    if existing is not None and digest(existing) not in known:
         raise RuntimeError('Unknown Mako appearance file; refusing to overwrite or remove it')
     return before, existing, original, active
 

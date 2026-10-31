@@ -24,6 +24,7 @@ Each filled a gap that affected security or everyday use; each has a guarded act
 | `xdg-desktop-portal`, `-wlr`, `-gtk` | Screen sharing in Firefox did not work; file choosers now float and take the Files design. |
 | `cliphist` | No clipboard history; Command+Shift+V, memory only. |
 | `imv` | Images opened in Firefox; now a dedicated viewer on the graphite ground. |
+| `nftables` (already installed, now enabled) | No firewall: the machine accepted incoming connections, including LLMNR on port 5355, on any network. |
 | `btop` | No way to see what was using CPU, memory, battery or heat. Activity Monitor in the launcher and Command menu, in the terminal's graphite. |
 
 ## Considered and deferred

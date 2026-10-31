@@ -190,6 +190,8 @@ def registry():
                                  ('Utilities', 'New UUID', 'Copy UUID', ('uuid', None)),
                                  ('Utilities', 'Current date', 'Copy ISO date', ('date', None)),
                                  ('Utilities', 'Activity Monitor', 'Open Activity Monitor', ('run', ['foot', 'btop'])),
+                                 ('Utilities', 'Update system', 'Update and check Limux',
+                                  ('run', ['foot', '--title', 'Update system', str(HOME / 'limux/scripts/limux-update')])),
                                  ('Utilities', 'Clear clipboard history', 'Clear clipboard history',
                                   ('run', [str(HOME / '.local/bin/limux-clipboard'), 'clear']))]))
     # Power: anything that ends the session asks first in the same picker.
@@ -206,7 +208,7 @@ def registry():
 
 VERBS = {'Copy snippet': 'Copy', 'Open quicklink': 'Open', 'Open in file manager': 'Open',
          'Copy placeholder paragraph': 'Copy', 'Copy UUID': 'Copy', 'Copy ISO date': 'Copy',
-         'Open snippet instructions': 'Open', 'Open Activity Monitor': 'Open', 'Clear clipboard history': 'Clear',
+         'Open snippet instructions': 'Open', 'Open Activity Monitor': 'Open', 'Update and check Limux': 'Run', 'Clear clipboard history': 'Clear',
          'Sleep now': '', 'Restart': 'Asks first', 'Shut down': 'Asks first', 'Log out': 'Asks first'}
 
 

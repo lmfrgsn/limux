@@ -24,7 +24,12 @@ ORIGINAL = (ROOT/'themes/recovery'/MANIFEST['recovery_file']).read_bytes()
 class MakoAdapterTests(unittest.TestCase):
     def test_fragment_is_appearance_only_and_token_coloured(self):
         text = render(THEME)
+        section = ''
         for line in text.splitlines():
+            section = line if line.startswith('[') else section
+            # The single behaviour exception: Limux's own level card stays out of history.
+            if line == 'history=0' and section == '[category=limux.level]':
+                continue
             self.assertNotIn(line.split('=', 1)[0], FUNCTIONAL)
         tokens = {v.upper() for v in THEME['colors'].values()}
         for colour in re.findall(r'#[0-9A-Fa-f]{6}', text):

@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Limux level card: shows the current volume, display brightness, keyboard light or
+# microphone state as one replacing notification (category limux.level, styled by
+# the generated Mako appearance). Called after t2-hardware-control changes a level;
+# it only reads state and never changes it.
+set -euo pipefail
+runtime="${XDG_RUNTIME_DIR:?Desktop session required}/limux"
+mkdir -p "$runtime"
+
+percent() {  # brightnessctl -m prints device,class,value,percent%,max
+    brightnessctl --device="$1" -m | cut -d, -f4 | tr -d '%'
+}
+
+case "${1:-}" in
+    volume)
+        read -r _ level muted < <(wpctl get-volume @DEFAULT_AUDIO_SINK@ | tr -d '[]'; echo) || true
+        value=$(awk -v v="${level:-0}" 'BEGIN { printf "%d", v * 100 + 0.5 }')
+        name=Volume
+        if [[ "${muted:-}" == MUTED ]]; then text=Muted; value=0; else text="$value%"; fi
+        ;;
+    microphone)
+        name=Microphone
+        if wpctl get-volume @DEFAULT_AUDIO_SOURCE@ | grep -q MUTED; then text=Off; value=0; else text=On; value=100; fi
+        ;;
+    display)
+        name=Brightness; value=$(percent gmux_backlight); text="$value%" ;;
+    keyboard)
+        name='Keyboard light'; value=$(percent apple::kbd_backlight)
+        if (( value == 0 )); then text=Off; else text="$value%"; fi
+        ;;
+    *) echo 'usage: limux-level volume|microphone|display|keyboard' >&2; exit 2 ;;
+esac
+
+# One card for every level, like a single on-screen display: each press replaces it.
+id_file="$runtime/level.id"
+id=$(cat "$id_file" 2>/dev/null || echo 0)
+[[ "$id" =~ ^[0-9]+$ ]] || id=0
+notify-send --app-name="$name" --category=limux.level --expire-time=1500 --transient \
+    --hint="int:value:$value" --replace-id="$id" --print-id "$text" > "$id_file.new"
+mv "$id_file.new" "$id_file"

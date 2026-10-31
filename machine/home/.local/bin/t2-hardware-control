@@ -45,3 +45,15 @@ case "${1:-}" in
     stop) playerctl stop ;;
     *) echo 'Unknown T2 hardware control' >&2; exit 2 ;;
 esac
+
+# Limux level card (scripts/activate-feedback.py): show the level just set.
+case "${1:-}" in
+    volume-up|volume-down|mute) limux_level=volume ;;
+    mic-mute) limux_level=microphone ;;
+    screen-up|screen-down) limux_level=display ;;
+    keyboard-up|keyboard-down) limux_level=keyboard ;;
+    *) limux_level= ;;
+esac
+if [[ -n $limux_level && -x $HOME/.local/bin/limux-level ]]; then
+    "$HOME/.local/bin/limux-level" "$limux_level" >/dev/null 2>&1 || true
+fi

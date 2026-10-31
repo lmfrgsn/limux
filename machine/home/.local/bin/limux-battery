@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Limux low-battery warning: a critical notification at 10% and again at 5% while
+# discharging, cleared as soon as the charger is connected. Reads sysfs once a
+# minute; started once per session from MangoWM.
+set -euo pipefail
+battery=${LIMUX_BATTERY:-/sys/class/power_supply/BAT0}   # overridable for tests
+runtime="${XDG_RUNTIME_DIR:?Desktop session required}/limux"
+mkdir -p "$runtime"
+exec 9>"$runtime/battery.lock"
+flock -n 9 || exit 0   # one watcher per session
+
+warned=100   # lowest threshold already announced during this discharge
+id=0
+while sleep "${LIMUX_BATTERY_INTERVAL:-60}" 9>&-; do   # sleep must not hold the lock
+    [[ -r $battery/capacity ]] || continue
+    capacity=$(<"$battery/capacity")
+    status=$(<"$battery/status")
+    if [[ $status != Discharging ]]; then
+        if (( id > 0 )); then makoctl dismiss -n "$id" >/dev/null 2>&1 || true; fi
+        warned=100; id=0
+        continue
+    fi
+    for threshold in 5 10; do
+        if (( capacity <= threshold && threshold < warned )); then
+            if (( threshold == 5 )); then body='Plug in now.'; else body='Plug in soon.'; fi
+            id=$(notify-send --app-name=Battery --urgency=critical --replace-id="$id" --print-id \
+                "Battery at $capacity%" "$body")
+            warned=$threshold
+            break
+        fi
+    done
+done

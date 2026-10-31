@@ -160,6 +160,11 @@ padding_horizontal = 16
 width = 360
 margin = 12
 label_tracking = 600
+# Level card (volume, brightness, keyboard light, microphone), approved 2026-10-31:
+# the notification card, narrower, its canvas progress fill as the meter. The label
+# is graphite because quiet grey falls below 4.5:1 where it overlaps the fill.
+level_width = 240
+level_label = "text"
 
 [mango]
 # Approved initial MangoWM baseline from fd645da; preserve these exact values.

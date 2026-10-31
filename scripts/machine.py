@@ -40,6 +40,8 @@ HOME_FILES = (
     '.local/bin/limux-night-light',
     '.local/bin/limux-idle',
     '.local/bin/limux-clipboard',
+    '.local/bin/limux-level',
+    '.local/bin/limux-battery',
     '.local/bin/limux-screen-chooser',
     '.local/bin/t2-hardware-control',
     '.local/bin/setup-t2-hardware',
@@ -72,7 +74,7 @@ SYSTEM_FILES = (
     '/usr/local/sbin/limux-touchbar-recover',
 )
 SYSTEM_UNITS = ('NetworkManager.service', 'bluetooth.service', 't2fanrd.service', 'tiny-dfr.service',
-                'limux-touchbar-recover.service', 'systemd-resolved.service')
+                'limux-touchbar-recover.service', 'systemd-resolved.service', 'nftables.service')
 USER_UNITS = ('pipewire.socket', 'pipewire-pulse.socket', 'pipewire.service', 'pipewire-pulse.service',
               'wireplumber.service', 't2-speaker-mute.service')
 PACKAGES = STORE/'packages.txt'

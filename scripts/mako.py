@@ -2,9 +2,10 @@
 import re
 from mangobar import contrast
 
-COLORS = ('surface', 'text', 'secondary', 'label', 'edge', 'urgent', 'progress')
+LEVEL = 'limux.level'
+COLORS = ('surface', 'text', 'secondary', 'label', 'edge', 'urgent', 'progress', 'level_label')
 METRICS = (('border', 0, 4), ('radius', 0, 16), ('padding_vertical', 0, 32),
-           ('padding_horizontal', 0, 32), ('width', 200, 600), ('margin', 0, 48), ('label_tracking', 0, 2000))
+           ('padding_horizontal', 0, 32), ('width', 200, 600), ('level_width', 160, 600), ('margin', 0, 48), ('label_tracking', 0, 2000))
 # Behaviour stays in the user's config; the fragment must never set these.
 FUNCTIONAL = ('anchor', 'default-timeout', 'ignore-timeout', 'max-visible', 'layer', 'output', 'sort',
               'max-history', 'history', 'group-by', 'invisible', 'actions', 'on-button-left',
@@ -20,6 +21,8 @@ def palette(theme):
     for ink in ('text', 'secondary', 'label', 'urgent'):
         if contrast(c[ink], c['surface']) < 4.5:
             raise ValueError(f'insufficient Mako contrast: {ink}')
+    if contrast(c['level_label'], c['progress']) < 4.5 or contrast(c['level_label'], c['surface']) < 4.5:
+        raise ValueError('insufficient Mako level label contrast')
     if contrast(c['text'], c['progress']) < 4.5:
         raise ValueError('insufficient Mako contrast over progress')
     return c
@@ -65,9 +68,22 @@ def render(theme):
         '[urgency=critical]',
         f'border-color={c["urgent"]}',
         f'format={label(c["urgent"])}\\n{summary}\\n{body}',
+        '',
+        # Level card: limux-level sends category limux.level with a progress value.
+        f'[category={LEVEL}]',
+        f'width={m["level_width"]}',
+        # Mako ignores the transient hint; the one behaviour line Limux sets, and
+        # only for its own level card, so volume presses never fill the history.
+        'history=0',
+        f'format={label(c["level_label"])}\\n{summary}',
     ]
     text = '\n'.join(lines) + '\n'
+    section = ''
     for line in text.splitlines():
+        if line.startswith('['):
+            section = line
+        if line == 'history=0' and section == f'[category={LEVEL}]':
+            continue
         if line.split('=', 1)[0] in FUNCTIONAL:
             raise ValueError(f'Mako fragment must not set behaviour: {line}')
     return text

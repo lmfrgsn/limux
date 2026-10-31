@@ -10,6 +10,7 @@ bluez
 bluez-tools
 bluez-utils
 brightnessctl
+btop
 btrfs-progs
 cliphist
 efibootmgr
@@ -55,6 +56,7 @@ tiny-dfr
 tllist
 ttf-dejavu
 tumbler
+upower
 wl-clipboard
 wlr-randr
 wlsunset

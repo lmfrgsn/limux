@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# Limux system update, opened in Foot from the Command menu: updates every package
+# with pacman, then runs each Limux component's read-only check so a package update
+# that changed something Limux depends on is reported, not discovered later.
+# It changes nothing itself beyond pacman's own update.
+set -uo pipefail
+cd "$(dirname "$(readlink -f "$0")")/.." || exit 1
+
+# Component name, then the read-only check that proves it is still as approved.
+checks=(
+    'Bar|activate-bar-status.py verify'
+    'Window borders|mango-appearance.py verify'
+    'Launcher and Command menu|activate-rofi.py check'
+    'Command+K|activate-commands.py check'
+    'Launcher names|launcher-entries.py verify'
+    'Terminal|activate-foot.py verify'
+    'Files|activate-gtk.py verify'
+    'Files shortcuts|thunar-shortcuts.py verify'
+    'Notifications|activate-mako.py verify'
+    'Level card and battery warning|activate-feedback.py verify'
+    'Lock screen|activate-lock.py verify'
+    'Password prompt|activate-polkit.py verify'
+    'Screen sharing and file choosers|activate-portals.py verify'
+    'Clipboard history|activate-clipboard.py verify'
+    'Image viewer|activate-imv.py verify'
+    'Activity Monitor|activate-btop.py verify'
+    'Firewall|firewall.py verify'
+)
+
+finish() {
+    echo
+    read -rsp 'Press Enter to close.' _
+    exit "$1"
+}
+
+echo 'Updating packages'
+echo
+before=$(pacman -Q)
+if ! sudo pacman -Syu; then
+    echo
+    echo 'The update did not finish; nothing else was checked.'
+    finish 1
+fi
+changed=$(comm -13 <(echo "$before") <(pacman -Q) | wc -l)
+
+echo
+echo "Checking Limux ($changed packages changed)"
+echo
+failed=0
+for entry in "${checks[@]}"; do
+    name=${entry%%|*}
+    read -ra check <<< "${entry#*|}"
+    if output=$(timeout 60 python3 "scripts/${check[0]}" "${check[@]:1}" 2>&1); then
+        printf '  ✓ %s\n' "$name"
+    else
+        printf '  ✗ %s: %s\n' "$name" "$(tail -n1 <<< "$output")"
+        failed=1
+    fi
+done
+
+echo
+if [[ ! -d /usr/lib/modules/$(uname -r) ]]; then
+    echo 'The kernel was updated. Restart to use it; until then, new hardware modules cannot load.'
+fi
+if (( failed )); then
+    echo 'Something above needs a look before it is trusted. Nothing was changed to fix it.'
+else
+    echo 'Everything Limux owns is as approved.'
+fi
+finish "$failed"
