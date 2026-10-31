@@ -13,6 +13,31 @@ Read-only snapshot: 30 October 2026, updated after the user's Waybar and library
 | Waybar status | The user removed Waybar and its unused dependency chain. Pacman, user config, packaged examples and active startup paths now have no Waybar installation; old migration references remain only in historical documentation/scripts and duplicate-start guards. |
 | Quicklinks | Repaired: `xdg-utils` provides `xdg-open`; folders open in Thunar and web links in Firefox (the default browser). |
 
+## Added on 31 October 2026
+
+Each filled a gap that affected security or everyday use; each has a guarded activation, a rollback and a Rhapsody design. See the [architecture](architecture.md) table for files and recovery.
+
+| Packages | Gap filled |
+| --- | --- |
+| `hyprlock`, `hypridle` | No lock screen: opening the lid returned straight to the session. Locks at 5 minutes idle, before sleep and on Ctrl+Command+Q. |
+| `polkit-gnome` | No authentication agent: admin actions from the desktop failed silently. |
+| `xdg-desktop-portal`, `-wlr`, `-gtk` | Screen sharing in Firefox did not work; file choosers now float and take the Files design. |
+| `cliphist` | No clipboard history; Command+Shift+V, memory only. |
+| `imv` | Images opened in Firefox; now a dedicated viewer on the graphite ground. |
+
+## Considered and deferred
+
+Reviewed with the user on 31 October 2026 and left out to avoid unused software. Add one when the need appears; each is a single package and would get the same guarded activation and Rhapsody design.
+
+| Candidate | Add when | Until then |
+| --- | --- | --- |
+| `mpv` (media player) | Local video or audio files are played regularly. | Firefox plays common MP4 and WebM; no local videos exist. |
+| `bluetui` (Bluetooth) | Bluetooth devices are used regularly. | No devices are paired; `bluetoothctl` (bluez-utils) handles occasional pairing. |
+| `wiremix` (volume mixer) | A second audio output appears (headphones, HDMI, Bluetooth). | One output, the built-in speakers; volume keys work. |
+| `satty` (screenshot annotation) | Screenshots are often marked up before sharing. | Command+Shift+3 and 4 capture as before. |
+| `zathura` (PDF viewer) | Keyboard-driven PDF reading is wanted. | Firefox's PDF viewer; zathura now brings GTK 4. |
+| `btop`, `fzf`, `bat`, `eza`, `zoxide` | Personal preference. | `ripgrep` is already installed. |
+
 ## Installed software
 
 The 55 explicitly installed packages are grouped here; the other 470 packages are libraries and transitive dependencies. Package installation does not prove a daemon is running or an application is used.
