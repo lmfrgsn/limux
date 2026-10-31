@@ -16,6 +16,15 @@ text cursor.
 > chip). It is published to read and borrow from, not to install. See
 > [Using it elsewhere](#using-it-elsewhere).
 
+![Limux desktop: the quiet workspace bar, Foot in graphite and Files in porcelain](docs/screenshots/desktop.png)
+
+| | |
+| --- | --- |
+| ![The launcher alone on the desktop, Activity Monitor selected in orange](docs/screenshots/launcher.png) | ![The Command menu alone on the desktop, listing everyday shortcuts](docs/screenshots/command-menu.png) |
+| Launcher (Command+Space) | Command menu (Command+K) |
+| ![btop as Activity Monitor on the terminal's graphite](docs/screenshots/activity-monitor.png) | ![A volume level card above a notification card](docs/screenshots/notifications.png) |
+| Activity Monitor | Level card and notification |
+
 ## What it includes
 
 | Area | Limux |
