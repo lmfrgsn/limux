@@ -455,3 +455,5 @@ The user asked what Omarchy (4.0 alpha, read from its repository and manual) doe
 ## Battery warning uses the bar's percentage — 2026-10-31
 
 The user saw "Battery at 9%" while the bar showed 52%. Two faults. The card came from the test suite: its private Mako still drew on the live Wayland display, so a simulated warning appeared on the desktop. The battery test now runs the real watcher with stand-in `notify-send` and `makoctl` that only log, and no test starts Mako with notifications. Second, the watcher read the kernel's `capacity`, which on this worn battery measures against the original design size (full is 75% of design): 43% when the bar showed 57%, so it would have warned at about 13% on the bar. It now uses the bar's own calculation, remaining over full (energy, else charge), rounded half up, falling back to `capacity` only when those files are missing; a test pins that case.
+
+**LLMNR off (2026-10-31).** The user ran `sudo python3 scripts/llmnr.py activate`. resolved reports `-LLMNR +mDNS` globally and on every link, port 5355 is closed, and DNS lookups and HTTPS work.
