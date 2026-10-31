@@ -61,9 +61,9 @@ def state(manifest):
     out = {}
     for rel, pin in manifest['files'].items():
         path = HOME/rel
-        out[rel] = ('original' if not path.exists() else
-                    'active' if path.is_file() and not path.is_symlink() and digest(path.read_bytes()) == pin
-                    else 'unknown')
+        found = digest(path.read_bytes()) if path.is_file() and not path.is_symlink() else None
+        out[rel] = ('original' if not path.exists() else 'active' if found == pin else
+                    'previous' if found in manifest.get('previous', {}).get(rel, []) else 'unknown')
     out['rule'] = 'active' if has_rule(CONFIG.read_text()) else 'original'
     return out
 
@@ -127,10 +127,14 @@ def activate(manifest):
         return
     written, before = [], CONFIG.read_text()
     try:
+        replaced = {}
         for path, data in files.items():
             if not path.exists():
                 write_file(path, data)
                 written.append(path)
+            elif current[str(path.relative_to(HOME))] == 'previous':
+                replaced[path] = path.read_bytes()
+                write_file(path, data)
         if not has_rule(before):
             lines = before.splitlines(keepends=True)
             last = max(i for i, line in enumerate(lines) if line.startswith('tag_rule='))
@@ -144,6 +148,8 @@ def activate(manifest):
             write_config(CONFIG.read_text(), before)
         for path in written:
             path.unlink(missing_ok=True)
+        for path, data in replaced.items():
+            write_file(path, data)
         raise RuntimeError('activation failed; previous state restored') from failure
     print('Portals configured: screen sharing uses the Limux picker; file choosers float, centred.')
 

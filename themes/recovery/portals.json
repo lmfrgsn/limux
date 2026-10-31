@@ -6,7 +6,16 @@
     "xdg-desktop-portal-gtk"
   ],
   "files": {
-    ".config/xdg-desktop-portal-wlr/config": "8fcc3b5c23edbdb903851d21080d892ffab11c4f7d88bde9f5932978f8fed450",
-    ".local/bin/limux-screen-chooser": "62c48be87ed9b343650630e618be0c3a8e84bca03f7609aca299da1200a5b4f5"
+    ".config/xdg-desktop-portal-wlr/config": "6f9e17fbb5b8178083d910d3549f30dca3fd027085ba49024fa6396ae1194095",
+    ".local/bin/limux-screen-chooser": "46c4c56c7f3fe32075816ff3041e5795dcfe32d369fd6ef48f58d4ff3d95d824"
+  },
+  "previous": {
+    ".config/xdg-desktop-portal-wlr/config": [
+      "8fcc3b5c23edbdb903851d21080d892ffab11c4f7d88bde9f5932978f8fed450"
+    ],
+    ".local/bin/limux-screen-chooser": [
+      "62c48be87ed9b343650630e618be0c3a8e84bca03f7609aca299da1200a5b4f5",
+      "ff22ee2e1879692b86886b4be9055e711b0dd2c96d9561541236d33fec4e98a7"
+    ]
   }
 }

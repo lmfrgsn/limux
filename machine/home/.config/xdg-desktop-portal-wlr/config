@@ -1,4 +1,5 @@
-# Limux screen sharing: the Limux picker chooses what to share.
+# Limux screen sharing: the Limux picker chooses what to share. Absolute path:
+# the portal's service PATH is only /usr/local/bin:/usr/bin.
 [screencast]
 chooser_type = dmenu
-chooser_cmd = limux-screen-chooser
+chooser_cmd = /home/liam/.local/bin/limux-screen-chooser

@@ -26,9 +26,13 @@ class PortalTests(unittest.TestCase):
         source = CHOOSER.read_text()
         namespace = {}
         exec(source.split('\n\n\nlines =')[0], namespace)  # label() only; no Rofi
-        self.assertEqual(namespace['label']('Monitor: eDP-1'), ('Built-in display', 'eDP-1'))
-        self.assertEqual(namespace['label']('Monitor: HDMI-A-1'), ('Display HDMI-A-1', 'HDMI-A-1'))
-        self.assertEqual(namespace['label']('eDP-1'), ('Built-in display', 'eDP-1'))
+        self.assertEqual(namespace['label']('Monitor: eDP-1'), ('Built-in display', 'Screen'))
+        self.assertEqual(namespace['label']('Monitor: HDMI-A-1'), ('Display HDMI-A-1', 'Screen'))
+        self.assertEqual(namespace['label']('Monitor: DP-2 Dell Inc. DELL U2720Q'), ('Dell Inc. DELL U2720Q', 'Screen'))
+        self.assertEqual(namespace['label']('eDP-1'), ('Built-in display', 'Screen'))
+        self.assertEqual(namespace['label']('Monitor: eDP-1 Apple Computer Inc Color LCD'), ('Built-in display', 'Screen'))
+        self.assertEqual(namespace['label']('Window: gUM Test Page — Mozilla Firefox (b97954d6786c229ba94f00dd88669112)'),
+                         ('gUM Test Page — Mozilla Firefox', 'Window'))
 
     def test_chooser_cancels_on_empty_input(self):
         result = subprocess.run([sys.executable, str(CHOOSER)], input='', capture_output=True, text=True)

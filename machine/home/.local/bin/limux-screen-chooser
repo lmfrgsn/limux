@@ -3,6 +3,7 @@
 The Limux picker lists what can be shared by name; the portal's own line for the
 choice is printed back unchanged. Escape cancels the share."""
 from html import escape
+import re
 import subprocess
 import sys
 
@@ -12,8 +13,13 @@ def label(line):
     if not name:
         kind, name = 'Monitor', line
     if kind == 'Monitor':
-        return ('Built-in display' if name.startswith('eDP') else f'Display {name}'), name
-    return name, kind
+        # The portal gives the connector, then the make and model; people know the model.
+        connector, _, model = name.partition(' ')
+        if connector.startswith('eDP'):
+            return 'Built-in display', 'Screen'
+        return (model.strip() or f'Display {connector}'), 'Screen'
+    # Window lines end with the portal's handle in brackets; the title alone is the name.
+    return re.sub(r'\s*\([0-9a-f]{16,}\)$', '', name), 'Window'
 
 
 lines = [line.rstrip('\n') for line in sys.stdin if line.strip()]
