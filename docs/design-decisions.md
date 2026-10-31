@@ -443,3 +443,7 @@ The user asked what Omarchy (4.0 alpha, read from its repository and manual) doe
 **Firewall.** No firewall ran. Arch's own nftables ruleset is used without its SSH rule and with DHCPv6 replies from the local link; it validates unprivileged in a private network namespace. The user applied it with sudo; networking was checked afterwards. Arch's unit loads the file and exits, so `verify` checks that it ran successfully this boot, and `rollback` removes the loaded table because disabling the unit alone would leave the rules in force.
 
 **Update system.** A Command menu row runs `pacman -Syu` in Foot and then every component's read-only check. The retired Quiet Strip `check` is not included: its whole-file MangoWM pin has been stale since the lock screen work and is superseded by `activate-bar-status.py verify`.
+
+## Command+M minimises — 2026-10-31
+
+`bind=SUPER,m,quit` ended the MangoWM session on one keypress, with no confirmation; on a Mac, Command+M minimises, so it was easy to hit from habit (reported on 2026-10-28 and left unchanged then). The user chose to make Command+M minimise the focused window, like Command+I, which keeps minimising. Logging out stays available from the Command menu's Power group, which asks first. The candidate config passed MangoWM's parser before it replaced the live file and was reloaded. Command+N still switches layouts.

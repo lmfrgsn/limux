@@ -13,7 +13,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT/'themes/recovery/thunar-shortcuts.json'
 # Command keys MangoWM already owns globally are left on Thunar's defaults:
-# N (layout), I (minimise), R (reload), O (overlay), M (quit), G, E, K, Space, Tab, arrows left/right.
+# N (layout), I and M (minimise), R (reload), O (overlay), G, E, K, Space, Tab, arrows left/right.
 SHORTCUTS = {
     'ThunarActionManager/copy': '<Super>c',
     'ThunarActionManager/cut': '<Super>x',

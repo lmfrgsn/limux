@@ -366,7 +366,7 @@ python3 scripts/launcher-entries.py rollback       # show all system entries aga
 
 ## Thunar Command shortcuts
 
-`scripts/thunar-shortcuts.py` gives Thunar's own actions Mac-style Command shortcuts in its accelerator map, `~/.config/Thunar/accels.scm`: ⌘C/X/V, ⌘Z and ⌘⇧Z, ⌘A, ⌘⌫ (move to Trash), ⌘D (duplicate), ⌘⇧N (new folder), ⌘↑/⌘↓ (parent/open), ⌘[ and ⌘] (back/forward), ⌘⇧H (home), ⌘L, ⌘F, ⌘T, ⌘W, ⌘Q, ⌘1–3 (views) and ⌘=/⌘−/⌘0 (zoom). Command keys MangoWM owns globally (N, I, R, O, M, G, E, K, Space, Tab, ←/→) are not used; those actions keep Thunar's defaults (for example Ctrl+N, Alt+Return, Ctrl+R).
+`scripts/thunar-shortcuts.py` gives Thunar's own actions Mac-style Command shortcuts in its accelerator map, `~/.config/Thunar/accels.scm`: ⌘C/X/V, ⌘Z and ⌘⇧Z, ⌘A, ⌘⌫ (move to Trash), ⌘D (duplicate), ⌘⇧N (new folder), ⌘↑/⌘↓ (parent/open), ⌘[ and ⌘] (back/forward), ⌘⇧H (home), ⌘L, ⌘F, ⌘T, ⌘W, ⌘Q, ⌘1–3 (views) and ⌘=/⌘−/⌘0 (zoom). Command keys MangoWM owns globally (N, I, R, O, M, G, E, K, Space, Tab, ←/→; M and I minimise) are not used; those actions keep Thunar's defaults (for example Ctrl+N, Alt+Return, Ctrl+R).
 
 Thunar rewrites this file itself, so the controller compares which shortcuts are set rather than bytes, refuses to write while Thunar is running, and refuses hand-edited maps. Rollback writes back Thunar's exact default dump from `themes/recovery/thunar-accels-default.scm`. The test suite compiles a small program against GTK 3 to confirm each key parses as a Command shortcut.
 
