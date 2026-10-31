@@ -1,6 +1,6 @@
 # Design decisions and implementation audit
 
-Recorded 2026-10-28; entries preserve the state at the time recorded. The [design language](design-language.md) is the sole maintained design specification; this log records status, rationale and discrepancies. Later dated approvals supersede earlier pending or proposed states. Evidence: [original source](references/original-design-reference.md), [original image](references/braun-interface-concept.png), [tokens](../themes/rhapsody.toml), [Mangobar adapter](../scripts/mangobar.py), and locally inspected generated `build/rhapsody/mangobar.css` (ignored, reproducible output).
+Recorded 2026-10-28; entries preserve the state at the time recorded. The [design language](design-language.md) is the sole maintained design specification; this log records status, rationale and discrepancies. Later dated approvals supersede earlier pending or proposed states. Evidence: the original concept source and image (retired 2026-10-31; in Git history), [tokens](../themes/rhapsody.toml), [Mangobar adapter](../scripts/mangobar.py), and locally inspected generated `build/rhapsody/mangobar.css` (ignored, reproducible output).
 
 **Reading this log:** dated entries preserve what was proposed or pending at that time. The [current reconciliation](#current-rhapsody-reconciliation--2026-10-30) supersedes earlier yellow-workspace and pending-activation statements; it does not erase their historical rationale. The [verified current state](#verified-current-state--2026-10-30) supersedes earlier Limux Commands approval statements. [Limux Files](#limux-files--thunar-design-approved-and-implemented--2026-10-30) records the approved Thunar design.
 
@@ -143,7 +143,7 @@ Validation: 33 tests passed, including read-only verification, approved activati
 
 The dark developer environment uses the established `#2F303B` graphite foundation
 with `#EAE9F0` chrome text and `#A8A8B4` metal secondary text. This extends the
-original [Braun reference](references/braun-interface-concept.png)'s material
+original Braun reference's material
 hierarchy into the developer workbench; it adds no ornamental terminal chrome,
 branding, glow or gradients. Eight logical pixels of padding provide a compact
 inset inside the already approved MangoWM frame. Light applications, window

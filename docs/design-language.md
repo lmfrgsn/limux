@@ -2,10 +2,6 @@
 
 This is the maintained design specification. Read alongside the [vision](vision.md), [architecture](architecture.md), [current implementation tokens](../themes/rhapsody.toml) and [decision log](design-decisions.md). Approved component states take precedence over earlier proposals; a new token or preview is not approval.
 
-The [original reference specification](references/original-design-reference.md) is archived evidence, not a competing maintained specification. Its [original visual reference](references/braun-interface-concept.png) is a concept, not a capture of the working desktop or a pixel-perfect layout requirement.
-
-![Original Limux concept: light bar, yellow active workspace, recessed launcher and material palette](references/braun-interface-concept.png)
-
 ## Current direction and influences
 
 Limux is the desktop product and interaction model; Rhapsody is its first theme. Braun industrial design, especially the ET 66 by Dietrich Lubs and Dieter Rams, informs precise proportions, typography, alignment and purposeful colour. The approved direction is a contemporary, quiet workspace: clear hierarchy, stable geometry and restrained surfaces. Recesses or control depth are useful when they clarify interaction, not requirements to decorate every component. The desktop should not imitate a historical machine or turn every element into a calculator button.
@@ -31,9 +27,9 @@ The six initial Rhapsody foundation values remain documented baselines. The subs
 | Text | `#343442` | Graphite-family readable ink |
 | Dark developer surface | `#2F303B` | Graphite-family dark workbench |
 
-The original concept explored the following material and signal roles. Its sample colours and yellow workspace remain historical reference, while the current token file and approved component states define today's implementation:
+The material and signal roles below began as an early concept. Its sample colours and yellow workspace are historical, recoverable from Git; the current token file and approved component states define today's implementation:
 
-| Material or signal | Established role | Approximate sample recorded in original specification; proposed comparison only |
+| Material or signal | Established role | Early concept sample; comparison only |
 | --- | --- | --- |
 | Porcelain | Light, clean application and system surfaces | `#F4F3F3` |
 | Cool grey | Quiet backgrounds and chrome, barely lavender-tinted | `#DCDCE5` |
@@ -48,11 +44,9 @@ Lavender is quiet within the neutral greys. Signals are sparse and tied to a sta
 
 The token file now names active workspace, list selection, terminal cursor and terminal search match separately. The old `selected` role is retained only for the recoverable boxed Mangobar renderer. Each mapping currently preserves approved output. Future colour changes need component previews and explicit approval. Verify contrast in light and dark contexts and retain non-colour cues where supported.
 
-## Original concept and current components
+## Current components
 
-Study the complete image, including its rationale and palette, before visual work:
-
-- The image's light bar and yellow boxed workspaces explain the original concept. The approved live Mangobar uses nine plain numbers on one uninterrupted porcelain surface, with one small inset orange active control and no visible layout indicator.
+- The early concept had a light bar with yellow boxed workspaces. The approved live Mangobar uses nine plain numbers on one uninterrupted porcelain surface, with one small inset orange active control and no visible layout indicator.
 - Bar status readings and agent indicators (approved and active) are line icons with values: Tabler at its regular stroke and the bar's text size, in quiet ink. Proximity groups them: icon and value 4px apart, 20px between pairs, 36px between the agent group and the system group, and a 20px right inset mirroring the left. Orange marks an agent that needs input and signal red an agent error; nothing else in the status area takes colour. See the [decision log](design-decisions.md#bar-status-icons-and-agent-indicators--design-target-approved--2026-10-30).
 - The launcher (Command+Space) and Command menu (Command+K) are one Limux picker: the notification card, a flat search (13 pt query, quiet placeholder, orange caret) divided from the list by a full-width hairline, one shared left edge for search text, labels and rows, the bar's orange inset with white text as the selection, quiet uppercase section labels, and a quiet secondary column (generic name, key or verb) at a fixed tab stop. No icons. The launcher lists Firefox, Files, Terminal and Activity Monitor. “RHAPSODY / 01” and the separate “APPLICATIONS” heading were rejected.
 - Limux Files (Thunar) applies the bar's patterns to a window: one porcelain surface with hairlines, the path as text, flat text fields (porcelain with a metal edge; orange edge and caret while typing), a graphite inset-style selection, quiet labels and measurements, and outline icons. Its approved target and known GTK 3 gaps are in the [decision log](design-decisions.md#limux-files--thunar-design-approved-and-implemented--2026-10-30).
@@ -65,7 +59,7 @@ Study the complete image, including its rationale and palette, before visual wor
 - Notifications (Mako) are porcelain cards on the window grid with a label, summary and body hierarchy; signal red marks critical only, and there are no icons.
 - Controls, content and passive information are visibly different. Typography, boundaries and surface depth work together: porcelain foregrounds, cool neutral ground, metal-like recesses and graphite ink. Passive measurements should not become competing badges.
 
-The screenshot is source context, not a layout target. Avoid gratuitous boxes, stripes, bevels, oversized controls, blur and gradients. Use depth only when it helps show interaction or material relationship.
+Avoid gratuitous boxes, stripes, bevels, oversized controls, blur and gradients. Use depth only when it helps show interaction or material relationship.
 
 ## Typography, geometry and states
 
@@ -112,7 +106,7 @@ Maintain one canonical active configuration per component, no stale packages/con
 
 Before each future visual iteration:
 
-1. Read this complete specification and inspect the original image, alongside the required project documents and current tokens.
+1. Read this complete specification alongside the required project documents and current tokens.
 2. Identify discrepancies and document proposed token, state and component changes. Obtain approval for unresolved final choices or changes to established identity/semantics; do not promote a preview to a permanent decision.
 3. Generate supported styling from shared tokens, validate native formats and inspect real screenshots at native scale, including hover, focus, selected and urgent states. Check functional precision, subtle lavender, purposeful signals, depth, accessibility and light/dark cohesion.
 4. Preserve behaviour and hardware. Live activation requires explicit authorization and a validated rollback path; a generated preview is not proof of visual approval.

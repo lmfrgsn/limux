@@ -1,6 +1,6 @@
 # Architecture
 
-The [canonical design language](design-language.md), [original visual reference](references/braun-interface-concept.png) and [decision log](design-decisions.md) govern appearance. This page describes current ownership and mechanics; historical preview instructions below do not describe the active design.
+The [canonical design language](design-language.md) and [decision log](design-decisions.md) govern appearance. This page describes current ownership and mechanics; historical preview instructions below do not describe the active design.
 
 ## Current implementation and approval status — 2026-10-30
 
