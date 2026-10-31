@@ -38,6 +38,9 @@ def tokens(theme):
             raise ValueError(f'invalid bar_status {key}: even 0–64 px')
     if t['group_gap'] < t['item_gap']:
         raise ValueError('bar_status group gap must not be smaller than the item gap')
+    for key in ('window_title', 'hide_empty_workspaces'):
+        if type(t[key]) is not bool:
+            raise ValueError(f'invalid bar_status {key}: true or false')
     if type(t['refresh_signal']) is not int or not 1 <= t['refresh_signal'] <= 20:
         raise ValueError('invalid bar_status refresh signal')
     for key in ('wifi_icon_scale', 'battery_icon_scale'):
@@ -58,6 +61,11 @@ def modules(theme, data, agent_script, runtime='$XDG_RUNTIME_DIR/limux/agents/ba
     right = [m for m in data['modules-right'] if not m.startswith('custom/agent-')]
     agents = [f'custom/agent-{agent}-{slot}' for agent in AGENTS for slot, _ in SLOTS]
     data['modules-right'] = right[:right.index('custom/wifi')] + agents + right[right.index('custom/wifi'):]
+    # Left group: workspaces with windows plus the current one; the focused
+    # window's title only when wanted (the focus border already shows it).
+    data['workspaces'] = dict(data.get('workspaces', {}), **{'hide-empty': t['hide_empty_workspaces']})
+    if not t['window_title']:
+        data['modules-left'] = [m for m in data.get('modules-left', []) if m != 'window']
     for agent in AGENTS:
         for slot, _ in SLOTS:
             data[f'custom/agent-{agent}-{slot}'] = {

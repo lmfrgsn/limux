@@ -96,6 +96,10 @@ agent_input = "workspace_orange"
 agent_error = "signal_red"
 # Real-time signal (SIGRTMIN+n) that refreshes the agent modules at once.
 refresh_signal = 8
+# Left group: only workspaces with windows (and the current one) are listed, by
+# number, which is also their Ctrl+number shortcut. The window title is off.
+hide_empty_workspaces = true
+window_title = false
 # Milliseconds per clockwise turn of the working spinner, drawn by the bar
 # (patches/mangobar/04-spin-custom-modules.patch) at about 15 frames a second.
 spin_period = 1000

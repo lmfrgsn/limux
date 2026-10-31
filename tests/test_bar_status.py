@@ -15,7 +15,8 @@ spec = importlib.util.spec_from_file_location('agent_status', ROOT/'scripts/agen
 agent_status = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(agent_status)
 THEME = tomllib.loads((ROOT/'themes/rhapsody.toml').read_text())
-LIVE = {'modules-right': ['tray', 'custom/wifi', 'battery', 'pulseaudio'],
+LIVE = {'modules-left': ['workspaces', 'window'], 'workspaces': {'hide-empty': False},
+        'modules-right': ['tray', 'custom/wifi', 'battery', 'pulseaudio'],
         'custom/wifi': {'exec': 'python3 /home/x/.local/share/limux/mangobar/wifi-status.py', 'interval': 5},
         'battery': {'device': 'BAT0', 'format': 'Bat {percent}%{icon}'},
         'pulseaudio': {'format': 'Vol {volume}%', 'on-click': 'mute'}}
@@ -38,6 +39,8 @@ class BarStatusTests(unittest.TestCase):
         self.assertEqual(spinning, [f'custom/agent-{a}-icon-spin' for a in b.AGENTS])
         self.assertEqual(data['custom/agent-codex-icon-spin']['spin-period'],
                          THEME['bar_status']['spin_period'])
+        self.assertTrue(data['workspaces']['hide-empty'])
+        self.assertNotIn('window', data['modules-left'])
         # Mangobar keeps CSS selectors and click actions in 32-byte buffers.
         self.assertTrue(all(len(m.replace('custom/', 'custom-')) <= 31 for m in right))
         # Regenerating does not duplicate agent modules.
