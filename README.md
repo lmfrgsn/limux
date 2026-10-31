@@ -5,10 +5,8 @@ Limux is a personal desktop environment for Arch Linux, built on the
 distribution or a dotfiles dump: it is one designed system, with its own
 interaction model and a first theme, **Rhapsody**.
 
-The design draws on Braun's industrial design (the ET 66 calculator by Dietrich
-Lubs and Dieter Rams) and on the light, cohesive feel of classic Macintosh and
-NeXTSTEP: porcelain and cool-grey system surfaces, graphite developer tools,
-precise type, and colour used only where it means something. The one warm accent,
+It is light and quiet: porcelain and cool-grey system surfaces, graphite developer
+tools, precise type, and colour used only where it means something. The one warm accent,
 workspace orange, marks where you are: the active workspace, the selected row, the
 text cursor.
 
