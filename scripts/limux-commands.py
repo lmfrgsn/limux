@@ -86,6 +86,10 @@ def shortcuts(path=MANGO):
                 category, description = SPAWN[command]
             elif 'mango-screenshot' in command:
                 category, description = 'System', 'Capture ' + command.split()[-1] + ' screenshot'
+            elif command.endswith('limux-clipboard pick'):
+                category, description = 'Apps', 'Open clipboard history'
+            elif command == 'loginctl lock-session':
+                category, description = 'System', 'Lock screen'
             elif 't2-hardware-control' in command:
                 category, description = 'Hardware', command.split()[-1].replace('-', ' ').capitalize()
             else:
@@ -160,12 +164,13 @@ def registry():
     """Ordered groups; a binding appears once, and only if present in live config."""
     live = shortcuts() + foot_shortcuts()
     priority = {'Open application launcher', 'Focus next window', 'Close focused window',
-                'Open terminal', 'Open files', 'Capture full screenshot', 'Capture area screenshot'}
+                'Open terminal', 'Open files', 'Open clipboard history', 'Capture full screenshot',
+                'Capture area screenshot', 'Lock screen'}
     groups = []
     common = [row for row in live if row[2] in priority and row[1] not in ('⌥Space', 'XF86Search')]
     rank = {'Open application launcher': 0, 'Focus next window': 1, 'Close focused window': 2,
-            'Open files': 3, 'Open terminal': 4, 'Capture area screenshot': 5,
-            'Capture full screenshot': 6}
+            'Open files': 3, 'Open terminal': 4, 'Open clipboard history': 5, 'Capture area screenshot': 6,
+            'Capture full screenshot': 7, 'Lock screen': 8}
     common.sort(key=lambda row: rank[row[2]])
     used = {id(row) for row in common}
     groups.append(('Everyday', common))
@@ -177,7 +182,9 @@ def registry():
                    + quicklinks()))
     groups.append(('Utilities', [('Utilities', 'Lorem Ipsum', 'Copy placeholder paragraph', ('copy', LOREM)),
                                  ('Utilities', 'New UUID', 'Copy UUID', ('uuid', None)),
-                                 ('Utilities', 'Current date', 'Copy ISO date', ('date', None))]))
+                                 ('Utilities', 'Current date', 'Copy ISO date', ('date', None)),
+                                 ('Utilities', 'Clear clipboard history', 'Clear clipboard history',
+                                  ('run', [str(HOME / '.local/bin/limux-clipboard'), 'clear']))]))
     for category in ('Workspaces', 'Windows', 'Gestures', 'Foot', 'Apps', 'Hardware', 'Layout', 'Mouse', 'System'):
         items = [row for row in live if row[0] == category and id(row) not in used]
         if items:
@@ -187,7 +194,7 @@ def registry():
 
 VERBS = {'Copy snippet': 'Copy', 'Open quicklink': 'Open', 'Open in file manager': 'Open',
          'Copy placeholder paragraph': 'Copy', 'Copy UUID': 'Copy', 'Copy ISO date': 'Copy',
-         'Open snippet instructions': 'Open'}
+         'Open snippet instructions': 'Open', 'Clear clipboard history': 'Clear'}
 
 
 def display_rows(groups, tokens_path=TOKENS):
@@ -213,6 +220,9 @@ def execute(action):
     kind, value = action
     if kind == 'open':
         subprocess.Popen(['xdg-open', value], start_new_session=True)
+        return
+    if kind == 'run':
+        subprocess.Popen(value, start_new_session=True)
         return
     if kind == 'uuid':
         value = str(uuid.uuid4())

@@ -39,6 +39,7 @@ HOME_FILES = (
     '.local/bin/mango-screenshot',
     '.local/bin/limux-night-light',
     '.local/bin/limux-idle',
+    '.local/bin/limux-clipboard',
     '.local/bin/limux-screen-chooser',
     '.local/bin/t2-hardware-control',
     '.local/bin/setup-t2-hardware',

@@ -11,6 +11,7 @@ bluez-tools
 bluez-utils
 brightnessctl
 btrfs-progs
+cliphist
 efibootmgr
 firefox
 foot
