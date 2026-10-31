@@ -38,7 +38,6 @@ class QuietActivationTest(unittest.TestCase):
                 'launcher': activation.digest(old['launcher']),
                 'config': activation.digest(old['config']),
                 'css': activation.digest(old['css']),
-                'mango': activation.digest(mango.read_bytes()),
             }
             with patch.multiple(activation, UPSTREAM=upstream, LAUNCHER=launcher,
                                 CONFIG=config, CSS=css, MANGO=mango, PATCHED=patched,

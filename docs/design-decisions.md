@@ -447,3 +447,7 @@ The user asked what Omarchy (4.0 alpha, read from its repository and manual) doe
 ## Command+M minimises — 2026-10-31
 
 `bind=SUPER,m,quit` ended the MangoWM session on one keypress, with no confirmation; on a Mac, Command+M minimises, so it was easy to hit from habit (reported on 2026-10-28 and left unchanged then). The user chose to make Command+M minimise the focused window, like Command+I, which keeps minimising. Logging out stays available from the Command menu's Power group, which asks first. The candidate config passed MangoWM's parser before it replaced the live file and was reloaded. Command+N still switches layouts.
+
+## Quiet Strip recovery repaired — 2026-10-31
+
+`activate-quiet-bar.py` pinned the entire MangoWM config by hash. Every later MangoWM edit (lock screen, polkit, portals, clipboard, picker animation, trackpad, Command+M, battery watcher) broke that pin, so its `check` failed and, worse, its `rollback` (the documented step from the Quiet Strip back to the original bar, after `activate-bar-status.py rollback`) would have refused to run. The pin is replaced by what the comment always intended: MangoWM must accept the config and it must start exactly one managed bar. `check` now says directly when bar status is layered over the Strip, instead of reporting an unexpected file. The script is kept, not retired, because it is the last step of the bar's recovery chain.

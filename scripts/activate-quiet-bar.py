@@ -28,12 +28,13 @@ CSS = HOME / '.config/mangobar/style.css'
 MANGO = HOME / '.config/mango/config.conf'
 PATCHED = HOME / '.local/libexec/limux/mangobar-0.2.2-quiet/mangobar'
 STATE = HOME / '.local/state/limux/quiet-bar-activation'
+# Bar status layers over the Strip and replaces its binary, config and CSS.
+BAR_STATUS_STATE = HOME / '.local/state/limux/bar-status-activation'
 EXPECTED = {
     'upstream': '36a5d8ec257ac5fe4183e655f1f88d97711b218ed02a6f70e1b4ed3fdc237d56',
     'launcher': '42343522012b965af0c8518e477ed4ac66c32dff33eac810c7978f31eef5ab6b',
     'config': '13d8cd1666d70a1beac55c358363af2be0f4305bfda6fec7b875ea830f049c48',
     'css': 'f82d060029411d566a2789351e4f3faca0def1ae29f43110d819cc5d7e015dc5',
-    'mango': '48f1594e450b1623a6c8acdd7b0825022d09ecc099c0a48ca0e5edfaaac7cc08',
     'candidate_config': '2db6d858b089621079a2df73210664e9c62ad558e9f6a18387130a429a6a6467',
     'candidate_css': '66fbb5d94cbf629a58cd8d4916698cbf42a2c89a602e0f80d43cf9fec2b73267',
 }
@@ -92,9 +93,11 @@ def require_session():
 
 
 def startup_entry():
-    # The complete current MangoWM config is hash-pinned. Its one startup entry
-    # is preserved byte-for-byte through activation and rollback.
-    checked_file(MANGO, EXPECTED['mango'])
+    # The MangoWM config must parse and start exactly one managed bar. It used to be
+    # pinned as a whole file, which every unrelated MangoWM edit broke, rollback included.
+    parsed = subprocess.run(['mango', '-p', '-c', str(MANGO)], capture_output=True, text=True)
+    if parsed.returncode != 0:
+        raise RuntimeError(f'MangoWM rejects its config; inspect before changing: {MANGO}')
     entries = [line.strip() for line in MANGO.read_text().splitlines()
                if line.strip().startswith(('exec=', 'exec_once='))
                and any(word in line for word in ('mangobar', 'limux-bar', 'waybar'))]
@@ -381,6 +384,9 @@ def rollback():
 
 
 def check():
+    if BAR_STATUS_STATE.exists():
+        raise RuntimeError('bar status is active over the Strip; check it with activate-bar-status.py verify, '
+                           'and run its rollback before any action here')
     if STATE.exists():
         manifest, _ = backup()
         require_session()
